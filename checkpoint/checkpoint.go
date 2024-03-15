@@ -12,13 +12,13 @@ import (
 
 // VerifyCheckpoint Obtain and verify whether the checkpoints of m committee members are consistent.
 func VerifyCheckpoint(getter getter.OrdGetter, config *types.Config) {
-	provides := provide.GetProviders(config)
+	committeeIndexer := provide.GetCommitteeIndexers(config)
 	var Checkpoints []*checkpoint.Checkpoint
-	if len(provides) > 0 {
-		for i, _ := range provides {
+	if len(committeeIndexer) > 0 {
+		for i, _ := range committeeIndexer {
 			go func(p types.CheckPointProvider) {
 				Checkpoints = append(Checkpoints, p.GetCheckpoint())
-			}(provides[i])
+			}(committeeIndexer[i])
 		}
 	}
 	for len(Checkpoints) < config.MinimalCheckPoint {

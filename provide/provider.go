@@ -5,7 +5,7 @@ import (
 	"github.com/RiemaLabs/indexer-light/types"
 )
 
-func GetProviders(config *types.Config) []types.CheckPointProvider {
+func GetCommitteeIndexers(config *types.Config) []types.CheckPointProvider {
 	var Provider []types.CheckPointProvider
 	if config == nil || config.CommitteeIndexer == nil || (config.CommitteeIndexer.S3 == nil && config.CommitteeIndexer.Da == nil) {
 		return Provider
