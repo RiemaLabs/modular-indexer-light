@@ -10,8 +10,8 @@ import (
 	"github.com/RiemaLabs/indexer-light/types"
 )
 
-// ExamineCheckpoint Obtain and verify whether the checkpoints of m committee members are consistent.
-func ExamineCheckpoint(getter getter.OrdGetter, config *types.Config) {
+// VerifyCheckpoint Obtain and verify whether the checkpoints of m committee members are consistent.
+func VerifyCheckpoint(getter getter.OrdGetter, config *types.Config) {
 	provides := provide.GetProviders(config)
 	var Checkpoints []*checkpoint.Checkpoint
 	if len(provides) > 0 {

@@ -6,10 +6,17 @@ type (
 	Config struct {
 		*CommitteeIndexer    `json:"committeeIndexer"`
 		*CommitteeIndexerApi `json:"committeeIndexerApi"`
+		*BitCoinRpc          `json:"bitCoinRpc"`
 		// minimal entry
 		MinimalCheckPoint int    `json:"minimalCheckPoint"`
 		StartHeight       int    `json:"startHeight"`
 		StartBlockHash    string `json:"startBlockHash"`
+	}
+
+	BitCoinRpc struct {
+		Host     string `json:"host"`
+		User     string `json:"user"`
+		Password string `json:"password"`
 	}
 
 	CommitteeIndexerApi struct {

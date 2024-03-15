@@ -8,11 +8,17 @@ import (
 	"github.com/RiemaLabs/indexer-light/apis"
 	"github.com/RiemaLabs/indexer-light/checkpoint"
 	"github.com/RiemaLabs/indexer-light/config"
+
+	getter2 "github.com/RiemaLabs/indexer-light/getter"
 )
 
 func main() {
 	go apis.ApiSrv()
-	queue, err := fetchHeight(nil)
+	rpcGetter, err2 := getter2.NewGetter(config.Config)
+	if err2 != nil {
+		return
+	}
+	queue, err := fetchHeight(rpcGetter)
 	if err != nil {
 		return
 	}
@@ -31,7 +37,7 @@ func fetchHeight(getter getter.OrdGetter) (*ord.StateQueue, error) {
 			return nil, err
 		}
 		if latestHeight > uint(config.Config.StartHeight) && !strings.EqualFold(hash, config.Config.StartBlockHash) {
-			checkpoint.ExamineCheckpoint(getter, config.Config)
+			checkpoint.VerifyCheckpoint(getter, config.Config)
 		}
 	}
 }

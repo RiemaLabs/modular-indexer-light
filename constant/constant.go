@@ -18,6 +18,6 @@ const (
 )
 
 var (
-	ConfigFileName = "config.json"
+	ConfigFileName = "./config.json"
 	ApiState       = ApiStateActive
 )
