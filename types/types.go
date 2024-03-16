@@ -50,5 +50,14 @@ type (
 )
 
 type CheckPointProvider interface {
-	GetCheckpoint() *checkpoint.Checkpoint
+	GetCheckpoint(height uint) *CheckPointObject
+}
+type CheckPointObject struct {
+	CheckPoint *checkpoint.Checkpoint
+	Name       string
+	Type       string
+	Source     struct {
+		*SourceS3
+		*SourceDa
+	}
 }
