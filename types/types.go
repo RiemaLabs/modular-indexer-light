@@ -38,6 +38,7 @@ type (
 		IndexerName  string `json:"indexerName"`
 		MetaProtocol string `json:"metaProtocol"`
 		ApiUrl       string `json:"apiUrl"`
+		Region       string `json:"region"`
 	}
 
 	SourceDa struct {
@@ -47,17 +48,20 @@ type (
 		MetaProtocol  string `json:"metaProtocol"`
 		ApiUrl        string `json:"apiUrl"`
 	}
-)
 
-type CheckPointProvider interface {
-	GetCheckpoint(height uint) *CheckPointObject
-}
-type CheckPointObject struct {
-	CheckPoint *checkpoint.Checkpoint
-	Name       string
-	Type       string
-	Source     struct {
+	Source struct {
 		*SourceS3
 		*SourceDa
 	}
+
+	CheckPointObject struct {
+		CheckPoint *checkpoint.Checkpoint
+		Name       string
+		Type       string
+		Source     *Source
+	}
+)
+
+type CheckPointProvider interface {
+	GetCheckpoint(height uint, hash string) *CheckPointObject
 }

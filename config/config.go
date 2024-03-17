@@ -39,3 +39,19 @@ func GetCommitteeIndexerApi(config *types.Config) []string {
 	}
 	return url
 }
+
+func UpdateConfig(config *types.Config) error {
+	file, err := os.OpenFile(constant.ConfigFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		return err
+	}
+	marshal, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+	_, err = file.Write(marshal)
+	if err != nil {
+		return err
+	}
+	return nil
+}

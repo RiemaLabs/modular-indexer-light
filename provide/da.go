@@ -11,7 +11,7 @@ func NewDA(config *types.SourceDa) *ProviderDa {
 		Config: config,
 	}
 }
-func (p *ProviderDa) GetCheckpoint(height uint) *types.CheckPointObject {
+func (p *ProviderDa) GetCheckpoint(height uint, hash string) *types.CheckPointObject {
 	// TODO::
 	return nil
 }

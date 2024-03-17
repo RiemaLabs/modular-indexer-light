@@ -1,14 +1,19 @@
 package apis
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 	"sync"
 
+	"github.com/RiemaLabs/indexer-light/committee"
 	"github.com/RiemaLabs/indexer-light/config"
 	"github.com/RiemaLabs/indexer-light/constant"
+	"github.com/RiemaLabs/indexer-light/verify"
+	"github.com/ethereum/go-verkle"
 	"github.com/gin-gonic/gin"
 )
 
@@ -67,25 +72,68 @@ func setupReverseProxy(proxyPath string) gin.HandlerFunc {
 	}
 }
 
-func ApiSrv() {
+func Start() {
 	r := gin.Default()
 
-	r.POST("/brc20_verifiable_light_get_current_balance_of_wallet", setupReverseProxy("brc20_verifiable_get_current_balance_of_wallet"))
+	r.POST(constant.LightBlockHigh, setupReverseProxy(constant.BlockHigh))
 
-	r.POST("/brc20_verifiable_light_block_height", setupReverseProxy("/brc20_verifiable_block_height"))
-
-	r.POST("/brc20_verifiable_light_state", func(context *gin.Context) {
+	r.POST(constant.LightState, func(context *gin.Context) {
 		context.JSON(http.StatusOK, Brc20VerifiableLightStateResponse{
 			State: constant.ApiState,
 		})
 	})
 
-	r.POST("/brc20_verifiable_light_last_checkpoint", func(context *gin.Context) {
+	r.POST(constant.LightBalance, func(c *gin.Context) {
+		balancer := NewRoundRobinBalancer(config.GetCommitteeIndexerApi(config.Config))
+		target := balancer.Next()
+		if target == "" {
+			c.String(http.StatusForbidden, "No available backends")
+			return
+		}
+		req := &Brc20VerifiableLightGetCurrentBalanceOfWalletRequest{}
+		err := c.BindJSON(req)
+		if err != nil {
+			c.String(http.StatusForbidden, "Parameter error")
+			return
+		}
+		balance, err := committee.NewClient(c, target, target).GetBalance(req.Tick, req.Pkscript)
+		if err != nil {
+			return
+		}
+		if balance != nil {
+			//TODO:: balance.Proof to verkle.Proof
+			preProof := &verkle.Proof{}
+			prePointByte, err := base64.StdEncoding.DecodeString(verify.DefiniteState.PreCheckpoint.Commitment)
+			if err != nil {
+				c.JSON(http.StatusOK, "")
+				return
+			}
+			prePoint := &verkle.Point{}
+			err = prePoint.SetBytes(prePointByte)
+			if err != nil {
+				c.JSON(http.StatusOK, "")
+				return
+			}
+			err = verify.VerifyProof(preProof, prePoint)
+			if err != nil {
+				c.JSON(http.StatusOK, "")
+				return
+			}
+			h, _ := strconv.Atoi(verify.DefiniteState.PostCheckpoint.Height)
+			c.JSON(http.StatusOK, Brc20VerifiableLightGetCurrentBalanceOfWalletResponse{
+				Result:      balance.Result,
+				BlockHeight: h,
+			})
+		}
+
+	})
+
+	r.POST(constant.LightCheckpoint, func(context *gin.Context) {
 		//TODO::
 		context.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{})
 	})
 
-	r.POST("/brc20_verifiable_light_last_checkpoint", func(context *gin.Context) {
+	r.POST(constant.LightLastCheckpoint, func(context *gin.Context) {
 		//TODO::
 		context.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{})
 	})

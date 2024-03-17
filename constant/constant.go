@@ -13,8 +13,9 @@ const (
 )
 
 const (
-	ProvideS3Name = "S3"
-	ProvideDaName = "Da"
+	ProvideS3Name       = "S3"
+	ProvideDaName       = "Da"
+	DefaultMetaProtocol = "brc-20"
 )
 
 var (

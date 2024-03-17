@@ -1,4 +1,4 @@
-package indexer
+package committee
 
 import (
 	"context"
@@ -31,8 +31,8 @@ func (c *CommitteeIndexer) path(str string) string {
 	return path
 }
 
-func (c *CommitteeIndexer) StateDiff() (*apis.Brc20VerifiableGetCurrentStateProofResponse, error) {
-	var data *apis.Brc20VerifiableGetCurrentStateProofResponse
+func (c *CommitteeIndexer) StateDiff() (*apis.Brc20VerifiableLatestStateProofResponse, error) {
+	var data *apis.Brc20VerifiableLatestStateProofResponse
 	post, err := c.Post(c.ctx, c.path(constant.StateDiff), nil, nil)
 	if err != nil {
 		return nil, err
