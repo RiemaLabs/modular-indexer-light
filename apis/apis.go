@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/RiemaLabs/indexer-light/committee"
 	"github.com/RiemaLabs/indexer-light/config"
 	"github.com/RiemaLabs/indexer-light/constant"
+	"github.com/RiemaLabs/indexer-light/indexer"
 	"github.com/RiemaLabs/indexer-light/verify"
 	"github.com/ethereum/go-verkle"
 	"github.com/gin-gonic/gin"
@@ -96,7 +96,7 @@ func Start() {
 			c.String(http.StatusForbidden, "Parameter error")
 			return
 		}
-		balance, err := committee.NewClient(c, target, target).GetBalance(req.Tick, req.Pkscript)
+		balance, err := indexer.NewClient(c, target, target).GetBalance(req.Tick, req.Pkscript)
 		if err != nil {
 			return
 		}

@@ -42,6 +42,7 @@ type (
 	}
 
 	SourceDa struct {
+		NamespaceID   string `json:"namespaceID"`
 		Address       string `json:"address"`
 		TransactionID string `json:"transactionID"`
 		IndexerName   string `json:"indexerName"`

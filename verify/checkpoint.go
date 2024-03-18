@@ -10,9 +10,9 @@ import (
 	"github.com/RiemaLabs/indexer-committee/checkpoint"
 	"github.com/RiemaLabs/indexer-committee/ord"
 	"github.com/RiemaLabs/indexer-committee/ord/getter"
-	"github.com/RiemaLabs/indexer-light/committee"
 	"github.com/RiemaLabs/indexer-light/config"
 	"github.com/RiemaLabs/indexer-light/constant"
+	"github.com/RiemaLabs/indexer-light/indexer"
 	"github.com/RiemaLabs/indexer-light/log"
 	"github.com/RiemaLabs/indexer-light/provide"
 	"github.com/RiemaLabs/indexer-light/types"
@@ -91,7 +91,7 @@ func verifyCheckpoint(getter getter.OrdGetter, config *types.Config, diffCheckpo
 	// Request the Checkpoint of the parent block (under h-1 height)
 	var diffPreCheckpoint = make(map[string]*types.CheckPointObject)
 	for key, cpo := range diffCheckpoint {
-		Committee := committee.NewClient(context.Background(), cpo.CheckPoint.Name, cpo.CheckPoint.URL)
+		Committee := indexer.NewClient(context.Background(), cpo.CheckPoint.Name, cpo.CheckPoint.URL)
 		state, err := Committee.StateDiff()
 		if err != nil {
 			continue
