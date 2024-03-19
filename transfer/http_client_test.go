@@ -100,13 +100,65 @@ func TestHttpGetter_GetBlock(t *testing.T) {
 				Password: tt.fields.Password,
 				client:   tt.fields.client,
 			}
-			got, err := r.GetBlock(tt.args.hash, tt.args.verbose)
+			got, err := r.GetBlock1(tt.args.hash)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("HttpGetter.GetBlock() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got.Hash != tt.args.hash {
 				t.Errorf("HttpGetter.GetBlock() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHttpGetter_GetBlockHash(t *testing.T) {
+	type fields struct {
+		URL      string
+		Username string
+		Password string
+		client   *http.Client
+	}
+	type args struct {
+		blockHeight uint
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "http test",
+			fields: fields{
+				URL:      "https://frosty-serene-emerald.btc.quiknode.pro/402f5ac57de95e38c0a33d1a5e6f6c2f66709262/",
+				Username: "",
+				Password: "",
+				client:   &http.Client{},
+			},
+			args: args{
+				blockHeight: 835161,
+			},
+			want: "000000000000000000021a731d2106dda997d6eaf6228252c7abdc259c1fca5e",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &HttpGetter{
+				URL:      tt.fields.URL,
+				Username: tt.fields.Username,
+				Password: tt.fields.Password,
+				client:   tt.fields.client,
+			}
+			got, err := r.GetBlockHash(tt.args.blockHeight)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("HttpGetter.GetBlockHash() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("HttpGetter.GetBlockHash() = %v, want %v", got, tt.want)
 			}
 		})
 	}
