@@ -2,21 +2,29 @@ package transfer
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/hex"
 	"errors"
-	"io"
-	"net/http"
-	"time"
+	"fmt"
+	"math"
+	"sort"
+	"strconv"
+	"strings"
 
+	"github.com/balletcrypto/bitcoin-inscription-parser/parser"
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/wire"
+	"github.com/sirupsen/logrus"
 )
+
+var defaultURL = "https://frosty-serene-emerald.btc.quiknode.pro/402f5ac57de95e38c0a33d1a5e6f6c2f66709262/"
 
 type OrdTransfer struct {
 	ID            uint
 	InscriptionID string
-	OldSatpoints  []string
-	OldPkscript   string
-	OldWallet     string
+	OldSatpoint   string
+	NewSatpoint   string
 	NewPkscript   string
 	NewWallet     string
 	SentAsFee     bool
@@ -24,107 +32,174 @@ type OrdTransfer struct {
 	ContentType   string
 }
 
-type HttpGetter struct {
-	URL      string
-	Username string
-	Password string
-	client   *http.Client
+func (o OrdTransfer) Offset() uint64 {
+	offset, _ := strconv.ParseInt(strings.Split(o.InscriptionID, "i")[1], 10, 32)
+	return uint64(offset)
 }
 
-type HttpError struct {
-	Code    int
-	Message string
-}
-
-func NewHttpGetter(host, username, password string) *HttpGetter {
-	return &HttpGetter{
-		URL:      host,
-		Username: username,
-		Password: password,
-		client:   &http.Client{Timeout: 3 * time.Second},
+func Verify(transfers TransferByInscription, blockHeight uint) (bool, error) {
+	if len(transfers) == 0 {
+		return false, errors.New("enpty tranfer data")
 	}
-}
 
-func (r *HttpGetter) post(data interface{}, headers map[string]string) ([]byte, error) {
-	param, err := json.Marshal(data)
+	sort.Sort(transfers)
+
+	batch := make(map[string]TransferByInscription)
+	// find a batch of inscriptions in same txid
+	f, n := 0, 1
+	for n < len(transfers) {
+		first := strings.Split(transfers[f].NewSatpoint, ":")[0]
+		cur := strings.Split(transfers[n].NewSatpoint, ":")[0]
+		if first == cur {
+			n++
+			continue
+		}
+		batch[first] = transfers[f:n]
+		f = n
+		n++
+	}
+	batch[strings.Split(transfers[f].NewSatpoint, ":")[0]] = transfers[f:n]
+
+	hash, err := DefaultBitcoinClient.GetBlockHash(blockHeight)
 	if nil != err {
-		return nil, err
+		return false, err
 	}
-	req, err := http.NewRequest("POST", r.URL, bytes.NewBuffer(param))
+	blockBody, err := DefaultBitcoinClient.GetBlock2(hash)
 	if nil != err {
-		return nil, err
+		return false, err
 	}
-	req.Header.Add("Content-Type", "application/json")
-	if len(headers) > 0 {
-		for k, v := range headers {
-			req.Header.Set(k, v)
+
+	for _, tx := range blockBody.Tx {
+		if trans, exist := batch[tx.Txid]; exist {
+			is, err := envelopVerify(trans, tx)
+			if nil != err {
+				logrus.Warnf("envelopVerify failed txid: %s, err %v", tx.Txid, err)
+			}
+			if !is {
+				return is, err
+			}
+		}
+
+	}
+	return true, nil
+}
+
+func envelopVerify(transfers []OrdTransfer, tx btcjson.TxRawResult) (bool, error) {
+	sort.Sort(TransferByInscription(transfers))
+
+	buf, err := hex.DecodeString(tx.Hex)
+	if nil != err {
+		return false, err
+	}
+	msgTx := new(wire.MsgTx)
+	if err := msgTx.Deserialize(bytes.NewReader(buf)); nil != err {
+		return false, err
+	}
+
+	inscriptions := parser.ParseInscriptionsFromTransaction(msgTx)
+	if len(transfers) > len(inscriptions) {
+		return false, nil
+	}
+	id_counter := 0
+	allIns := make([]Flotsam, 0, len(inscriptions))
+	total_input_value := uint64(0)
+	for index, tx_in := range msgTx.TxIn {
+		// find oldSatpoin for privious output
+		for _, obj := range transfers {
+			if obj.OldSatpoint != "" && strings.Join(strings.Split(obj.OldSatpoint, ":")[:2], ":") == tx_in.PreviousOutPoint.String() {
+				arr := strings.Split(obj.OldSatpoint, ":")
+				satOff, _ := strconv.ParseInt(arr[2], 10, 64)
+				offset := total_input_value + uint64(satOff)
+				// find old inscription content && content type
+				beforeIns, err := DefaultBitcoinClient.GetAllInscriptions(arr[0])
+				if nil != err {
+					return false, err
+				}
+				body, exist := beforeIns[obj.InscriptionID]
+				if !exist {
+					return false, fmt.Errorf("old inscription not found: %s", obj.InscriptionID)
+				}
+				allIns = append(allIns, Flotsam{
+					InsID:  InsFromStr(obj.InscriptionID),
+					Offset: offset,
+					Body:   body,
+				})
+			}
+		}
+
+		// parse new Inscripitons
+		offset := total_input_value
+		pOut, err := DefaultBitcoinClient.GetOutput(tx_in.PreviousOutPoint.Hash.String(), int(tx_in.PreviousOutPoint.Index))
+		if nil != err {
+			return false, err
+		}
+		total_input_value += uint64(pOut.Value * math.Pow10(8))
+		for _, ii := range inscriptions {
+			if index == int(ii.TxInIndex) {
+				allIns = append(allIns, Flotsam{
+					InsID: InscriptionID{
+						tx.Txid,
+						id_counter,
+					},
+					Offset: offset, // TODO parser lib missing pointer, So we default inscription first sat at outpoint
+					Body:   ii,
+				})
+				id_counter++
+			}
 		}
 	}
-	resp, err := r.client.Do(req)
-	if nil != err {
-		return nil, err
-	}
-	defer resp.Body.Close()
+	sort.Sort(ArrayFloatsam(allIns))
 
-	return io.ReadAll(resp.Body)
-}
-
-func (r *HttpGetter) GetRawTransaction(txID string) (*btcjson.TxRawResult, error) {
-
-	type txReq struct {
-		Method string        `json:"method"`
-		Params []interface{} `json:"params"`
-	}
-
-	body, err := r.post(txReq{
-		Method: "getrawtransaction",
-		Params: []interface{}{txID, true},
-	}, nil)
-	if nil != err {
-		return nil, err
+	new_location := make([]NewLocation, 0)
+	output_value := uint64(0)
+	for vout, out := range msgTx.TxOut {
+		end := output_value + uint64(out.Value)
+		for i, flot := range allIns {
+			if flot.Offset >= uint64(end) {
+				allIns = allIns[i:]
+				break
+			}
+			new_location = append(new_location, NewLocation{
+				SentToCoinbasse: false,
+				TxOut:           *out,
+				Flotsam:         flot,
+				NewSatpoint:     fmt.Sprintf("%s:%d:%d", flot.InsID.TxID, vout, flot.Offset),
+			})
+		}
+		output_value = end
 	}
 
-	type Result struct {
-		Result *btcjson.TxRawResult
-		Error  HttpError
-	}
-	var ret Result
-	if err := json.Unmarshal(body, &ret); nil != err {
-		return nil, err
-	}
-	if ret.Error.Code != 0 {
-		return nil, errors.New(ret.Error.Message)
-	}
-	return ret.Result, nil
-}
+	p1, p2 := 0, 0
+	for p1 < len(transfers) && p2 < len(new_location) {
+		offset := transfers[p1].Offset()
 
-func (r *HttpGetter) GetBlock(hash string, verbose int) (*btcjson.GetBlockVerboseResult, error) {
-	type param struct {
-		Method string        `json:"method"`
-		Params []interface{} `json:"params"`
-	}
+		tmpTr := transfers[p1]
+		tmpNewl := new_location[p2]
 
-	body, err := r.post(param{
-		Method: "getblock",
-		Params: []interface{}{hash, verbose},
-	}, nil)
-	if nil != err {
-		return nil, err
+		if tmpTr.Offset() == new_location[p2].Flotsam.Offset {
+			// pkscript verify ||  wallet  verify
+			pkOBj, err := txscript.ParsePkScript(tmpNewl.TxOut.PkScript)
+			if nil != err {
+				return false, err
+			}
+			addr, _ := pkOBj.Address(&chaincfg.MainNetParams)
+			if tmpTr.NewPkscript != string(tmpNewl.TxOut.PkScript) || tmpTr.NewWallet != addr.String() ||
+				!bytes.Equal(tmpTr.Content, tmpNewl.Flotsam.Body.Inscription.ContentBody) ||
+				!bytes.Equal([]byte(tmpTr.ContentType), tmpNewl.Body.Inscription.ContentType) {
+				return false, nil
+			}
+			// TODO verify newSatPoint
+			p1++
+			p2++
+		} else if offset > inscriptions[p2].TxInOffset {
+			p2++
+		} else {
+			p1++
+		}
 	}
-
-	type result struct {
-		Result *btcjson.GetBlockVerboseResult
-		Error  HttpError
-	}
-
-	var ret result
-	if err := json.Unmarshal(body, &ret); nil != err {
-		return nil, err
+	if p1 < len(transfers) {
+		return false, nil
 	}
 
-	return ret.Result, nil
-}
-
-func Verify(data []OrdTransfer, blockHeight int) bool {
-	return true
+	return true, nil
 }
