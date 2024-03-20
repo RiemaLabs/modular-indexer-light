@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/balletcrypto/bitcoin-inscription-parser/parser"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 )
@@ -159,6 +160,54 @@ func TestHttpGetter_GetBlockHash(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("HttpGetter.GetBlockHash() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHttpGetter_GetAllInscriptions(t *testing.T) {
+	type fields struct {
+		URL      string
+		Username string
+		Password string
+		client   *http.Client
+	}
+	type args struct {
+		txID string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    map[string]*parser.TransactionInscription
+		wantErr bool
+	}{
+		{
+			name: "common test",
+			fields: fields{
+				URL:    defaultURL,
+				client: &http.Client{},
+			},
+			args: args{
+				txID: "9db3938b6ae166668e35e6f219a5c3a6146b613eed2f088644ce1fe829309b55",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &HttpGetter{
+				URL:      tt.fields.URL,
+				Username: tt.fields.Username,
+				Password: tt.fields.Password,
+				client:   tt.fields.client,
+			}
+			got, err := r.GetAllInscriptions(tt.args.txID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("HttpGetter.GetAllInscriptions() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if len(got) == 0 {
+				t.Errorf("HttpGetter.GetAllInscriptions() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -27,7 +27,7 @@ type InscriptionID struct {
 }
 
 func InsFromStr(in string) InscriptionID {
-	arr := strings.Split(in, ":")
+	arr := strings.Split(in, "i")
 	index, _ := strconv.ParseInt(arr[1], 10, 32)
 	return InscriptionID{
 		TxID:  arr[0],

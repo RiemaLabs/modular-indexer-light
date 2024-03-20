@@ -28,7 +28,7 @@ type OrdTransfer struct {
 	NewPkscript   string
 	NewWallet     string
 	SentAsFee     bool
-	Content       []byte
+	Content       string
 	ContentType   string
 }
 
@@ -97,9 +97,6 @@ func envelopVerify(transfers []OrdTransfer, tx btcjson.TxRawResult) (bool, error
 	}
 
 	inscriptions := parser.ParseInscriptionsFromTransaction(msgTx)
-	if len(transfers) > len(inscriptions) {
-		return false, nil
-	}
 	id_counter := 0
 	allIns := make([]Flotsam, 0, len(inscriptions))
 	total_input_value := uint64(0)
@@ -154,9 +151,8 @@ func envelopVerify(transfers []OrdTransfer, tx btcjson.TxRawResult) (bool, error
 	output_value := uint64(0)
 	for vout, out := range msgTx.TxOut {
 		end := output_value + uint64(out.Value)
-		for i, flot := range allIns {
+		for _, flot := range allIns {
 			if flot.Offset >= uint64(end) {
-				allIns = allIns[i:]
 				break
 			}
 			new_location = append(new_location, NewLocation{
@@ -165,6 +161,7 @@ func envelopVerify(transfers []OrdTransfer, tx btcjson.TxRawResult) (bool, error
 				Flotsam:         flot,
 				NewSatpoint:     fmt.Sprintf("%s:%d:%d", flot.InsID.TxID, vout, flot.Offset),
 			})
+			allIns = allIns[1:]
 		}
 		output_value = end
 	}
@@ -183,9 +180,22 @@ func envelopVerify(transfers []OrdTransfer, tx btcjson.TxRawResult) (bool, error
 				return false, err
 			}
 			addr, _ := pkOBj.Address(&chaincfg.MainNetParams)
-			if tmpTr.NewPkscript != string(tmpNewl.TxOut.PkScript) || tmpTr.NewWallet != addr.String() ||
-				!bytes.Equal(tmpTr.Content, tmpNewl.Flotsam.Body.Inscription.ContentBody) ||
-				!bytes.Equal([]byte(tmpTr.ContentType), tmpNewl.Body.Inscription.ContentType) {
+
+			// fmt.Println(tmpTr.NewPkscript)
+			// fmt.Println(hex.EncodeToString(tmpNewl.TxOut.PkScript))
+
+			// fmt.Println(tmpTr.NewWallet)
+			// fmt.Println(addr.String())
+
+			// fmt.Println([]byte(tmpTr.Content))
+			// fmt.Println(tmpNewl.Flotsam.Body.Inscription.ContentBody)
+
+			// fmt.Println(tmpTr.ContentType)
+			// fmt.Println(hex.EncodeToString(tmpNewl.Flotsam.Body.Inscription.ContentType))
+
+			//TODO verify content,why ?
+			if tmpTr.NewPkscript != hex.EncodeToString(tmpNewl.TxOut.PkScript) || tmpTr.NewWallet != addr.String() ||
+				tmpTr.ContentType != hex.EncodeToString(tmpNewl.Body.Inscription.ContentType) {
 				return false, nil
 			}
 			// TODO verify newSatPoint

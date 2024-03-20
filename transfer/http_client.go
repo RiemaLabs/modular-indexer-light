@@ -38,7 +38,7 @@ func NewHttpGetter(host, username, password string) *HttpGetter {
 		URL:      host,
 		Username: username,
 		Password: password,
-		client:   &http.Client{Timeout: 3 * time.Second},
+		client:   &http.Client{Timeout: 10 * time.Second},
 	}
 }
 
@@ -224,13 +224,14 @@ func (r *HttpGetter) GetAllInscriptions(txID string) (map[string]*parser.Transac
 		return nil, err
 	}
 
+	// inscription -> content
 	res := make(map[string]*parser.TransactionInscription)
 	inscriptions := parser.ParseInscriptionsFromTransaction(msgTx)
 	id_counter := 0
 	for index, _ := range msgTx.TxIn {
 		for _, ii := range inscriptions {
 			if int(ii.TxInIndex) == index {
-				res[fmt.Sprintf("%s:%d", txID, id_counter)] = ii
+				res[fmt.Sprintf("%si%d", txID, id_counter)] = ii
 				id_counter++
 			}
 
