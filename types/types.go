@@ -1,6 +1,10 @@
 package types
 
-import "github.com/RiemaLabs/indexer-committee/checkpoint"
+import (
+	"context"
+
+	"github.com/RiemaLabs/indexer-committee/checkpoint"
+)
 
 type (
 	Config struct {
@@ -48,6 +52,7 @@ type (
 		IndexerName   string `json:"indexerName"`
 		MetaProtocol  string `json:"metaProtocol"`
 		ApiUrl        string `json:"apiUrl"`
+		Rpc           string `json:"rpc"`
 	}
 
 	Source struct {
@@ -64,5 +69,5 @@ type (
 )
 
 type CheckPointProvider interface {
-	GetCheckpoint(height uint, hash string) *CheckPointObject
+	GetCheckpoint(ctx context.Context, height uint, hash string) *CheckPointObject
 }

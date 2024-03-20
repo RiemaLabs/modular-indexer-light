@@ -1,47 +1,60 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
+	"time"
 
-	"github.com/RiemaLabs/indexer-committee/ord"
 	"github.com/RiemaLabs/indexer-committee/ord/getter"
 	"github.com/RiemaLabs/indexer-light/apis"
 	"github.com/RiemaLabs/indexer-light/config"
 	"github.com/RiemaLabs/indexer-light/constant"
+	"github.com/RiemaLabs/indexer-light/log"
 	"github.com/RiemaLabs/indexer-light/verify"
 
 	getter2 "github.com/RiemaLabs/indexer-light/getter"
 )
 
 func main() {
-	go apis.Start()
-	rpcGetter, err2 := getter2.NewGetter(config.Config)
-	if err2 != nil {
-		return
-	}
-	queue, err := fetchHeight(rpcGetter)
+	log.SetLevel(log.LevelVerbose)
+	log.SetVerion("v0.0.1", time.Now().Format("20060102"))
+	marshal, err := json.Marshal(config.Config)
 	if err != nil {
 		return
 	}
-	queue.Println()
+	fmt.Println("config:", string(marshal))
+	go apis.Start()
+	rpcGetter, err := getter2.NewGetter(config.Config)
+	if err != nil {
+		return
+	}
+	fetchHeight(rpcGetter)
+
 }
 
 // TODO:: Not completed
-func fetchHeight(getter getter.OrdGetter) (*ord.StateQueue, error) {
+func fetchHeight(getter getter.OrdGetter) {
 	for {
 		latestHeight, err := getter.GetLatestBlockHeight()
 		if err != nil {
-			return nil, err
+			log.Error("fetchHeight", "GetLatestBlockHeight", err)
+			return
 		}
+		log.Debug("fetchHeight", "latestHeight", latestHeight)
 		hash, err := getter.GetBlockHash(latestHeight)
 		if err != nil {
-			return nil, err
+			log.Error("fetchHeight", "GetBlockHash", err)
+			return
 		}
+		log.Debug("fetchHeight", "latestHash", hash)
 		if latestHeight > uint(config.Config.StartHeight) && !strings.EqualFold(hash, config.Config.StartBlockHash) {
+			log.Debug("fetchHeight", "msg", "sync...")
 			constant.ApiState = constant.ApiStateInit
 			err := verify.VerifyCheckpoint(getter, config.Config)
 			if err != nil {
-				return nil, err
+				log.Error("fetchHeight", "VerifyCheckpoint", err)
+				return
 			}
 			constant.ApiState = constant.ApiStateActive
 		}

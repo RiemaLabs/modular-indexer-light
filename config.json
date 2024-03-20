@@ -1,0 +1,33 @@
+{
+  "minimalCheckPoint": 3,
+  "startHeight": 100,
+  "startBlockHash": "",
+  "bitCoinRpc": {
+    "host": "https://hardworking-light-meme.btc.quiknode.pro/12fbc8204dea881e41de39337dc91fd580642dce",
+    "port": 0,
+    "user": "",
+    "password": ""
+  },
+  "committeeIndexerApi": {
+    "name": "",
+    "url": ""
+  },
+  "committeeIndexer": {
+    "s3": [{
+      "accessKey": "s3",
+      "url": "https://s3.amazonaws.com/committee-indexer/",
+      "bucket": "nubit-modular-indexer",
+      "region": "us-west-2",
+      "indexerName": "nubit-modular-indexer",
+      "metaProtocol": "brc-20",
+      "apiUrl": ""
+    }],
+    "da": [{
+      "namespaceID": "",
+      "indexerName": "",
+      "metaProtocol": "",
+      "rpc": "",
+      "apiUrl": ""
+    }]
+  }
+}
