@@ -7,7 +7,7 @@ func (a TransferByInscription) Len() int {
 }
 
 func (a TransferByInscription) Less(i, j int) bool {
-	return a[i].InscriptionID < a[j].InscriptionID
+	return a[i].NewSatpoint < a[j].NewSatpoint
 }
 
 func (a TransferByInscription) Swap(i, j int) {
