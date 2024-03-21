@@ -121,7 +121,7 @@ func Start() {
 			}
 			h, _ := strconv.Atoi(verify.DefiniteState.PostCheckpoint.Height)
 			c.JSON(http.StatusOK, Brc20VerifiableLightGetCurrentBalanceOfWalletResponse{
-				Result:      balance.Result,
+				Result:      balance.Result.AvailableBalance,
 				BlockHeight: h,
 			})
 		}

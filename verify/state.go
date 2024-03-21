@@ -60,7 +60,7 @@ func (d *DefiniteCheckpoint) Update(getter getter.OrdGetter, post *checkpoint.Ch
 		if err != nil {
 			return err
 		}
-		ckObj := committee.GetCheckpoint(preH, hash)
+		ckObj := committee.GetCheckpoint(nil, preH, hash)
 		d.SetPre(ckObj.CheckPoint)
 	}
 

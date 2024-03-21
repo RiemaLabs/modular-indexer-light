@@ -58,15 +58,31 @@ func (c *CommitteeIndexer) BlockHigh() (uint, error) {
 	return data, err
 }
 
-func (c *CommitteeIndexer) GetBalance(tick, pkscript string) (*apis.Brc20VerifiableGetCurrentBalanceOfWalletResponse, error) {
+func (c *CommitteeIndexer) GetBalance(tick, wallet string) (*apis.Brc20VerifiableGetCurrentBalanceOfWalletResponse, error) {
 	var data *apis.Brc20VerifiableGetCurrentBalanceOfWalletResponse
-	post, err := c.Post(c.ctx, c.path(constant.Balance), apis.Brc20VerifiableGetCurrentBalanceOfWalletRequest{Tick: tick, Pkscript: pkscript}, nil)
+	post, err := c.Post(c.ctx, c.path(constant.Balance), apis.Brc20VerifiableGetCurrentBalanceOfWalletRequest{
+		Tick:   tick,
+		Wallet: wallet,
+	}, nil)
 	if err != nil {
 		return nil, err
 	}
 	err = json.Unmarshal(post, &data)
 	if err != nil {
 		log.Error("CommitteeIndexer", "method", "GetBalance", "Unmarshal", err)
+	}
+	return data, err
+}
+
+func (c *CommitteeIndexer) GeBalanceOfPkscript(tick, pkscript string) (*apis.Brc20VerifiableCurrentBalanceOfPkscriptRsponse, error) {
+	var data *apis.Brc20VerifiableCurrentBalanceOfPkscriptRsponse
+	post, err := c.Post(c.ctx, c.path(constant.BalanceOfPkscrip), apis.Brc20VerifiableCurrentBalanceOfPkscriptRequest{Tick: tick, Pkscript: pkscript}, nil)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(post, &data)
+	if err != nil {
+		log.Error("CommitteeIndexer", "method", "GeBalanceOfPkscript", "Unmarshal", err)
 	}
 	return data, err
 }

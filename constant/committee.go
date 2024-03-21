@@ -3,9 +3,10 @@ package constant
 const (
 	// committee api
 
-	StateDiff = "/v1/brc20_verifiable/latest_state_proof"
-	BlockHigh = "/v1/brc20_verifiable/block_height"
-	Balance   = "/v1/brc20_verifiable/get_current_balance_of_wallet"
+	StateDiff        = "/v1/brc20_verifiable/latest_state_proof"
+	BlockHigh        = "/v1/brc20_verifiable/block_height"
+	Balance          = "/v1/brc20_verifiable/get_current_balance_of_wallet"
+	BalanceOfPkscrip = "/v1/brc20_verifiable/current_balance_of_pkscript"
 )
 
 const (

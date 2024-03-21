@@ -8,8 +8,8 @@ import (
 
 	"github.com/RiemaLabs/indexer-committee/apis"
 	"github.com/RiemaLabs/indexer-committee/checkpoint"
-	"github.com/RiemaLabs/indexer-committee/ord"
-	"github.com/RiemaLabs/indexer-committee/ord/getter"
+	ordgetter "github.com/RiemaLabs/indexer-committee/ord/getter"
+	"github.com/RiemaLabs/indexer-committee/ord/stateless"
 	"github.com/RiemaLabs/indexer-light/config"
 	"github.com/RiemaLabs/indexer-light/constant"
 	"github.com/RiemaLabs/indexer-light/indexer"
@@ -20,8 +20,9 @@ import (
 )
 
 // VerifyCheckpoint Obtain and verify whether the checkpoints of m committee members are consistent.
-func VerifyCheckpoint(getter getter.OrdGetter, config *types.Config) error {
+func VerifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config) error {
 	constant.ApiState = constant.ApiStateLoading
+	ctx := context.Background()
 	height, err := getter.GetLatestBlockHeight()
 	if err != nil {
 		return err
@@ -39,7 +40,7 @@ func VerifyCheckpoint(getter getter.OrdGetter, config *types.Config) error {
 	}
 	for i, _ := range committeeIndexer {
 		go func(p types.CheckPointProvider, height uint) {
-			Checkpoints = append(Checkpoints, p.GetCheckpoint(height, hash))
+			Checkpoints = append(Checkpoints, p.GetCheckpoint(ctx, height, hash))
 		}(committeeIndexer[i], height)
 	}
 	for len(Checkpoints) < config.MinimalCheckPoint {
@@ -68,8 +69,9 @@ func VerifyCheckpoint(getter getter.OrdGetter, config *types.Config) error {
 	return nil
 }
 
-func verifyCheckpoint(getter getter.OrdGetter, config *types.Config, diffCheckpoint map[string]*types.CheckPointObject) error {
+func verifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config, diffCheckpoint map[string]*types.CheckPointObject) error {
 	constant.ApiState = constant.ApiStateSync
+	ctx := context.Background()
 	if len(diffCheckpoint) == 0 {
 		return nil
 	}
@@ -99,18 +101,18 @@ func verifyCheckpoint(getter getter.OrdGetter, config *types.Config, diffCheckpo
 		diffState[key] = state
 		switch true {
 		case cpo.Source.SourceS3 != nil:
-			preCp := provide.NewS3(cpo.Source.SourceS3).GetCheckpoint(preHeight, preHash)
+			preCp := provide.NewS3(cpo.Source.SourceS3).GetCheckpoint(ctx, preHeight, preHash)
 			diffPreCheckpoint[key] = preCp
 		case cpo.Source.SourceDa != nil:
-			preCp := provide.NewDA(cpo.Source.SourceDa).GetCheckpoint(preHeight, preHash)
+			preCp := provide.NewDA(cpo.Source.SourceDa).GetCheckpoint(ctx, preHeight, preHash)
 			diffPreCheckpoint[key] = preCp
 		}
 	}
 
-	transfers, err := getter.GetOrdTransfers(height)
-	if err != nil {
-		return nil
-	}
+	//transfers, err := getter.GetOrdTransfers(height)
+	//if err != nil {
+	//	return nil
+	//}
 
 	// Definitely something wrong checkpoint
 	var wrongCheckpoint []*types.CheckPointObject
@@ -128,8 +130,20 @@ func verifyCheckpoint(getter getter.OrdGetter, config *types.Config, diffCheckpo
 			return nil
 		}
 
-		//TODO:: state.Proof to verkle.Proof
-		preProof := &verkle.Proof{}
+		preProofByte, err := base64.StdEncoding.DecodeString(state.Proof)
+		if err != nil {
+			return nil
+		}
+		preVProof := &verkle.VerkleProof{}
+		err = preVProof.UnmarshalJSON(preProofByte)
+		if err != nil {
+			return err
+		}
+
+		preProof, err := verkle.DeserializeProof(preVProof, nil)
+		if err != nil {
+			return err
+		}
 
 		//preStatePartial  == preCheckpoint
 		preStatePartial, err := verkle.PreStateTreeFromProof(preProof, prePoint) // preStatePartial===VerkleNode
@@ -143,18 +157,39 @@ func verifyCheckpoint(getter getter.OrdGetter, config *types.Config, diffCheckpo
 			return nil
 		}
 
-		preState := ord.State{
+		preState := &stateless.Header{
 			Root:   preStatePartial,
 			Height: height,
 			Hash:   "",
-			KV:     make(ord.KeyValueMap),
+			KV:     make(stateless.KeyValueMap),
 		}
 
 		// Light clients computes the partial postState from the partial preState.
 		// Then verifies: partial postState->partial preState is consistent with the stateDiff in the proofOfStateTrans.
 		// calculate State
-		calculateState := ord.Exec(preState, transfers)
-		calculatebytes := calculateState.Root.Commit().Bytes()
+		//stateless.Exec(preState, transfers)
+		var ordTransfers []ordgetter.OrdTransfer
+		if len(state.OrdTrans) > 0 {
+			for _, tran := range state.OrdTrans {
+				decodeString, err := base64.StdEncoding.DecodeString(tran.Content)
+				if err != nil {
+					return err
+				}
+				ordTransfers = append(ordTransfers, ordgetter.OrdTransfer{
+					ID:            tran.ID,
+					InscriptionID: tran.InscriptionID,
+					OldSatpoint:   tran.NewSatpoint,
+					NewSatpoint:   tran.NewSatpoint,
+					//NewPkScript:   tran.NewPkScript,
+					NewWallet:   tran.NewWallet,
+					SentAsFee:   tran.SentAsFee,
+					Content:     decodeString,
+					ContentType: tran.ContentType,
+				})
+			}
+		}
+		stateless.Exec(preState, ordTransfers)
+		calculatebytes := preState.Root.Commit().Bytes()
 		decodeString, err := base64.StdEncoding.DecodeString(diffCheckpoint[key].CheckPoint.Commitment)
 		if err != nil {
 			return nil

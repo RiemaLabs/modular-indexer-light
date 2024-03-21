@@ -1,62 +1,90 @@
 package getter
 
 import (
+	"context"
+	"encoding/json"
+
 	"github.com/RiemaLabs/indexer-committee/ord/getter"
+	"github.com/RiemaLabs/indexer-light/clients/http"
 	"github.com/RiemaLabs/indexer-light/types"
-	"github.com/btcsuite/btcd/rpcclient"
 )
 
+type GetBlockCountResponse struct {
+	Result int         `json:"result"`
+	Error  interface{} `json:"error"`
+	Id     interface{} `json:"id"`
+}
+
+type GetBlockHashResponse struct {
+	Result string      `json:"result"`
+	Error  interface{} `json:"error"`
+	Id     interface{} `json:"id"`
+}
+
 type BitcoinOrdGetter struct {
-	client *rpcclient.Client
+	client   *http.Client
+	Endpoint string
 }
 
 func NewGetter(config *types.Config) (*BitcoinOrdGetter, error) {
-	connCfg := &rpcclient.ConnConfig{
-		Host:         config.Host,
-		User:         config.User,
-		Pass:         config.Password,
-		HTTPPostMode: true, // Bitcoin core only supports HTTP POST mode
-		DisableTLS:   true, // Bitcoin core does not provide TLS by default
-	}
-	// Notice the notification parameter is nil since notifications are
-	// not supported in HTTP POST mode.
-	client, err := rpcclient.New(connCfg, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	return &BitcoinOrdGetter{
-		client: client,
+		client:   http.NewClient(),
+		Endpoint: config.BitCoinRpc.Host,
 	}, nil
 }
 
 func (r *BitcoinOrdGetter) GetLatestBlockHeight() (uint, error) {
-	count, err := r.client.GetBlockCount()
+	header := make(map[string]string)
+	header["Content-Type"] = "application/json"
+
+	param := make(map[string]string)
+	param["method"] = "getblockcount"
+	post, err := r.client.Post(context.Background(), r.Endpoint, param, header)
 	if err != nil {
 		return 0, err
 	}
-	return uint(count), err
+	var count GetBlockCountResponse
+	err = json.Unmarshal(post, &count)
+	if err != nil {
+		return 0, err
+	}
+
+	return uint(count.Result), err
 }
 
 func (r *BitcoinOrdGetter) GetBlockHash(blockHeight uint) (string, error) {
-	hash, err := r.client.GetBlockHash(int64(blockHeight))
-	if nil != err {
+	header := make(map[string]string)
+	header["Content-Type"] = "application/json"
+	param := make(map[string]any)
+	param["method"] = "getblockhash"
+	if blockHeight != 0 {
+		param["params"] = []int{int(blockHeight)}
+	}
+	// {"method": "getblockhash", "params": [835525]}
+
+	post, err := r.client.Post(context.Background(), r.Endpoint, param, header)
+	if err != nil {
 		return "", err
 	}
-	return hash.String(), err
+	var resp GetBlockHashResponse
+	err = json.Unmarshal(post, &resp)
+	if err != nil {
+		return "", err
+	}
+	return resp.Result, err
 }
 
 func (r *BitcoinOrdGetter) GetOrdTransfers(blockHeight uint) ([]getter.OrdTransfer, error) {
-	hash, err := r.client.GetBlockHash(int64(blockHeight))
-	if nil != err || hash == nil {
-		return []getter.OrdTransfer{}, err
-	}
-
-	block, err := r.client.GetBlock(hash)
-	if nil != err {
-		return []getter.OrdTransfer{}, err
-	}
-	block = block
+	//hash, err := r.client.GetBlockHash(int64(blockHeight))
+	//if nil != err || hash == nil {
+	//	return []getter.OrdTransfer{}, err
+	//}
+	//
+	//block, err := r.client.GetBlock(hash)
+	//if nil != err {
+	//	return []getter.OrdTransfer{}, err
+	//}
+	//block = block
 
 	// TODO fetch tx from  block.txdata
 	return []getter.OrdTransfer{}, nil
