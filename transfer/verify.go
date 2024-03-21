@@ -19,8 +19,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var defaultURL = "https://frosty-serene-emerald.btc.quiknode.pro/402f5ac57de95e38c0a33d1a5e6f6c2f66709262/"
-
 type OrdTransfer struct {
 	ID            uint
 	InscriptionID string
