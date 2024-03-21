@@ -15,9 +15,11 @@ import (
 	"github.com/RiemaLabs/indexer-committee/ord/stateless"
 	"github.com/RiemaLabs/indexer-light/config"
 	"github.com/RiemaLabs/indexer-light/constant"
+	getter2 "github.com/RiemaLabs/indexer-light/getter"
 	"github.com/RiemaLabs/indexer-light/indexer"
 	"github.com/RiemaLabs/indexer-light/log"
 	"github.com/RiemaLabs/indexer-light/provide"
+	"github.com/RiemaLabs/indexer-light/transfer"
 	"github.com/RiemaLabs/indexer-light/types"
 	"github.com/ethereum/go-verkle"
 )
@@ -198,12 +200,23 @@ func verifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config, diffChec
 		// calculate State
 		//stateless.Exec(preState, transfers)
 		var ordTransfers []ordgetter.OrdTransfer
+		var ordTrans []transfer.OrdTransfer
 		if len(state.OrdTrans) > 0 {
 			for _, tran := range state.OrdTrans {
 				decodeString, err := base64.StdEncoding.DecodeString(tran.Content)
 				if err != nil {
 					return err
 				}
+				ordTrans = append(ordTrans, transfer.OrdTransfer{
+					ID:            tran.ID,
+					InscriptionID: tran.InscriptionID,
+					OldSatpoint:   tran.NewSatpoint,
+					NewSatpoint:   tran.NewSatpoint,
+					NewWallet:     string(tran.NewWallet),
+					SentAsFee:     tran.SentAsFee,
+					Content:       tran.Content,
+					ContentType:   tran.ContentType,
+				})
 				ordTransfers = append(ordTransfers, ordgetter.OrdTransfer{
 					ID:            tran.ID,
 					InscriptionID: tran.InscriptionID,
@@ -217,6 +230,14 @@ func verifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config, diffChec
 				})
 			}
 		}
+		verify, err := transfer.Verify(getter.(*getter2.BitcoinOrdGetter), ordTrans, height)
+		if err != nil {
+			return err
+		}
+		if !verify {
+			return err
+		}
+
 		stateless.Exec(preState, ordTransfers)
 		calculatebytes := preState.Root.Commit().Bytes()
 		decodeString, err := base64.StdEncoding.DecodeString(diffCheckpoint[key].CheckPoint.Commitment)
