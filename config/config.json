@@ -1,1 +1,80 @@
-{"committeeIndexer":{"s3":null,"da":[{"namespaceID":"0x00000001","address":"","transactionID":"","indexerName":"world","metaProtocol":"brc-20","apiUrl":"","rpc":"http://middleware.nubit.xyz"},{"namespaceID":"0x00000002","address":"","transactionID":"","indexerName":"world","metaProtocol":"brc-20","apiUrl":"","rpc":"http://middleware.nubit.xyz"},{"namespaceID":"0x00000003","address":"","transactionID":"","indexerName":"world","metaProtocol":"brc-20","apiUrl":"","rpc":"http://middleware.nubit.xyz"},{"namespaceID":"0x00000004","address":"","transactionID":"","indexerName":"world","metaProtocol":"brc-20","apiUrl":"","rpc":"http://middleware.nubit.xyz"},{"namespaceID":"0x00000005","address":"","transactionID":"","indexerName":"world","metaProtocol":"brc-20","apiUrl":"","rpc":"http://middleware.nubit.xyz"},{"namespaceID":"0x00000006","address":"","transactionID":"","indexerName":"world","metaProtocol":"brc-20","apiUrl":"","rpc":"http://middleware.nubit.xyz"}],"timeOut":50},"bitCoinRpc":{"host":"https://hardworking-light-meme.btc.quiknode.pro/12fbc8204dea881e41de39337dc91fd580642dce","user":"","password":""},"minimalCheckPoint":3,"startHeight":835645,"startBlockHash":"0000000000000000000031694795481c362c3d8c8200ba71c9f18a08c3249e9f"}
+{
+  "committeeIndexer": {
+    "s3": [
+      {
+        "bucket": "",
+        "accessKey": "s3",
+        "url": "https://nubit-modular-indexer.s3.us-west-2.amazonaws.com",
+        "indexerName": "world",
+        "metaProtocol": "brc-20",
+        "apiUrl": "",
+        "region": "us-west-2"
+      }
+    ],
+    "da": [
+      {
+        "namespaceID": "0x00000001",
+        "address": "",
+        "transactionID": "",
+        "indexerName": "world",
+        "metaProtocol": "brc-20",
+        "apiUrl": "",
+        "rpc": "http://middleware.nubit.xyz"
+      },
+      {
+        "namespaceID": "0x00000002",
+        "address": "",
+        "transactionID": "",
+        "indexerName": "world",
+        "metaProtocol": "brc-20",
+        "apiUrl": "",
+        "rpc": "http://middleware.nubit.xyz"
+      },
+      {
+        "namespaceID": "0x00000003",
+        "address": "",
+        "transactionID": "",
+        "indexerName": "world",
+        "metaProtocol": "brc-20",
+        "apiUrl": "",
+        "rpc": "http://middleware.nubit.xyz"
+      },
+      {
+        "namespaceID": "0x00000004",
+        "address": "",
+        "transactionID": "",
+        "indexerName": "world",
+        "metaProtocol": "brc-20",
+        "apiUrl": "",
+        "rpc": "http://middleware.nubit.xyz"
+      },
+      {
+        "namespaceID": "0x00000005",
+        "address": "",
+        "transactionID": "",
+        "indexerName": "world",
+        "metaProtocol": "brc-20",
+        "apiUrl": "",
+        "rpc": "http://middleware.nubit.xyz"
+      },
+      {
+        "namespaceID": "0x00000006",
+        "address": "",
+        "transactionID": "",
+        "indexerName": "world",
+        "metaProtocol": "brc-20",
+        "apiUrl": "",
+        "rpc": "http://middleware.nubit.xyz"
+      }
+    ],
+    "timeOut": 50
+  },
+  "bitCoinRpc": {
+    "host": "https://hardworking-light-meme.btc.quiknode.pro/12fbc8204dea881e41de39337dc91fd580642dce",
+    "user": "",
+    "password": ""
+  },
+  "minimalCheckPoint": 3,
+  "startHeight": 0,
+  "startBlockHash": ""
+}
