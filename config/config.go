@@ -1,6 +1,7 @@
 package config
 
 import (
+	_ "embed"
 	"encoding/json"
 	"os"
 
@@ -8,15 +9,14 @@ import (
 	"github.com/RiemaLabs/indexer-light/types"
 )
 
+//go:embed config.json
+var configBody []byte
+
 var Config *types.Config
 
 func init() {
 	Config = &types.Config{}
-	file, err := os.ReadFile(constant.ConfigFileName)
-	if err != nil {
-		return
-	}
-	err = json.Unmarshal(file, &Config)
+	err := json.Unmarshal(configBody, &Config)
 	if err != nil {
 		return
 	}

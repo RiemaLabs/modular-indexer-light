@@ -3,7 +3,11 @@ module github.com/RiemaLabs/indexer-light
 go 1.22.1
 
 require (
+<<<<<<< HEAD
 	github.com/btcsuite/btcd v0.24.0 // indirect
+=======
+	github.com/btcsuite/btcd v0.24.0
+>>>>>>> verify
 	github.com/btcsuite/btcd/btcutil v1.1.5 // indirect
 )
 
