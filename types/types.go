@@ -8,9 +8,9 @@ import (
 
 type (
 	Config struct {
-		*CommitteeIndexer    `json:"committeeIndexer"`
-		*CommitteeIndexerApi `json:"committeeIndexerApi"`
-		*BitCoinRpc          `json:"bitCoinRpc"`
+		*CommitteeIndexer `json:"committeeIndexer"`
+		//*CommitteeIndexerApi `json:"committeeIndexerApi"`
+		*BitCoinRpc `json:"bitCoinRpc"`
 		// minimal entry
 		MinimalCheckPoint int    `json:"minimalCheckPoint"`
 		StartHeight       int    `json:"startHeight"`
@@ -23,10 +23,10 @@ type (
 		Password string `json:"password"`
 	}
 
-	CommitteeIndexerApi struct {
-		Name string `json:"name"`
-		Url  string `json:"url"`
-	}
+	//CommitteeIndexerApi struct {
+	//	Name string `json:"name"`
+	//	Url  string `json:"url"`
+	//}
 
 	CommitteeIndexer struct {
 		S3      []*SourceS3 `json:"s3"`

@@ -36,6 +36,7 @@ func (p *ProviderS3) GetCheckpoint(ctx context.Context, height uint, hash string
 			}
 			return aws.Endpoint{}, &aws.EndpointNotFoundError{}
 		})),
+		awscfg.WithS3DisableMultiRegionAccessPoints(false),
 	)
 	if err != nil {
 		log.Error("ProviderS3", "s3.LoadDefaultConfig", err)

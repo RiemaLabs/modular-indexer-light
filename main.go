@@ -6,6 +6,7 @@ import (
 
 	"github.com/RiemaLabs/indexer-committee/ord/getter"
 	"github.com/RiemaLabs/indexer-light/apis"
+	"github.com/RiemaLabs/indexer-light/cmd"
 	"github.com/RiemaLabs/indexer-light/config"
 	"github.com/RiemaLabs/indexer-light/constant"
 	"github.com/RiemaLabs/indexer-light/log"
@@ -17,6 +18,11 @@ import (
 func main() {
 	log.SetLevel(log.LevelVerbose)
 	log.SetVerion("v0.0.1", time.Now().Format("20060102"))
+	rootCmd := cmd.NewCmd()
+	if err := rootCmd.Init().Execute(); err != nil {
+		log.Error("main", "Failed to parse the arguments", err)
+	}
+
 	go apis.Start()
 	rpcGetter, err := getter2.NewGetter(config.Config)
 	if err != nil {
@@ -33,20 +39,20 @@ func fetchHeight(getter getter.OrdGetter) {
 			log.Error("fetchHeight", "GetLatestBlockHeight", err)
 			return
 		}
-		log.Debug("fetchHeight", "latestHeight", latestHeight)
+		log.Debug("fetchHeight", "latestHeight", latestHeight, "Config.StartHeight", config.Config.StartHeight)
 		hash, err := getter.GetBlockHash(latestHeight)
 		if err != nil {
 			log.Error("fetchHeight", "GetBlockHash", err)
 			return
 		}
-		log.Debug("fetchHeight", "latestHash", hash)
+		log.Debug("fetchHeight", "latestHash", hash, "Config.StartBlockHash", config.Config.StartBlockHash)
 		if latestHeight > uint(config.Config.StartHeight) && !strings.EqualFold(hash, config.Config.StartBlockHash) {
 			log.Debug("fetchHeight", "msg", "sync...")
 			constant.ApiState = constant.ApiStateInit
-			err := verify.VerifyCheckpoint(getter, config.Config)
+			err = verify.VerifyCheckpoint(getter, config.Config)
 			if err != nil {
 				log.Error("fetchHeight", "VerifyCheckpoint", err)
-				return
+				continue
 			}
 			constant.ApiState = constant.ApiStateActive
 		}

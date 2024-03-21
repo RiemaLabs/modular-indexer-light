@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"sync"
 	"time"
 
 	"github.com/RiemaLabs/indexer-committee/apis"
@@ -21,10 +23,10 @@ import (
 )
 
 // VerifyCheckpoint Obtain and verify whether the checkpoints of m committee members are consistent.
-func VerifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config) error {
+func VerifyCheckpoint(getter ordgetter.OrdGetter, cfg *types.Config) error {
 	constant.ApiState = constant.ApiStateLoading
 	ctx := context.Background()
-	ctx, CancelFunc := context.WithTimeout(ctx, time.Duration(config.CommitteeIndexer.TimeOut)*time.Second)
+	ctx, CancelFunc := context.WithTimeout(ctx, time.Duration(cfg.CommitteeIndexer.TimeOut)*time.Second)
 	defer CancelFunc()
 	height, err := getter.GetLatestBlockHeight()
 	if err != nil {
@@ -34,35 +36,50 @@ func VerifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config) error {
 	if err != nil {
 		return err
 	}
-	config.StartHeight = int(height)
-	config.StartBlockHash = hash
-	committeeIndexer := provide.GetCommitteeIndexers(config)
+	cfg.StartHeight = int(height)
+	cfg.StartBlockHash = hash
+	defer func() {
+		config.UpdateConfig(cfg)
+	}()
+	committeeIndexer := provide.GetCommitteeIndexers(cfg)
 	var Checkpoints []*types.CheckPointObject
 	if len(committeeIndexer) == 0 {
 		panic("Invalid CommitteeIndexer provide")
 	}
+	wg := &sync.WaitGroup{}
 	for i, _ := range committeeIndexer {
-		go func(p types.CheckPointProvider, height uint) {
-			Checkpoints = append(Checkpoints, p.GetCheckpoint(ctx, height, hash))
-		}(committeeIndexer[i], height)
+		wg.Add(1)
+		go func(w *sync.WaitGroup, p types.CheckPointProvider, height uint) {
+			defer w.Done()
+			ck := p.GetCheckpoint(ctx, height, hash)
+			if ck == nil {
+				return
+			}
+			Checkpoints = append(Checkpoints, ck)
+			return
+		}(wg, committeeIndexer[i], height)
 	}
 
 	for {
 		select {
 		case <-ctx.Done():
 			log.Debug("VerifyCheckpoint", "msg", ctx.Err())
-			return ctx.Err()
+			goto RUNNING
 		default:
-			if len(Checkpoints) >= config.MinimalCheckPoint {
-				goto RUNING
-			}
+			wg.Wait()
+			goto RUNNING
 		}
 	}
-RUNING:
+RUNNING:
+	checkpointLen := len(Checkpoints)
+	log.Debug("VerifyCheckpoint", "msg", fmt.Sprintf("VerifyCheckpoint len %d", checkpointLen))
+	if checkpointLen < cfg.MinimalCheckPoint {
+		return fmt.Errorf("VerifyCheckpoint len %d", checkpointLen)
+	}
 	diffMap := make(map[string]*types.CheckPointObject)
 	for i, _ := range Checkpoints {
 		if _, ok := diffMap[Checkpoints[i].CheckPoint.Commitment]; ok {
-			err = DefiniteState.Update(getter, Checkpoints[i].CheckPoint)
+			err = DefiniteState.Update(getter, Checkpoints[i])
 			if err != nil {
 				return err
 			}
@@ -72,8 +89,8 @@ RUNING:
 	}
 
 	// The checkpoints of m committee members are inconsistent
-	if len(diffMap) > 0 {
-		err = verifyCheckpoint(getter, config, diffMap)
+	if len(diffMap) > 1 {
+		err = verifyCheckpoint(getter, cfg, diffMap)
 		if err != nil {
 			return err
 		}
@@ -87,7 +104,6 @@ func verifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config, diffChec
 	if len(diffCheckpoint) == 0 {
 		return nil
 	}
-
 	height, err := getter.GetLatestBlockHeight()
 	if err != nil {
 		return nil
@@ -98,7 +114,6 @@ func verifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config, diffChec
 	if err != nil {
 		return err
 	}
-
 	// Request the two Committee Indexers respectively: the set of state changes from the state corresponding to the parent block to the current block state
 	// The state change set that transitions from the state  corresponding to the parent block to the current block state
 	var diffState = make(map[string]*apis.Brc20VerifiableLatestStateProofResponse)
@@ -120,6 +135,8 @@ func verifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config, diffChec
 			diffPreCheckpoint[key] = preCp
 		}
 	}
+
+	log.Debug("verifyCheckpoint", "diffPreCheckpoint", len(diffPreCheckpoint), "diffState", len(diffState))
 
 	//transfers, err := getter.GetOrdTransfers(height)
 	//if err != nil {

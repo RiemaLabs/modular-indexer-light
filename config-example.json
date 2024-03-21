@@ -1,0 +1,36 @@
+{
+  "committeeIndexer": {
+    "s3": [
+      {
+        "bucket": "",
+        "accessKey": "s3",
+        "url": "https://nubit-modular-indexer.s3.us-west-2.amazonaws.com",
+        "indexerName": "word",
+        "metaProtocol": "brc-20",
+        "apiUrl": "",
+        "region": "us-west-2"
+      }
+    ],
+    "da": [
+      {
+        "namespaceID": "0x00000001",
+        "indexerName": "word",
+        "metaProtocol": "brc-20",
+        "rpc": "https://test.api.nubit.network:444"
+      }
+    ],
+    "timeOut": 50
+  },
+  "committeeIndexerApi": {
+    "name": "",
+    "url": ""
+  },
+  "bitCoinRpc": {
+    "host": "https://hardworking-light-meme.btc.quiknode.pro/12fbc8204dea881e41de39337dc91fd580642dce",
+    "user": "",
+    "password": ""
+  },
+  "minimalCheckPoint": 3,
+  "startHeight": 0,
+  "startBlockHash": ""
+}
