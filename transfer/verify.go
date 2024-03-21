@@ -187,8 +187,8 @@ func envelopVerify(transfers []OrdTransfer, tx btcjson.TxRawResult) (bool, error
 			// fmt.Println(tmpTr.NewWallet)
 			// fmt.Println(addr.String())
 
-			// fmt.Println([]byte(tmpTr.Content))
-			// fmt.Println(tmpNewl.Flotsam.Body.Inscription.ContentBody)
+			fmt.Println([]byte(tmpTr.Content))
+			fmt.Println(tmpNewl.Flotsam.Body.Inscription.ContentBody)
 
 			// fmt.Println(tmpTr.ContentType)
 			// fmt.Println(hex.EncodeToString(tmpNewl.Flotsam.Body.Inscription.ContentType))
