@@ -1,9 +1,16 @@
 package transfer
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/RiemaLabs/indexer-light/config"
+	"github.com/RiemaLabs/indexer-light/getter"
+)
 
 func TestVerify(t *testing.T) {
+	client, _ := getter.NewGetter(config.Config)
 	type args struct {
+		*getter.BitcoinOrdGetter
 		transfers   TransferByInscription
 		blockHeight uint
 	}
@@ -16,6 +23,7 @@ func TestVerify(t *testing.T) {
 		{
 			name: "common test",
 			args: args{
+				BitcoinOrdGetter: client,
 				transfers: []OrdTransfer{
 					{
 						InscriptionID: "fb0d434af0bebb1808b6454614020306a5dcd49209ae463eaa58643848d344dfi0",
@@ -43,7 +51,7 @@ func TestVerify(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Verify(tt.args.transfers, tt.args.blockHeight)
+			got, err := Verify(tt.args.BitcoinOrdGetter, tt.args.transfers, tt.args.blockHeight)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Verify() error = %v, wantErr %v", err, tt.wantErr)
 				return

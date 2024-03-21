@@ -4,7 +4,7 @@ go 1.22.1
 
 require (
 	github.com/btcsuite/btcd v0.24.0
-	github.com/btcsuite/btcd/btcutil v1.1.5
+	github.com/btcsuite/btcd/btcutil v1.1.5 // indirect
 )
 
 require (

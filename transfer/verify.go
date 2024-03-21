@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/RiemaLabs/indexer-light/getter"
 	"github.com/balletcrypto/bitcoin-inscription-parser/parser"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -37,7 +38,7 @@ func (o OrdTransfer) Offset() uint64 {
 	return uint64(offset)
 }
 
-func Verify(transfers TransferByInscription, blockHeight uint) (bool, error) {
+func Verify(chainClient *getter.BitcoinOrdGetter, transfers TransferByInscription, blockHeight uint) (bool, error) {
 	if len(transfers) == 0 {
 		return false, errors.New("enpty tranfer data")
 	}
@@ -60,18 +61,18 @@ func Verify(transfers TransferByInscription, blockHeight uint) (bool, error) {
 	}
 	batch[strings.Split(transfers[f].NewSatpoint, ":")[0]] = transfers[f:n]
 
-	hash, err := DefaultBitcoinClient.GetBlockHash(blockHeight)
+	hash, err := chainClient.GetBlockHash(blockHeight)
 	if nil != err {
 		return false, err
 	}
-	blockBody, err := DefaultBitcoinClient.GetBlock2(hash)
+	blockBody, err := chainClient.GetBlock2(hash)
 	if nil != err {
 		return false, err
 	}
 
 	for _, tx := range blockBody.Tx {
 		if trans, exist := batch[tx.Txid]; exist {
-			is, err := envelopVerify(trans, tx)
+			is, err := envelopVerify(chainClient, trans, tx)
 			if nil != err {
 				logrus.Warnf("envelopVerify failed txid: %s, err %v", tx.Txid, err)
 			}
@@ -84,7 +85,7 @@ func Verify(transfers TransferByInscription, blockHeight uint) (bool, error) {
 	return true, nil
 }
 
-func envelopVerify(transfers []OrdTransfer, tx btcjson.TxRawResult) (bool, error) {
+func envelopVerify(chainClient *getter.BitcoinOrdGetter, transfers []OrdTransfer, tx btcjson.TxRawResult) (bool, error) {
 	sort.Sort(TransferByInscription(transfers))
 
 	buf, err := hex.DecodeString(tx.Hex)
@@ -108,7 +109,7 @@ func envelopVerify(transfers []OrdTransfer, tx btcjson.TxRawResult) (bool, error
 				satOff, _ := strconv.ParseInt(arr[2], 10, 64)
 				offset := total_input_value + uint64(satOff)
 				// find old inscription content && content type
-				beforeIns, err := DefaultBitcoinClient.GetAllInscriptions(arr[0])
+				beforeIns, err := chainClient.GetAllInscriptions(arr[0])
 				if nil != err {
 					return false, err
 				}
@@ -126,7 +127,7 @@ func envelopVerify(transfers []OrdTransfer, tx btcjson.TxRawResult) (bool, error
 
 		// parse new Inscripitons
 		offset := total_input_value
-		pOut, err := DefaultBitcoinClient.GetOutput(tx_in.PreviousOutPoint.Hash.String(), int(tx_in.PreviousOutPoint.Index))
+		pOut, err := chainClient.GetOutput(tx_in.PreviousOutPoint.Hash.String(), int(tx_in.PreviousOutPoint.Index))
 		if nil != err {
 			return false, err
 		}
@@ -187,8 +188,8 @@ func envelopVerify(transfers []OrdTransfer, tx btcjson.TxRawResult) (bool, error
 			// fmt.Println(tmpTr.NewWallet)
 			// fmt.Println(addr.String())
 
-			fmt.Println([]byte(tmpTr.Content))
-			fmt.Println(tmpNewl.Flotsam.Body.Inscription.ContentBody)
+			// fmt.Println([]byte(tmpTr.Content))
+			// fmt.Println(tmpNewl.Flotsam.Body.Inscription.ContentBody)
 
 			// fmt.Println(tmpTr.ContentType)
 			// fmt.Println(hex.EncodeToString(tmpNewl.Flotsam.Body.Inscription.ContentType))

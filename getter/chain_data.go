@@ -1,110 +1,33 @@
-package transfer
+package getter
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
-	"time"
 
 	"github.com/balletcrypto/bitcoin-inscription-parser/parser"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/wire"
 )
 
-var DefaultBitcoinClient *HttpGetter
-
-type HttpGetter struct {
-	URL      string
-	Username string
-	Password string
-	client   *http.Client
-}
-
 type HttpError struct {
 	Code    int
 	Message string
 }
 
-func init() {
-	DefaultBitcoinClient = NewHttpGetter(defaultURL, "", "")
-}
-
-func NewHttpGetter(host, username, password string) *HttpGetter {
-	return &HttpGetter{
-		URL:      host,
-		Username: username,
-		Password: password,
-		client:   &http.Client{Timeout: 10 * time.Second},
-	}
-}
-
-func (r *HttpGetter) post(data interface{}, headers map[string]string) ([]byte, error) {
-	param, err := json.Marshal(data)
-	if nil != err {
-		return nil, err
-	}
-	req, err := http.NewRequest("POST", r.URL, bytes.NewBuffer(param))
-	if nil != err {
-		return nil, err
-	}
-	req.Header.Add("Content-Type", "application/json")
-	if len(headers) > 0 {
-		for k, v := range headers {
-			req.Header.Set(k, v)
-		}
-	}
-	resp, err := r.client.Do(req)
-	if nil != err {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	return io.ReadAll(resp.Body)
-}
-
-func (r *HttpGetter) GetBlockHash(blockHeight uint) (string, error) {
-	type param struct {
-		Method string `json:"method"`
-		Params []uint `json:"params"`
-	}
-
-	body, err := r.post(param{
-		Method: "getblockhash",
-		Params: []uint{blockHeight},
-	}, nil)
-	if nil != err {
-		return "", err
-	}
-
-	type Result struct {
-		Result string
-		Error  HttpError
-	}
-	var ret Result
-	if err := json.Unmarshal(body, &ret); nil != err {
-		return "", err
-	}
-	if ret.Error.Code != 0 {
-		return "", errors.New(ret.Error.Message)
-	}
-	return ret.Result, nil
-}
-
-func (r *HttpGetter) GetRawTransaction(txID string) (*btcjson.TxRawResult, error) {
-
+func (r *BitcoinOrdGetter) GetRawTransaction(txID string) (*btcjson.TxRawResult, error) {
 	type txReq struct {
 		Method string        `json:"method"`
 		Params []interface{} `json:"params"`
 	}
 
-	body, err := r.post(txReq{
+	body, err := r.client.Post(context.Background(), r.Endpoint, txReq{
 		Method: "getrawtransaction",
 		Params: []interface{}{txID, true},
-	}, nil)
+	}, map[string]string{"Content-Type": "application/json"})
 	if nil != err {
 		return nil, err
 	}
@@ -123,16 +46,16 @@ func (r *HttpGetter) GetRawTransaction(txID string) (*btcjson.TxRawResult, error
 	return ret.Result, nil
 }
 
-func (r *HttpGetter) GetOutput(txID string, index int) (*btcjson.Vout, error) {
+func (r *BitcoinOrdGetter) GetOutput(txID string, index int) (*btcjson.Vout, error) {
 	type txReq struct {
 		Method string        `json:"method"`
 		Params []interface{} `json:"params"`
 	}
 
-	body, err := r.post(txReq{
+	body, err := r.client.Post(context.Background(), r.Endpoint, txReq{
 		Method: "getrawtransaction",
 		Params: []interface{}{txID, true},
-	}, nil)
+	}, map[string]string{"Content-Type": "application/json"})
 	if nil != err {
 		return nil, err
 	}
@@ -155,16 +78,16 @@ func (r *HttpGetter) GetOutput(txID string, index int) (*btcjson.Vout, error) {
 	return &ret.Result.Vout[index], nil
 }
 
-func (r *HttpGetter) GetBlock1(hash string) (*btcjson.GetBlockVerboseResult, error) {
+func (r *BitcoinOrdGetter) GetBlock1(hash string) (*btcjson.GetBlockVerboseResult, error) {
 	type param struct {
 		Method string        `json:"method"`
 		Params []interface{} `json:"params"`
 	}
 
-	body, err := r.post(param{
+	body, err := r.client.Post(context.Background(), r.Endpoint, param{
 		Method: "getblock",
 		Params: []interface{}{hash, 1},
-	}, nil)
+	}, map[string]string{"Content-Type": "application/json"})
 	if nil != err {
 		return nil, err
 	}
@@ -182,16 +105,16 @@ func (r *HttpGetter) GetBlock1(hash string) (*btcjson.GetBlockVerboseResult, err
 	return ret.Result, nil
 }
 
-func (r *HttpGetter) GetBlock2(hash string) (*btcjson.GetBlockVerboseTxResult, error) {
+func (r *BitcoinOrdGetter) GetBlock2(hash string) (*btcjson.GetBlockVerboseTxResult, error) {
 	type param struct {
 		Method string        `json:"method"`
 		Params []interface{} `json:"params"`
 	}
 
-	body, err := r.post(param{
+	body, err := r.client.Post(context.Background(), r.Endpoint, param{
 		Method: "getblock",
 		Params: []interface{}{hash, 2},
-	}, nil)
+	}, map[string]string{"Content-Type": "application/json"})
 	if nil != err {
 		return nil, err
 	}
@@ -209,7 +132,7 @@ func (r *HttpGetter) GetBlock2(hash string) (*btcjson.GetBlockVerboseTxResult, e
 	return ret.Result, nil
 }
 
-func (r *HttpGetter) GetAllInscriptions(txID string) (map[string]*parser.TransactionInscription, error) {
+func (r *BitcoinOrdGetter) GetAllInscriptions(txID string) (map[string]*parser.TransactionInscription, error) {
 	rawTx, err := r.GetRawTransaction(txID)
 	if nil != err {
 		return nil, err
