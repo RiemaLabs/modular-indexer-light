@@ -13,20 +13,14 @@
     "url": ""
   },
   "committeeIndexer": {
+    "timeOut": 50,
     "s3": [{
       "accessKey": "s3",
-      "url": "https://s3.amazonaws.com/committee-indexer/",
+      "url": "https://s3.us-west-2.amazonaws.com",
       "bucket": "nubit-modular-indexer",
       "region": "us-west-2",
-      "indexerName": "nubit-modular-indexer",
+      "indexerName": "word",
       "metaProtocol": "brc-20",
-      "apiUrl": ""
-    }],
-    "da": [{
-      "namespaceID": "",
-      "indexerName": "",
-      "metaProtocol": "",
-      "rpc": "",
       "apiUrl": ""
     }]
   }

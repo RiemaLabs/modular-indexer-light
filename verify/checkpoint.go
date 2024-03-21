@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"time"
 
 	"github.com/RiemaLabs/indexer-committee/apis"
 	"github.com/RiemaLabs/indexer-committee/checkpoint"
@@ -23,6 +24,8 @@ import (
 func VerifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config) error {
 	constant.ApiState = constant.ApiStateLoading
 	ctx := context.Background()
+	ctx, CancelFunc := context.WithTimeout(ctx, time.Duration(config.CommitteeIndexer.TimeOut)*time.Second)
+	defer CancelFunc()
 	height, err := getter.GetLatestBlockHeight()
 	if err != nil {
 		return err
@@ -43,10 +46,19 @@ func VerifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config) error {
 			Checkpoints = append(Checkpoints, p.GetCheckpoint(ctx, height, hash))
 		}(committeeIndexer[i], height)
 	}
-	for len(Checkpoints) < config.MinimalCheckPoint {
-		continue
-	}
 
+	for {
+		select {
+		case <-ctx.Done():
+			log.Debug("VerifyCheckpoint", "msg", ctx.Err())
+			return ctx.Err()
+		default:
+			if len(Checkpoints) >= config.MinimalCheckPoint {
+				goto RUNING
+			}
+		}
+	}
+RUNING:
 	diffMap := make(map[string]*types.CheckPointObject)
 	for i, _ := range Checkpoints {
 		if _, ok := diffMap[Checkpoints[i].CheckPoint.Commitment]; ok {

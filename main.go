@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -19,18 +17,12 @@ import (
 func main() {
 	log.SetLevel(log.LevelVerbose)
 	log.SetVerion("v0.0.1", time.Now().Format("20060102"))
-	marshal, err := json.Marshal(config.Config)
-	if err != nil {
-		return
-	}
-	fmt.Println("config:", string(marshal))
 	go apis.Start()
 	rpcGetter, err := getter2.NewGetter(config.Config)
 	if err != nil {
 		return
 	}
 	fetchHeight(rpcGetter)
-
 }
 
 // TODO:: Not completed

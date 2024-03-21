@@ -29,8 +29,9 @@ type (
 	}
 
 	CommitteeIndexer struct {
-		S3 []*SourceS3 `json:"s3"`
-		Da []*SourceDa `json:"da"`
+		S3      []*SourceS3 `json:"s3"`
+		Da      []*SourceDa `json:"da"`
+		TimeOut int         `json:"timeOut"`
 	}
 
 	// data source
