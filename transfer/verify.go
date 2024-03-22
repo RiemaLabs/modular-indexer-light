@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/RiemaLabs/indexer-light/config"
 	"github.com/RiemaLabs/indexer-light/getter"
 	"github.com/balletcrypto/bitcoin-inscription-parser/parser"
 	"github.com/btcsuite/btcd/btcjson"
@@ -36,12 +37,13 @@ func (o OrdTransfer) Offset() uint64 {
 	return uint64(offset)
 }
 
-func Verify(chainClient *getter.BitcoinOrdGetter, transfers TransferByInscription, blockHeight uint) (bool, error) {
+func Verify(transfers TransferByInscription, blockHeight uint) (bool, error) {
 	if len(transfers) == 0 {
 		return false, errors.New("enpty tranfer data")
 	}
 
 	sort.Sort(transfers)
+	chainClient, _ := getter.NewGetter(config.Config)
 
 	batch := make(map[string]TransferByInscription)
 	// find a batch of inscriptions in same txid

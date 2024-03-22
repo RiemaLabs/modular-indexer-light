@@ -213,9 +213,9 @@ require (
 )
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.25.3
-	github.com/aws/aws-sdk-go-v2/config v1.27.7
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.11
+	github.com/aws/aws-sdk-go-v2 v1.25.3 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.27.7 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.52.1
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect

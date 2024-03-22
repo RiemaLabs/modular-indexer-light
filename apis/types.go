@@ -1,5 +1,7 @@
 package apis
 
+import "github.com/RiemaLabs/indexer-light/transfer"
+
 type Brc20VerifiableLightGetCurrentBalanceOfWalletRequest struct {
 	Tick     string `json:"tick"`
 	Pkscript string `json:"pkscript"`
@@ -34,4 +36,14 @@ type Brc20VerifiableLightLastCheckpointResponse struct {
 
 type Brc20VerifiableLightStateResponse struct {
 	State string `json:"state"`
+}
+
+type Brc20VerifiableLightTransferVerifyRequest struct {
+	BlockHeight uint                   `json:"block_height"`
+	Transfers   []transfer.OrdTransfer `json:"transfers"`
+}
+
+type Brc20VerifiableLightTransferVerifyResponse struct {
+	Result bool  `json:"result"`
+	Error  error `json:"error"`
 }

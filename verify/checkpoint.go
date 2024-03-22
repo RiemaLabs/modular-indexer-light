@@ -15,7 +15,6 @@ import (
 	"github.com/RiemaLabs/indexer-committee/ord/stateless"
 	"github.com/RiemaLabs/indexer-light/config"
 	"github.com/RiemaLabs/indexer-light/constant"
-	getter2 "github.com/RiemaLabs/indexer-light/getter"
 	"github.com/RiemaLabs/indexer-light/indexer"
 	"github.com/RiemaLabs/indexer-light/log"
 	"github.com/RiemaLabs/indexer-light/provide"
@@ -230,7 +229,7 @@ func verifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config, diffChec
 				})
 			}
 		}
-		verify, err := transfer.Verify(getter.(*getter2.BitcoinOrdGetter), ordTrans, height)
+		verify, err := transfer.Verify(ordTrans, height)
 		if err != nil {
 			return err
 		}

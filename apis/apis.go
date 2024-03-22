@@ -2,6 +2,7 @@ package apis
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
@@ -12,6 +13,7 @@ import (
 	"github.com/RiemaLabs/indexer-light/config"
 	"github.com/RiemaLabs/indexer-light/constant"
 	"github.com/RiemaLabs/indexer-light/indexer"
+	"github.com/RiemaLabs/indexer-light/transfer"
 	"github.com/RiemaLabs/indexer-light/verify"
 	"github.com/ethereum/go-verkle"
 	"github.com/gin-gonic/gin"
@@ -136,6 +138,16 @@ func Start() {
 	r.POST(constant.LightLastCheckpoint, func(context *gin.Context) {
 		//TODO::
 		context.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{})
+	})
+
+	r.POST(constant.LightTransfer, func(ctx *gin.Context) {
+		req := Brc20VerifiableLightTransferVerifyRequest{}
+		if err := ctx.BindJSON(&req); nil != err {
+			ctx.JSON(http.StatusBadRequest, Brc20VerifiableLightTransferVerifyResponse{false, errors.New("unauthed parameter")})
+		}
+
+		is, err := transfer.Verify(req.Transfers, req.BlockHeight)
+		ctx.JSON(http.StatusOK, Brc20VerifiableLightTransferVerifyResponse{is, err})
 	})
 
 	fmt.Println("Starting Gin HTTP reverse proxy server on :8081...")
