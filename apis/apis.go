@@ -144,6 +144,7 @@ func Start() {
 		req := Brc20VerifiableLightTransferVerifyRequest{}
 		if err := ctx.BindJSON(&req); nil != err {
 			ctx.JSON(http.StatusBadRequest, Brc20VerifiableLightTransferVerifyResponse{false, errors.New("unauthed parameter")})
+			return
 		}
 
 		if is, msg := req.Check(); !is {
@@ -156,7 +157,7 @@ func Start() {
 	})
 
 	fmt.Println("Starting Gin HTTP reverse proxy server on :8081...")
-	err := r.Run(":8081")
+	err := r.Run(":8080")
 	if err != nil {
 		panic(err)
 	}
