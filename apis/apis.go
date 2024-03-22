@@ -1,21 +1,16 @@
 package apis
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strconv"
 	"sync"
 
 	"github.com/RiemaLabs/indexer-light/config"
 	"github.com/RiemaLabs/indexer-light/constant"
-	"github.com/RiemaLabs/indexer-light/indexer"
 	"github.com/RiemaLabs/indexer-light/transfer"
-	"github.com/RiemaLabs/indexer-light/verify"
-	"github.com/ethereum/go-verkle"
 	"github.com/gin-gonic/gin"
 )
 
@@ -44,17 +39,6 @@ func NewRoundRobinBalancer(backends []string) *RoundRobinBalancer {
 
 func setupReverseProxy(proxyPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		switch constant.ApiState {
-		case constant.ApiStateSync:
-			c.JSON(http.StatusForbidden, "API is syncing")
-			return
-		case constant.ApiStateLoading:
-			c.JSON(http.StatusForbidden, "API is loading")
-			return
-		case constant.ApiStateActive:
-
-		}
-
 		c.Request.URL.Path = proxyPath
 		balancer := NewRoundRobinBalancer(config.GetCommitteeIndexerApi(config.Config))
 		target := balancer.Next()
@@ -62,13 +46,11 @@ func setupReverseProxy(proxyPath string) gin.HandlerFunc {
 			c.String(http.StatusForbidden, "No available backends")
 			return
 		}
-
 		targetURL, err := url.Parse(target)
 		if err != nil {
 			c.String(http.StatusForbidden, fmt.Sprintf("Failed to parse backend URL: %s", err))
 			return
 		}
-
 		proxy := httputil.NewSingleHostReverseProxy(targetURL)
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
@@ -77,67 +59,29 @@ func setupReverseProxy(proxyPath string) gin.HandlerFunc {
 func Start() {
 	r := gin.Default()
 
-	r.POST(constant.LightBlockHigh, setupReverseProxy(constant.BlockHigh))
+	r.Use(gin.Recovery(), CheckState(), gin.Logger())
 
-	r.POST(constant.LightState, func(context *gin.Context) {
+	r.GET(constant.LightBlockHigh, setupReverseProxy(constant.BlockHigh))
+
+	r.GET(constant.LightState, func(context *gin.Context) {
 		context.JSON(http.StatusOK, Brc20VerifiableLightStateResponse{
 			State: constant.ApiState,
 		})
 	})
 
-	r.POST(constant.LightBalance, func(c *gin.Context) {
-		balancer := NewRoundRobinBalancer(config.GetCommitteeIndexerApi(config.Config))
-		target := balancer.Next()
-		if target == "" {
-			c.String(http.StatusForbidden, "No available backends")
-			return
-		}
-		req := &Brc20VerifiableLightGetCurrentBalanceOfWalletRequest{}
-		err := c.BindJSON(req)
-		if err != nil {
-			c.String(http.StatusForbidden, "Parameter error")
-			return
-		}
-		balance, err := indexer.NewClient(c, target, target).GetBalance(req.Tick, req.Pkscript)
-		if err != nil {
-			return
-		}
-		if balance != nil {
-			//TODO:: balance.Proof to verkle.Proof
-			preProof := &verkle.Proof{}
-			prePointByte, err := base64.StdEncoding.DecodeString(verify.DefiniteState.PreCheckpoint.Commitment)
-			if err != nil {
-				c.JSON(http.StatusOK, "")
-				return
-			}
-			prePoint := &verkle.Point{}
-			err = prePoint.SetBytes(prePointByte)
-			if err != nil {
-				c.JSON(http.StatusOK, "")
-				return
-			}
-			err = verify.VerifyProof(preProof, prePoint)
-			if err != nil {
-				c.JSON(http.StatusOK, "")
-				return
-			}
-			h, _ := strconv.Atoi(verify.DefiniteState.PostCheckpoint.Height)
-			c.JSON(http.StatusOK, Brc20VerifiableLightGetCurrentBalanceOfWalletResponse{
-				Result:      balance.Result.AvailableBalance,
-				BlockHeight: h,
-			})
-		}
+	r.GET(constant.LightBalance, GetcurrentBalanceOfWallet)
 
-	})
-
-	r.POST(constant.LightCheckpoint, func(context *gin.Context) {
+	r.GET(constant.LightCheckpoint, func(context *gin.Context) {
 		//TODO::
 		context.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{})
 	})
 
-	r.POST(constant.LightLastCheckpoint, func(context *gin.Context) {
+	r.GET(constant.LightLastCheckpoint, func(context *gin.Context) {
 		//TODO::
 		context.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{})
+	})
+	r.POST(constant.TransferVerify, func(context *gin.Context) {
+
 	})
 
 	r.POST(constant.LightTransfer, func(ctx *gin.Context) {

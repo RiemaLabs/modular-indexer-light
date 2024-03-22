@@ -237,7 +237,7 @@ func verifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config, diffChec
 			return err
 		}
 
-		stateless.Exec(preState, ordTransfers)
+		stateless.Exec(preState, ordTransfers, height)
 		calculatebytes := preState.Root.Commit().Bytes()
 		decodeString, err := base64.StdEncoding.DecodeString(diffCheckpoint[key].CheckPoint.Commitment)
 		if err != nil {
