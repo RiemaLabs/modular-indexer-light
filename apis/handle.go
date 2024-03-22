@@ -23,11 +23,9 @@ func CheckState() gin.HandlerFunc {
 			c.JSON(http.StatusForbidden, "API is loading")
 			return
 		case constant.ApiStateActive:
-
 		}
 		c.Next()
 	}
-
 }
 
 func GetcurrentBalanceOfWallet(c *gin.Context) {

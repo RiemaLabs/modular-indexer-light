@@ -80,9 +80,6 @@ func Start() {
 		//TODO::
 		context.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{})
 	})
-	r.POST(constant.TransferVerify, func(context *gin.Context) {
-
-	})
 
 	r.POST(constant.LightTransfer, func(ctx *gin.Context) {
 		req := Brc20VerifiableLightTransferVerifyRequest{}
