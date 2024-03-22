@@ -56,5 +56,6 @@ func fetchHeight(getter getter.OrdGetter) {
 			}
 			constant.ApiState = constant.ApiStateActive
 		}
+		time.Sleep(10 * time.Minute)
 	}
 }
