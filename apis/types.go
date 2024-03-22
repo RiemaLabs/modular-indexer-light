@@ -1,6 +1,8 @@
 package apis
 
-import "github.com/RiemaLabs/indexer-light/transfer"
+import (
+	"github.com/RiemaLabs/indexer-light/transfer"
+)
 
 type Brc20VerifiableLightGetCurrentBalanceOfWalletRequest struct {
 	Tick     string `json:"tick"`
@@ -41,6 +43,20 @@ type Brc20VerifiableLightStateResponse struct {
 type Brc20VerifiableLightTransferVerifyRequest struct {
 	BlockHeight uint                   `json:"block_height"`
 	Transfers   []transfer.OrdTransfer `json:"transfers"`
+}
+
+func (o Brc20VerifiableLightTransferVerifyRequest) Check() (bool, string) {
+	if o.BlockHeight <= 0 {
+		return false, "invalid block_height"
+	}
+
+	for _, tr := range o.Transfers {
+		if is, msg := tr.Check(); !is {
+			return is, msg
+		}
+	}
+
+	return true, ""
 }
 
 type Brc20VerifiableLightTransferVerifyResponse struct {

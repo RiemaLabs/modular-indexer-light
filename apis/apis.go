@@ -146,6 +146,11 @@ func Start() {
 			ctx.JSON(http.StatusBadRequest, Brc20VerifiableLightTransferVerifyResponse{false, errors.New("unauthed parameter")})
 		}
 
+		if is, msg := req.Check(); !is {
+			ctx.JSON(http.StatusOK, Brc20VerifiableLightTransferVerifyResponse{false, errors.New(msg)})
+			return
+		}
+
 		is, err := transfer.Verify(req.Transfers, req.BlockHeight)
 		ctx.JSON(http.StatusOK, Brc20VerifiableLightTransferVerifyResponse{is, err})
 	})

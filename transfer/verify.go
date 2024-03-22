@@ -32,6 +32,26 @@ type OrdTransfer struct {
 	ContentType   string
 }
 
+func (o OrdTransfer) Check() (bool, string) {
+	if len(o.InscriptionID) < 66 || len(strings.Split(o.InscriptionID, "i")) != 2 {
+		return false, fmt.Sprintf("invalid inscription_id: %s", o.InscriptionID)
+	}
+
+	if len(o.NewSatpoint) < 68 || len(strings.Split(o.NewSatpoint, ":")) != 3 {
+		return false, fmt.Sprintf("invalid new_satpoint: %s", o.NewSatpoint)
+	}
+
+	if len(o.OldSatpoint) > 0 {
+		if len(o.OldSatpoint) < 68 || len(strings.Split(o.OldSatpoint, ":")) != 3 {
+			return false, fmt.Sprintf("invalid old_satpoint: %s", o.OldSatpoint)
+		}
+	}
+	if len(o.NewPkscript) <= 0 || len(o.NewWallet) <= 0 {
+		return false, "invalid new_pkscript or new_wallet"
+	}
+	return true, ""
+}
+
 func (o OrdTransfer) Offset() uint64 {
 	offset, _ := strconv.ParseInt(strings.Split(o.InscriptionID, "i")[1], 10, 32)
 	return uint64(offset)
