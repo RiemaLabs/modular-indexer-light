@@ -14,8 +14,6 @@
     "da": [
       {
         "namespaceID": "0x00000001",
-        "address": "",
-        "transactionID": "",
         "indexerName": "world",
         "metaProtocol": "brc-20",
         "apiUrl": "",

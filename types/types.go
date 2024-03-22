@@ -9,8 +9,7 @@ import (
 type (
 	Config struct {
 		*CommitteeIndexer `json:"committeeIndexer"`
-		//*CommitteeIndexerApi `json:"committeeIndexerApi"`
-		*BitCoinRpc `json:"bitCoinRpc"`
+		*BitCoinRpc       `json:"bitCoinRpc"`
 		// minimal entry
 		MinimalCheckPoint int    `json:"minimalCheckPoint"`
 		StartHeight       int    `json:"startHeight"`
@@ -22,11 +21,6 @@ type (
 		User     string `json:"user"`
 		Password string `json:"password"`
 	}
-
-	//CommitteeIndexerApi struct {
-	//	Name string `json:"name"`
-	//	Url  string `json:"url"`
-	//}
 
 	CommitteeIndexer struct {
 		S3      []*SourceS3 `json:"s3"`
@@ -42,30 +36,27 @@ type (
 		Url          string `json:"url"`
 		IndexerName  string `json:"indexerName"`
 		MetaProtocol string `json:"metaProtocol"`
-		ApiUrl       string `json:"apiUrl"`
 		Region       string `json:"region"`
 	}
 
 	SourceDa struct {
-		NamespaceID   string `json:"namespaceID"`
-		Address       string `json:"address"`
-		TransactionID string `json:"transactionID"`
-		IndexerName   string `json:"indexerName"`
-		MetaProtocol  string `json:"metaProtocol"`
-		ApiUrl        string `json:"apiUrl"`
-		Rpc           string `json:"rpc"`
+		NamespaceID  string `json:"namespaceID"`
+		IndexerName  string `json:"indexerName"`
+		MetaProtocol string `json:"metaProtocol"`
+		ApiUrl       string `json:"apiUrl"`
+		Rpc          string `json:"rpc"`
 	}
 
 	Source struct {
-		*SourceS3
-		*SourceDa
+		*SourceS3 `json:"*SourceS3,omitempty"`
+		*SourceDa `json:"*SourceDa,omitempty"`
 	}
 
 	CheckPointObject struct {
-		CheckPoint *checkpoint.Checkpoint
-		Name       string
-		Type       string
-		Source     *Source
+		CheckPoint *checkpoint.Checkpoint `json:"checkPoint,omitempty"`
+		Name       string                 `json:"name,omitempty"`
+		Type       string                 `json:"type,omitempty"`
+		Source     *Source                `json:"source,omitempty"`
 	}
 )
 
