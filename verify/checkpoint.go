@@ -274,7 +274,7 @@ func eliminateBadCommittee(cfg *types.Config, wrongCheckpoint []*types.CheckPoin
 				case object.Source.SourceS3 != nil && cfg.CommitteeIndexer.S3 != nil:
 					var ns3 []*types.SourceS3
 					for _, s3 := range cfg.CommitteeIndexer.S3 {
-						if s3.IndexerName == object.Source.SourceS3.IndexerName && s3.ApiUrl == object.Source.SourceS3.Url {
+						if s3.IndexerName == object.Source.SourceS3.IndexerName && s3.ApiUrl == object.Source.SourceS3.ApiUrl {
 							log.Error("Verify", "RemoveS3", object.Source.SourceS3.IndexerName, "msg", "This Committee Indexer generated an untrusted checkpoint", "errCheckpoint", checkpointStr(object.CheckPoint))
 							continue
 						}
@@ -284,7 +284,7 @@ func eliminateBadCommittee(cfg *types.Config, wrongCheckpoint []*types.CheckPoin
 				case object.Source.SourceDa != nil && cfg.CommitteeIndexer.Da != nil:
 					var nda []*types.SourceDa
 					for _, da := range cfg.CommitteeIndexer.Da {
-						if da.IndexerName == object.Source.SourceS3.IndexerName && da.ApiUrl == object.Source.SourceS3.Url {
+						if da.IndexerName == object.Source.SourceDa.IndexerName && da.ApiUrl == object.Source.SourceDa.ApiUrl {
 							log.Error("Verify", "RemoveDA", object.Source.SourceS3.IndexerName, "msg", "This Committee Indexer generated an untrusted checkpoint", "errCheckpoint", checkpointStr(object.CheckPoint))
 							continue
 						}

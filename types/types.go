@@ -33,7 +33,7 @@ type (
 	SourceS3 struct {
 		Bucket       string `json:"bucket"`
 		AccessKey    string `json:"accessKey"`
-		Url          string `json:"url"`
+		ApiUrl       string `json:"apiUrl"`
 		IndexerName  string `json:"indexerName"`
 		MetaProtocol string `json:"metaProtocol"`
 		Region       string `json:"region"`
