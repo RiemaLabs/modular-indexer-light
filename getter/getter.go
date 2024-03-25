@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/RiemaLabs/indexer-committee/ord/getter"
-	"github.com/RiemaLabs/indexer-light/clients/http"
-	"github.com/RiemaLabs/indexer-light/types"
+	"github.com/RiemaLabs/modular-indexer-committee/ord/getter"
+	"github.com/RiemaLabs/modular-indexer-light/clients/http"
+	"github.com/RiemaLabs/modular-indexer-light/types"
 )
 
 type GetBlockCountResponse struct {

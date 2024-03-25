@@ -3,7 +3,7 @@ package provide
 import (
 	"context"
 
-	"github.com/RiemaLabs/indexer-light/types"
+	"github.com/RiemaLabs/modular-indexer-light/types"
 	sdk "github.com/RiemaLabs/nubit-da-sdk"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )

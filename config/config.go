@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/RiemaLabs/indexer-light/constant"
-	"github.com/RiemaLabs/indexer-light/types"
+	"github.com/RiemaLabs/modular-indexer-light/constant"
+	"github.com/RiemaLabs/modular-indexer-light/types"
 )
 
 //go:embed config.json

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/RiemaLabs/indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/config"
 	"github.com/spf13/cobra"
 )
 

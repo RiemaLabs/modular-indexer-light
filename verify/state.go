@@ -8,12 +8,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/RiemaLabs/indexer-committee/checkpoint"
-	"github.com/RiemaLabs/indexer-committee/ord/getter"
-	"github.com/RiemaLabs/indexer-light/config"
-	"github.com/RiemaLabs/indexer-light/constant"
-	"github.com/RiemaLabs/indexer-light/provide"
-	"github.com/RiemaLabs/indexer-light/types"
+	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
+	"github.com/RiemaLabs/modular-indexer-committee/ord/getter"
+	"github.com/RiemaLabs/modular-indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/constant"
+	"github.com/RiemaLabs/modular-indexer-light/provide"
+	"github.com/RiemaLabs/modular-indexer-light/types"
 )
 
 type DefiniteCheckpoint struct {

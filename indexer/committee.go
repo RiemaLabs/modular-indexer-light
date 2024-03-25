@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"net/url"
 
-	"github.com/RiemaLabs/indexer-committee/apis"
-	"github.com/RiemaLabs/indexer-light/clients/http"
-	"github.com/RiemaLabs/indexer-light/constant"
-	"github.com/RiemaLabs/indexer-light/log"
+	"github.com/RiemaLabs/modular-indexer-committee/apis"
+	"github.com/RiemaLabs/modular-indexer-light/clients/http"
+	"github.com/RiemaLabs/modular-indexer-light/constant"
+	"github.com/RiemaLabs/modular-indexer-light/log"
 )
 
 type CommitteeIndexer struct {
@@ -74,8 +74,8 @@ func (c *CommitteeIndexer) GetBalance(tick, wallet string) (*apis.Brc20Verifiabl
 	return data, err
 }
 
-func (c *CommitteeIndexer) GeBalanceOfPkscript(tick, pkscript string) (*apis.Brc20VerifiableCurrentBalanceOfPkscriptRsponse, error) {
-	var data *apis.Brc20VerifiableCurrentBalanceOfPkscriptRsponse
+func (c *CommitteeIndexer) GeBalanceOfPkscript(tick, pkscript string) (*apis.Brc20VerifiableGetCurrentBalanceOfWalletRequest, error) {
+	var data *apis.Brc20VerifiableGetCurrentBalanceOfWalletRequest
 	post, err := c.Post(c.ctx, c.path(constant.BalanceOfPkscrip), apis.Brc20VerifiableCurrentBalanceOfPkscriptRequest{Tick: tick, Pkscript: pkscript}, nil)
 	if err != nil {
 		return nil, err

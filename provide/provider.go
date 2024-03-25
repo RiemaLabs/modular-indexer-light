@@ -1,8 +1,8 @@
 package provide
 
 import (
-	"github.com/RiemaLabs/indexer-light/constant"
-	"github.com/RiemaLabs/indexer-light/types"
+	"github.com/RiemaLabs/modular-indexer-light/constant"
+	"github.com/RiemaLabs/modular-indexer-light/types"
 )
 
 func GetCommitteeIndexers(config *types.Config) []types.CheckPointProvider {

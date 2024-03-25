@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/RiemaLabs/indexer-committee/checkpoint"
-	"github.com/RiemaLabs/indexer-light/clients/http"
-	"github.com/RiemaLabs/indexer-light/constant"
-	"github.com/RiemaLabs/indexer-light/log"
-	"github.com/RiemaLabs/indexer-light/types"
+	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
+	"github.com/RiemaLabs/modular-indexer-light/clients/http"
+	"github.com/RiemaLabs/modular-indexer-light/constant"
+	"github.com/RiemaLabs/modular-indexer-light/log"
+	"github.com/RiemaLabs/modular-indexer-light/types"
 )
 
 func NewS3(config *types.SourceS3) *ProviderS3 {
@@ -24,7 +24,7 @@ func (p *ProviderS3) GetCheckpoint(ctx context.Context, height uint, hash string
 	objectKey := fmt.Sprintf("test/checkpoint-%s-%s-%d-%s.json",
 		p.Config.IndexerName, constant.DefaultMetaProtocol, height, hash)
 
-	endpoint, err := url.JoinPath(p.Config.Url, objectKey)
+	endpoint, err := url.JoinPath(p.Config.ApiUrl, objectKey)
 	if err != nil {
 		log.Error("ProviderS3", "s3.JoinPath", err)
 		return nil

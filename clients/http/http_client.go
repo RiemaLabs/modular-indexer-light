@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/RiemaLabs/indexer-light/log"
+	"github.com/RiemaLabs/modular-indexer-light/log"
 )
 
 type Client struct {

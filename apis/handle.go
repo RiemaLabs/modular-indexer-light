@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/RiemaLabs/indexer-light/config"
-	"github.com/RiemaLabs/indexer-light/constant"
-	"github.com/RiemaLabs/indexer-light/indexer"
-	"github.com/RiemaLabs/indexer-light/verify"
+	"github.com/RiemaLabs/modular-indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/constant"
+	"github.com/RiemaLabs/modular-indexer-light/indexer"
+	"github.com/RiemaLabs/modular-indexer-light/verify"
 	"github.com/ethereum/go-verkle"
 	"github.com/gin-gonic/gin"
 )
@@ -58,7 +58,7 @@ func GetcurrentBalanceOfWallet(c *gin.Context) {
 			return
 		}
 
-		preProofByte, err := base64.StdEncoding.DecodeString(balance.Proof)
+		preProofByte, err := base64.StdEncoding.DecodeString(*balance.Proof)
 		if err != nil {
 			return
 		}

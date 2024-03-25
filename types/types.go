@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 
-	"github.com/RiemaLabs/indexer-committee/checkpoint"
+	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
 )
 
 type (

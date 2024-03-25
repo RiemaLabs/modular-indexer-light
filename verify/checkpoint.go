@@ -9,17 +9,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/RiemaLabs/indexer-committee/apis"
-	"github.com/RiemaLabs/indexer-committee/checkpoint"
-	ordgetter "github.com/RiemaLabs/indexer-committee/ord/getter"
-	"github.com/RiemaLabs/indexer-committee/ord/stateless"
-	"github.com/RiemaLabs/indexer-light/config"
-	"github.com/RiemaLabs/indexer-light/constant"
-	"github.com/RiemaLabs/indexer-light/indexer"
-	"github.com/RiemaLabs/indexer-light/log"
-	"github.com/RiemaLabs/indexer-light/provide"
-	"github.com/RiemaLabs/indexer-light/transfer"
-	"github.com/RiemaLabs/indexer-light/types"
+	"github.com/RiemaLabs/modular-indexer-committee/apis"
+	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
+	ordgetter "github.com/RiemaLabs/modular-indexer-committee/ord/getter"
+	"github.com/RiemaLabs/modular-indexer-committee/ord/stateless"
+	"github.com/RiemaLabs/modular-indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/constant"
+	"github.com/RiemaLabs/modular-indexer-light/indexer"
+	"github.com/RiemaLabs/modular-indexer-light/log"
+	"github.com/RiemaLabs/modular-indexer-light/provide"
+	"github.com/RiemaLabs/modular-indexer-light/transfer"
+	"github.com/RiemaLabs/modular-indexer-light/types"
 	"github.com/ethereum/go-verkle"
 )
 
@@ -160,7 +160,7 @@ func verifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config, diffChec
 			return nil
 		}
 
-		preProofByte, err := base64.StdEncoding.DecodeString(state.Proof)
+		preProofByte, err := base64.StdEncoding.DecodeString(*state.Proof)
 		if err != nil {
 			return nil
 		}
@@ -200,8 +200,8 @@ func verifyCheckpoint(getter ordgetter.OrdGetter, config *types.Config, diffChec
 		//stateless.Exec(preState, transfers)
 		var ordTransfers []ordgetter.OrdTransfer
 		var ordTrans []transfer.OrdTransfer
-		if len(state.OrdTrans) > 0 {
-			for _, tran := range state.OrdTrans {
+		if len(state.Result.OrdTransfers) > 0 {
+			for _, tran := range state.Result.OrdTransfers {
 				decodeString, err := base64.StdEncoding.DecodeString(tran.Content)
 				if err != nil {
 					return err

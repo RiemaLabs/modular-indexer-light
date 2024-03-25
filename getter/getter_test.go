@@ -3,8 +3,8 @@ package getter
 import (
 	"testing"
 
-	"github.com/RiemaLabs/indexer-light/clients/http"
-	"github.com/RiemaLabs/indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/clients/http"
+	"github.com/RiemaLabs/modular-indexer-light/config"
 )
 
 func TestBitcoinOrdGetter_GetLatestBlockHeight(t *testing.T) {

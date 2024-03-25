@@ -8,9 +8,9 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/RiemaLabs/indexer-light/config"
-	"github.com/RiemaLabs/indexer-light/constant"
-	"github.com/RiemaLabs/indexer-light/transfer"
+	"github.com/RiemaLabs/modular-indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/constant"
+	"github.com/RiemaLabs/modular-indexer-light/transfer"
 	"github.com/gin-gonic/gin"
 )
 

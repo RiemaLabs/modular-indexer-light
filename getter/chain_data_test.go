@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/RiemaLabs/indexer-light/clients/http"
-	"github.com/RiemaLabs/indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/clients/http"
+	"github.com/RiemaLabs/modular-indexer-light/config"
 	"github.com/balletcrypto/bitcoin-inscription-parser/parser"
 	"github.com/btcsuite/btcd/btcjson"
 )

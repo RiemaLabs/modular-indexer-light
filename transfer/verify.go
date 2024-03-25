@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/RiemaLabs/indexer-light/config"
-	"github.com/RiemaLabs/indexer-light/getter"
+	"github.com/RiemaLabs/modular-indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/getter"
 	"github.com/balletcrypto/bitcoin-inscription-parser/parser"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"

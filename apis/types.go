@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/RiemaLabs/indexer-light/transfer"
+	"github.com/RiemaLabs/modular-indexer-light/transfer"
 )
 
 type Brc20VerifiableLightGetCurrentBalanceOfWalletRequest struct {

@@ -4,15 +4,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RiemaLabs/indexer-committee/ord/getter"
-	"github.com/RiemaLabs/indexer-light/apis"
-	"github.com/RiemaLabs/indexer-light/cmd"
-	"github.com/RiemaLabs/indexer-light/config"
-	"github.com/RiemaLabs/indexer-light/constant"
-	"github.com/RiemaLabs/indexer-light/log"
-	"github.com/RiemaLabs/indexer-light/verify"
+	"github.com/RiemaLabs/modular-indexer-committee/ord/getter"
+	"github.com/RiemaLabs/modular-indexer-light/apis"
+	"github.com/RiemaLabs/modular-indexer-light/cmd"
+	"github.com/RiemaLabs/modular-indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/constant"
+	"github.com/RiemaLabs/modular-indexer-light/log"
+	"github.com/RiemaLabs/modular-indexer-light/verify"
 
-	getter2 "github.com/RiemaLabs/indexer-light/getter"
+	getter2 "github.com/RiemaLabs/modular-indexer-light/getter"
 )
 
 func main() {
