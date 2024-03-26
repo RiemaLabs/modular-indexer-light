@@ -102,3 +102,22 @@ As `Modular Indexer (Light)` is designed for efficiency and minimal resource usa
 :beetle: <https://github.com/RiemaLabs/modular-indexer-light/issues>  
 :book: <https://docs.nubit.org/developer-guides/introduction>  
 
+## FAQ
+- **Is there a consensus mechanism among modular-indexer-committees?**
+    - No, within the modular-indexer-committee, only one honest indexer needs to be available in the network to satisfy the 1-of-N trust assumption. This allows the light indexer to detect checkpoint inconsistencies and proceed with the verification process.
+- **How is the set of modular-indexer-committees determined?**
+    - Modular-indexer-committees must publish checkpoints to the DA Layer for access by other participants. Users can maintain their list of trusted committees. Since the light indexer verifies checkpoint correctness, malicious actors can be removed from the set upon detection; judgment of malicious behavior relies on a challenge-proof mechanism, not a 51% vote.
+- **Why do users need to verify data through checkpoints instead of a simple majority of the indexer network?**
+    - Relying on a simple majority could lead to Sybil attacks, as joining the indexer network is permissionless. Without a staking model or proof of work, attackers can gain a majority at a low cost. Therefore, verifying data through checkpoints prevents these low-cost attacks.
+- **Why are there no attacks like double-spending in the Modular Indexer architecture?**
+    - Bitcoin itself ensures transaction ordering and finality for meta-protocols (current: BRC-20). By ensuring the correctness of state transition rules and execution, indexers avoid double-spending attacks, including handling block reorganizations.
+- **Why upload checkpoints to the DA Layer instead of a centralized server or directly to Bitcoin?**
+    - Using a centralized server risks downtime and withholding of honest checkpoints, breaking the 1-of-N trust assumption. Uploading checkpoints to Bitcoin is costly due to transaction fees and the high data throughput demand, which Bitcoin's throughput cannot support.
+- **What kind of ecosystem support has this proposal received?**
+    - This proposal by Nubit aims to support and build the Bitcoin ecosystem. We've exchanged ideas with ecosystem partners and aim to promote the progress of the modular indexer architecture jointly.
+- **How does the interaction between Modular Indexer (Light) and Modular Indexer (Committee) work?**
+    - Modular Indexer (Light) relies on checkpoints published by Modular Indexer (Committee) to verify the integrity and correctness of data. Light indexers fetch these checkpoints from the DA Layer or S3 to confirm the accuracy of blockchain data. This interaction ensures reliable data without the need for heavy computation.
+- **What role does the Indexer Dashboard play in the Modular Indexer ecosystem?**
+    - The Indexer Dashboard is an interface that interacts with both Modular Indexer (Light) and (Committee), providing a user-friendly way to access and visualize blockchain data and checkpoints. It enhances user interaction, making it easy to monitor and manage data across the Modular Indexer network.
+    
+<!-- ## License -->
