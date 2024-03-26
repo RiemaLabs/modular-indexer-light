@@ -18,12 +18,9 @@ For a detailed understanding, refer to our paper: ["Modular Indexer: Fully User-
 Welcome to the setup guide for `Modular Indexer (Light)`. This section will guide you through the necessary steps to get your Modular Indexer (Light) up and running.
 
 ### System Requirements
-To run `Modular Indexer (Light)`, ensure your system meets the following requirements:
-- Golang environment, version 1.22.0 or higher
-- Basic knowledge of terminal/command line usage
-- Internet connection for downloading dependencies and interfacing with the Bitcoin blockchain
+`Modular Indexer (Light)` is crafted for ease of use and efficient interaction with the Bitcoin blockchain. It's tailored for systems with basic configurations, requiring only a Golang environment (version 1.22.0 or higher) and basic command line knowledge. An internet connection is essential for downloading dependencies and establishing connections to the blockchain. Significantly lighter on resources compared to its counterpart, `Modular Indexer (Committee)`, it seamlessly handles interactions with blockchain data without demanding sophisticated hardware. This synergy between `Modular Indexer (Light)` and `Modular Indexer (Committee)` ensures an accessible yet robust approach to working with Bitcoin's meta-protocols.
 
-Modular Indexer is built with Golang. You can run your own modular Indexer by following the procedure below. `Go` version `1.22.0` is required for running repository. Please visit [Golang download Page](https://go.dev/doc/install) to get latest Golang installed.
+For installation, start by ensuring your system has the latest version of Golang, available from the [Golang download page](https://go.dev/doc/install).
 
 ### Installation Steps
 1. **Clone the Repository**
@@ -80,6 +77,28 @@ Run Modular Indexer (Light): Start the application. You can also include additio
 ./modular-indexer-light
 ```
 
-5. **Basic Usage**
-After successfully running Modular Indexer (Light), you can start interacting with the Bitcoin blockchain. Test basic functionalities by executing relevant commands or accessing provided APIs.
+### 5. Basic Usage
+After successfully launching `Modular Indexer (Light)`, you have several functionalities at your disposal for interacting with the Bitcoin blockchain. These capabilities can be accessed through the `Indexer Dashboard` or [direct API calls](https://app.gitbook.com/o/CpG1oV8XXLDnYbUdhhqM/s/RvfNFdIQAghhQdWUByGF/developer-guides/introduction):
+
+#### Interacting with Bitcoin RPC
+The application can interact with the Bitcoin network via RPC calls, allowing operations like fetching the latest block height or retrieving block hashes.
+
+#### Querying Wallet Balances
+`Modular Indexer (Light)` is capable of fetching the balance of specified Bitcoin wallets, a crucial feature for tracking transactions and managing wallet assets.
+
+#### Accessing and Verifying Checkpoint Data
+Working in conjunction with `Modular Indexer (Committee)`, this tool can access and verify checkpoint data for various meta-protocols, ensuring data accuracy and integrity.
+
+#### Real-time Data Processing
+The application efficiently processes and analyzes blockchain data in real-time, enabling up-to-date blockchain interactions and analytics.
+
+As `Modular Indexer (Light)` is designed for efficiency and minimal resource usage, it provides a streamlined and accessible approach for users requiring interaction with Bitcoin's meta-protocols without intensive data processing needs.
+
+<!-- ## Service API -->
+
+## Useful Links
+:spider_web: <https://www.nubit.org>  
+:octocat: <https://github.com/Wechaty/wechaty>  
+:beetle: <https://github.com/RiemaLabs/modular-indexer-light/issues>  
+:book: <https://docs.nubit.org/developer-guides/introduction>  
 
