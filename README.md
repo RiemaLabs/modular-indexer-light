@@ -30,12 +30,14 @@ cd modular-indexer-light
 ```
 
 2. **Install Dependencies**
+
 Once you have cloned the repository, install all necessary dependencies.
 ```Bash
 go mod tidy
 ```
 
 3. **Configuration Instructions**
+
 Prepare config.json: Copy the example configuration file and tailor it according to your setup.
 ```Bash
 cp config.example.json config.json
@@ -57,12 +59,12 @@ Edit Configuration: Ensure the bitCoinRpc and committeeIndexerApi sections in co
 }
 ```
 
-### `bitCoinRpc` Configuration:
+#### `bitCoinRpc` Configuration:
 - `host`: The URL of your Bitcoin RPC server.
 - `user`: The username for accessing the Bitcoin RPC server.
 - `password`: The password associated with the specified user.
 
-### `committeeIndexerApi` Configuration:
+#### `committeeIndexerApi` Configuration:
 - `name`: A unique name for your indexer instance.
 - `url`: The endpoint URL of the Modular Indexer (Committee) or any equivalent service.
 
@@ -77,7 +79,7 @@ Run Modular Indexer (Light): Start the application. You can also include additio
 ./modular-indexer-light
 ```
 
-### 5. Basic Usage
+### Basic Usage
 After successfully launching `Modular Indexer (Light)`, you have several functionalities at your disposal for interacting with the Bitcoin blockchain. These capabilities can be accessed through the `Indexer Dashboard` or [direct API calls](https://app.gitbook.com/o/CpG1oV8XXLDnYbUdhhqM/s/RvfNFdIQAghhQdWUByGF/developer-guides/introduction):
 
 #### Interacting with Bitcoin RPC
@@ -119,5 +121,5 @@ As `Modular Indexer (Light)` is designed for efficiency and minimal resource usa
     - Modular Indexer (Light) relies on checkpoints published by Modular Indexer (Committee) to verify the integrity and correctness of data. Light indexers fetch these checkpoints from the DA Layer or S3 to confirm the accuracy of blockchain data. This interaction ensures reliable data without the need for heavy computation.
 - **What role does the Indexer Dashboard play in the Modular Indexer ecosystem?**
     - The Indexer Dashboard is an interface that interacts with both Modular Indexer (Light) and (Committee), providing a user-friendly way to access and visualize blockchain data and checkpoints. It enhances user interaction, making it easy to monitor and manage data across the Modular Indexer network.
-    
+
 <!-- ## License -->
