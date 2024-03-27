@@ -1,6 +1,6 @@
 module github.com/RiemaLabs/modular-indexer-light
 
-go 1.22.1
+go 1.22.0
 
 require (
 	github.com/RiemaLabs/modular-indexer-committee v0.1.0-rc.1
