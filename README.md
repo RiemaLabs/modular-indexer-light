@@ -73,7 +73,7 @@ cp config.example.json config.json
 #### Detailed Configuration Instructions:
 After copying the `config.example.json` to create your `config.json`, you'll need to provide detailed information for both Committee Indexer settings and Bitcoin RPC settings. Here's a breakdown of what each section in the configuration file means:
 
-##### Setting Up `committeeIndexers`:
+##### a. Setting Up `committeeIndexers`:
 - **S3 Indexers**:
   - `region`: The AWS region where your S3 bucket is located.
   - `bucket`: The name of the S3 bucket used by the indexer.
@@ -83,10 +83,10 @@ After copying the `config.example.json` to create your `config.json`, you'll nee
   - `namespaceID`: The namespace ID used in the DA Layer.
   - `name`: A unique name for your indexer instance.
 
-##### `bitcoinRPC` Configuration:
+##### b. `bitcoinRPC` Configuration:
 - `bitcoinRPC`: Enter the URL of your Bitcoin RPC server for direct blockchain interactions.
 
-##### Additional Configurations:
+##### c. Additional Configurations:
 - `metaProtocol`: Define the meta-protocol used (e.g., 'brc-20').
 - `minimalCheckpoint`: Specify the minimum number of checkpoints required for validation.
 - `version`: Indicate the version of your Modular Indexer (Light) setup.
