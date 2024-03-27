@@ -1,35 +1,20 @@
 package apis
 
-type Brc20VerifiableLightGetCurrentBalanceOfWalletRequest struct {
-	Tick     string `json:"tick"`
-	Pkscript string `json:"pkscript"`
-}
+import (
+	"github.com/RiemaLabs/modular-indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/constant"
+)
 
-type Brc20VerifiableLightGetCurrentBalanceOfWalletResponse struct {
-	Result      string `json:"result"`
-	BlockHeight int    `json:"blockHeight"`
+type Status interface {
+	Status() constant.ApiStatus
 }
 
 type Brc20VerifiableLightCheckpointsResponse struct {
-	Checkpoints []struct {
-		CheckpointHash   string `json:"checkpointHash"`
-		SubmissionMethod string `json:"submissionMethod"`
-		IndexerS3URL     string `json:"indexerS3URL"`
-		IndexerAddress   string `json:"indexerAddress"`
-		TransactionID    string `json:"transactionID"`
-		Checkpoint       struct {
-		} `json:"checkpoint"`
-	} `json:"checkpoints"`
+	Checkpoints []*config.CheckpointExport `json:"checkpoints"`
 }
 
 type Brc20VerifiableLightLastCheckpointResponse struct {
-	CheckpointHash   string `json:"checkpointHash"`
-	SubmissionMethod string `json:"submissionMethod"`
-	IndexerS3URL     string `json:"indexerS3URL"`
-	IndexerAddress   string `json:"indexerAddress"`
-	TransactionID    string `json:"transactionID"`
-	Checkpoint       struct {
-	} `json:"checkpoint"`
+	Checkpoint *config.CheckpointExport `json:"checkpoint"`
 }
 
 type Brc20VerifiableLightStateResponse struct {

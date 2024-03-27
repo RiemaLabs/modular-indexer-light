@@ -20,7 +20,8 @@ const (
 )
 
 const (
-	LevelError = iota
+	LevelOff = iota
+	LevelError
 	LevelWarn
 	LevelDebug
 	LevelVerbose
@@ -72,35 +73,39 @@ func toArgs(c int, a ...interface{}) string {
 	return strings.Join(kvs, ", ")
 }
 
-// Info ...
-func Info(tag string, a ...interface{}) {
-	i.Println(fmt.Sprintf("[%s.%s][ %24s ]", ver.Load(), build.Load(), tag), toArgs(colorGreen, a...))
-}
-
 // Verbose ...
 func Verbose(tag string, a ...interface{}) {
-	if lvl.Load() > 2 {
+	if lvl.Load() >= LevelVerbose {
 		v.Println(fmt.Sprintf("[%s.%s][ %24s ]", ver.Load(), build.Load(), tag), toArgs(colorMagenta, a...))
 	}
 }
 
 // Debug ...
 func Debug(tag string, a ...interface{}) {
-	if lvl.Load() > 1 {
+	if lvl.Load() >= LevelDebug {
 		d.Println(fmt.Sprintf("[%s.%s][ %24s ]", ver.Load(), build.Load(), tag), toArgs(colorBlue, a...))
 	}
 }
 
 // Warn ...
 func Warn(tag string, a ...interface{}) {
-	if lvl.Load() > 0 {
+	if lvl.Load() >= LevelWarn {
 		w.Println(fmt.Sprintf("[%s.%s][ %24s ]", ver.Load(), build.Load(), tag), toArgs(colorYellow, a...))
+	}
+}
+
+// Info ...
+func Info(tag string, a ...interface{}) {
+	if lvl.Load() >= LevelError {
+		i.Println(fmt.Sprintf("[%s.%s][ %24s ]", ver.Load(), build.Load(), tag), toArgs(colorGreen, a...))
 	}
 }
 
 // Error ...
 func Error(tag string, a ...interface{}) {
-	e.Println(fmt.Sprintf("[%s.%s][ %24s ]", ver.Load(), build.Load(), tag), toArgs(colorRed, a...))
+	if lvl.Load() >= LevelError {
+		e.Println(fmt.Sprintf("[%s.%s][ %24s ]", ver.Load(), build.Load(), tag), toArgs(colorRed, a...))
+	}
 }
 
 // Panicf ...

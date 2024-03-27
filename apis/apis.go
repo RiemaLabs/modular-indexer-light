@@ -1,146 +1,74 @@
 package apis
 
 import (
-	"encoding/base64"
 	"fmt"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
-	"strconv"
-	"sync"
+	"time"
 
-	"github.com/RiemaLabs/indexer-light/config"
-	"github.com/RiemaLabs/indexer-light/constant"
-	"github.com/RiemaLabs/indexer-light/indexer"
-	"github.com/RiemaLabs/indexer-light/verify"
-	"github.com/ethereum/go-verkle"
+	"github.com/RiemaLabs/modular-indexer-light/constant"
+	"github.com/RiemaLabs/modular-indexer-light/runtime"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-type RoundRobinBalancer struct {
-	sync.Mutex
-	index    int
-	backends []string
-}
+func StartService(df *runtime.RuntimeState, enableDebug bool) {
 
-func (r *RoundRobinBalancer) Next() string {
-	r.Lock()
-	defer r.Unlock()
-
-	if len(r.backends) == 0 {
-		return ""
+	if !enableDebug {
+		gin.SetMode(gin.ReleaseMode)
 	}
 
-	next := r.backends[r.index]
-	r.index = (r.index + 1) % len(r.backends)
-	return next
-}
-
-func NewRoundRobinBalancer(backends []string) *RoundRobinBalancer {
-	return &RoundRobinBalancer{index: -1, backends: backends}
-}
-
-func setupReverseProxy(proxyPath string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		switch constant.ApiState {
-		case constant.ApiStateSync:
-			c.JSON(http.StatusForbidden, "API is syncing")
-			return
-		case constant.ApiStateLoading:
-			c.JSON(http.StatusForbidden, "API is loading")
-			return
-		case constant.ApiStateActive:
-
-		}
-
-		c.Request.URL.Path = proxyPath
-		balancer := NewRoundRobinBalancer(config.GetCommitteeIndexerApi(config.Config))
-		target := balancer.Next()
-		if target == "" {
-			c.String(http.StatusForbidden, "No available backends")
-			return
-		}
-
-		targetURL, err := url.Parse(target)
-		if err != nil {
-			c.String(http.StatusForbidden, fmt.Sprintf("Failed to parse backend URL: %s", err))
-			return
-		}
-
-		proxy := httputil.NewSingleHostReverseProxy(targetURL)
-		proxy.ServeHTTP(c.Writer, c.Request)
-	}
-}
-
-func Start() {
 	r := gin.Default()
 
-	r.POST(constant.LightBlockHigh, setupReverseProxy(constant.BlockHigh))
+	// TODO: Medium. Add the TRUSTED_PROXIES to our config
+	// trustedProxies := os.Getenv("TRUSTED_PROXIES")
+	// if trustedProxies != "" {
+	//     r.SetTrustedProxies([]string{trustedProxies})
+	// }
 
-	r.POST(constant.LightState, func(context *gin.Context) {
-		context.JSON(http.StatusOK, Brc20VerifiableLightStateResponse{
-			State: constant.ApiState,
+	r.Use(gin.Recovery(), CheckState(), gin.Logger(), cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"POST", "GET"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	r.GET(constant.LightBlockHeight, func(c *gin.Context) {
+		c.Data(http.StatusOK, "text/plain", []byte(fmt.Sprintf("%d", df.CurrentHeight())))
+	})
+
+	r.GET(constant.LightState, func(c *gin.Context) {
+		c.JSON(http.StatusOK, Brc20VerifiableLightStateResponse{
+			State: constant.ApiState.String(),
 		})
 	})
 
-	r.POST(constant.LightBalance, func(c *gin.Context) {
-		balancer := NewRoundRobinBalancer(config.GetCommitteeIndexerApi(config.Config))
-		target := balancer.Next()
-		if target == "" {
-			c.String(http.StatusForbidden, "No available backends")
-			return
-		}
-		req := &Brc20VerifiableLightGetCurrentBalanceOfWalletRequest{}
-		err := c.BindJSON(req)
-		if err != nil {
-			c.String(http.StatusForbidden, "Parameter error")
-			return
-		}
-		balance, err := indexer.NewClient(c, target, target).GetBalance(req.Tick, req.Pkscript)
-		if err != nil {
-			return
-		}
-		if balance != nil {
-			//TODO:: balance.Proof to verkle.Proof
-			preProof := &verkle.Proof{}
-			prePointByte, err := base64.StdEncoding.DecodeString(verify.DefiniteState.PreCheckpoint.Commitment)
-			if err != nil {
-				c.JSON(http.StatusOK, "")
-				return
-			}
-			prePoint := &verkle.Point{}
-			err = prePoint.SetBytes(prePointByte)
-			if err != nil {
-				c.JSON(http.StatusOK, "")
-				return
-			}
-			err = verify.VerifyProof(preProof, prePoint)
-			if err != nil {
-				c.JSON(http.StatusOK, "")
-				return
-			}
-			h, _ := strconv.Atoi(verify.DefiniteState.PostCheckpoint.Height)
-			c.JSON(http.StatusOK, Brc20VerifiableLightGetCurrentBalanceOfWalletResponse{
-				Result:      balance.Result.AvailableBalance,
-				BlockHeight: h,
-			})
-		}
+	r.GET(constant.LightCurrentBalanceOfWallet, func(c *gin.Context) {
+		ck := df.CurrentFirstCheckpoint().Checkpoint
 
+		GetCurrentBalanceOfWallet(c, ck)
 	})
 
-	r.POST(constant.LightCheckpoint, func(context *gin.Context) {
-		//TODO::
-		context.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{})
+	r.GET(constant.LightCurrentBalanceOfPkscript, func(c *gin.Context) {
+		ck := df.CurrentFirstCheckpoint().Checkpoint
+
+		GetCurrentBalanceOfPkscript(c, ck)
 	})
 
-	r.POST(constant.LightLastCheckpoint, func(context *gin.Context) {
-		//TODO::
-		context.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{})
+	r.GET(constant.LightCurrentCheckpoints, func(c *gin.Context) {
+		cur := df.CurrentCheckpoints()
+		c.JSON(http.StatusOK, Brc20VerifiableLightCheckpointsResponse{
+			Checkpoints: cur,
+		})
 	})
 
-	fmt.Println("Starting Gin HTTP reverse proxy server on :8081...")
-	err := r.Run(":8081")
-	if err != nil {
-		panic(err)
-	}
+	r.GET(constant.LightLastCheckpoint, func(c *gin.Context) {
+		lt := df.LastCheckpoint()
+		c.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{
+			Checkpoint: lt,
+		})
+	})
+
+	// TODO: Medium. Allow user to setup port.
+	r.Run(":8080")
 }
