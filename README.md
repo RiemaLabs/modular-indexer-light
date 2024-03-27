@@ -24,20 +24,17 @@ Before we stepped into the installation, ensure your machine is equipped with th
 | **Bandwidth**| Upload/Download 100 KB/s |
 
 `Light Indexer` is crafted for ease of use and efficient interaction with the Bitcoin blockchain. It's tailored for systems with basic configurations, requiring only a Golang environment (version 1.22.0 or higher) and basic command line knowledge. An internet connection is essential for downloading dependencies and establishing connections to the blockchain. Significantly lighter on resources compared to its counterpart, `Modular Indexer (Committee)`, it seamlessly handles interactions with blockchain data without demanding sophisticated hardware. This synergy between `Light Indexer` and `Modular Indexer (Committee)` ensures an accessible yet robust approach to working with Bitcoin's meta-protocols.
-
 For installation, start by ensuring your system has the latest version of Golang, available from the [Golang download page](https://go.dev/doc/install).
 
 ### 2. Install Dependence
 `Light Indexer` is built with Golang. You can run your own `Light Indexer` by following the procedure below.
 `Go` version `1.22.0` is required for running repository. Please visit [Golang download Page](https://go.dev/doc/install) to get latest Golang installed.
-
 Golang is easy to install all dependence. Fetch all required package by simply running.
 ```Bash
 go mod tidy
 ```
 
-3. **Configuration Instructions**
-
+### 3. Configuration Instructions
 Configure `config.json`: To set up `Modular Indexer (Light)`, begin by copying the example configuration file. Customize it to match your specific requirements.
 ```Bash
 cp config.example.json config.json
@@ -73,10 +70,10 @@ cp config.example.json config.json
 }
 ```
 
-### Detailed Configuration Instructions:
+#### Detailed Configuration Instructions:
 After copying the `config.example.json` to create your `config.json`, you'll need to provide detailed information for both Committee Indexer settings and Bitcoin RPC settings. Here's a breakdown of what each section in the configuration file means:
 
-#### Setting Up `committeeIndexers`:
+##### Setting Up `committeeIndexers`:
 - **S3 Indexers**:
   - `region`: The AWS region where your S3 bucket is located.
   - `bucket`: The name of the S3 bucket used by the indexer.
@@ -86,15 +83,15 @@ After copying the `config.example.json` to create your `config.json`, you'll nee
   - `namespaceID`: The namespace ID used in the DA Layer.
   - `name`: A unique name for your indexer instance.
 
-#### `bitcoinRPC` Configuration:
+##### `bitcoinRPC` Configuration:
 - `bitcoinRPC`: Enter the URL of your Bitcoin RPC server for direct blockchain interactions.
 
-#### Additional Configurations:
+##### Additional Configurations:
 - `metaProtocol`: Define the meta-protocol used (e.g., 'brc-20').
 - `minimalCheckpoint`: Specify the minimum number of checkpoints required for validation.
 - `version`: Indicate the version of your Modular Indexer (Light) setup.
 
-4. **Running the Program**
+### 4. Running the Program
 Build the Application: Compile the Modular Indexer (Light) source code.
 ```Bash
 go build
@@ -105,7 +102,7 @@ Run Modular Indexer (Light): Start the application. You can also include additio
 ./modular-indexer-light
 ```
 
-### Basic Usage
+## Basic Usage
 After successfully launching `Light Indexer`, you have several functionalities at your disposal for interacting with the Bitcoin blockchain. These capabilities can be accessed through the `Indexer Dashboard` or [direct API calls](https://app.gitbook.com/o/CpG1oV8XXLDnYbUdhhqM/s/RvfNFdIQAghhQdWUByGF/developer-guides/introduction):
 
 #### Interacting with Bitcoin RPC
