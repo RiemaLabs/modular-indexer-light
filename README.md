@@ -38,35 +38,61 @@ go mod tidy
 
 3. **Configuration Instructions**
 
-Prepare config.json: Copy the example configuration file and tailor it according to your setup.
+Configure `config.json`: To set up `Modular Indexer (Light)`, begin by copying the example configuration file. Customize it to match your specific requirements.
 ```Bash
 cp config.example.json config.json
-# Edit config.json with your specific settings
-```
+# Edit config.json according to your needs
 
-Edit Configuration: Ensure the bitCoinRpc and committeeIndexerApi sections in config.json are set with the correct URLs and credentials, particularly the bitCoinRpc and committeeIndexerApi sections.
 ```json
 {
-  "bitCoinRpc": {
-    "host": "YOUR_BITCOIN_RPC_HOST",
-    "user": "YOUR_RPC_USER",
-    "password": "YOUR_RPC_PASSWORD"
+  "committeeIndexers": {
+    "s3": [
+      {
+        "region": "us-west-2",
+        "bucket": "nubit-modular-indexer-brc-20",
+        "name": "nubit-official-02"
+      }
+    ],
+    "da": [
+      {
+        "network": "Pre-Alpha Testnet",
+        "namespaceID": "0x00000003",
+        "name": "nubit-official-00"
+      },
+      {
+        "network": "Pre-Alpha Testnet",
+        "namespaceID": "0x00000005",
+        "name": "nubit-official-01"
+      }
+    ]
   },
-  "committeeIndexerApi": {
-    "name": "YOUR_INDEXER_NAME",
-    "url": "YOUR_INDEXER_API_URL"
-  }
+  "bitcoinRPC": "",
+  "metaProtocol": "brc-20",
+  "minimalCheckpoint": 2,
+  "version": "v0.1.0-rc.1"
 }
 ```
 
-#### `bitCoinRpc` Configuration:
-- `host`: The URL of your Bitcoin RPC server.
-- `user`: The username for accessing the Bitcoin RPC server.
-- `password`: The password associated with the specified user.
+### Detailed Configuration Instructions:
+After copying the `config.example.json` to create your `config.json`, you'll need to provide detailed information for both Committee Indexer settings and Bitcoin RPC settings. Here's a breakdown of what each section in the configuration file means:
 
-#### `committeeIndexerApi` Configuration:
-- `name`: A unique name for your indexer instance.
-- `url`: The endpoint URL of the Modular Indexer (Committee) or any equivalent service.
+#### Setting Up `committeeIndexers`:
+- **S3 Indexers**:
+  - `region`: The AWS region where your S3 bucket is located.
+  - `bucket`: The name of the S3 bucket used by the indexer.
+  - `name`: A unique name for your indexer instance.
+- **DA Indexers**:
+  - `network`: Specify the network for DA Layer (e.g., 'Pre-Alpha Testnet').
+  - `namespaceID`: The namespace ID used in the DA Layer.
+  - `name`: A unique name for your indexer instance.
+
+#### `bitcoinRPC` Configuration:
+- `bitcoinRPC`: Enter the URL of your Bitcoin RPC server for direct blockchain interactions.
+
+#### Additional Configurations:
+- `metaProtocol`: Define the meta-protocol used (e.g., 'brc-20').
+- `minimalCheckpoint`: Specify the minimum number of checkpoints required for validation.
+- `version`: Indicate the version of your Modular Indexer (Light) setup.
 
 4. **Running the Program**
 Build the Application: Compile the Modular Indexer (Light) source code.
