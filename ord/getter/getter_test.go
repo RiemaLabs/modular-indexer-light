@@ -1,16 +1,103 @@
 package getter
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/RiemaLabs/modular-indexer-light/clients/http"
 	"github.com/RiemaLabs/modular-indexer-light/config"
+
+	"reflect"
+
 	"github.com/balletcrypto/bitcoin-inscription-parser/parser"
 	"github.com/btcsuite/btcd/btcjson"
 )
 
-func TestBitcoinOrdGetter_GetRawTransaction(t *testing.T) {
+func TestBitcoinOrdGetterGetLatestBlockHeight(t *testing.T) {
+	config.InitConfig()
+	type fields struct {
+		client   *http.Client
+		Endpoint string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    uint
+		wantErr bool
+	}{
+		{
+			name: "common test",
+			fields: fields{
+				client:   http.NewClient(),
+				Endpoint: config.GlobalConfig.BitcoinRPC,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &BitcoinOrdGetter{
+				client:   tt.fields.client,
+				Endpoint: tt.fields.Endpoint,
+			}
+			got, err := r.GetLatestBlockHeight()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("BitcoinOrdGetter.GetLatestBlockHeight() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got <= 0 {
+				t.Errorf("BitcoinOrdGetter.GetLatestBlockHeight() = %v", got)
+			}
+		})
+	}
+}
+
+func TestBitcoinOrdGetterGetBlockHash(t *testing.T) {
+	config.InitConfig()
+	type fields struct {
+		client   *http.Client
+		Endpoint string
+	}
+	type args struct {
+		blockHeight uint
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "common test",
+			fields: fields{
+				client:   http.NewClient(),
+				Endpoint: config.GlobalConfig.BitcoinRPC,
+			},
+			args: args{
+				blockHeight: 835161,
+			},
+			want: "000000000000000000021a731d2106dda997d6eaf6228252c7abdc259c1fca5e",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &BitcoinOrdGetter{
+				client:   tt.fields.client,
+				Endpoint: tt.fields.Endpoint,
+			}
+			got, err := r.GetBlockHash(tt.args.blockHeight)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("BitcoinOrdGetter.GetBlockHash() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("BitcoinOrdGetter.GetBlockHash() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBitcoinOrdGetterGetRawTransaction(t *testing.T) {
+	config.InitConfig()
 	type fields struct {
 		client   *http.Client
 		Endpoint string
@@ -29,7 +116,7 @@ func TestBitcoinOrdGetter_GetRawTransaction(t *testing.T) {
 			name: "common test",
 			fields: fields{
 				client:   http.NewClient(),
-				Endpoint: config.Config.BitCoinRpc.Host,
+				Endpoint: config.GlobalConfig.BitcoinRPC,
 			},
 			args: args{
 				txID: "26a08b3ac578f1fe01bde9d0268353121f22461fcb48dc3144f1dd5210d0f8ad",
@@ -54,7 +141,8 @@ func TestBitcoinOrdGetter_GetRawTransaction(t *testing.T) {
 	}
 }
 
-func TestBitcoinOrdGetter_GetOutput(t *testing.T) {
+func TestBitcoinOrdGetterGetOutput(t *testing.T) {
+	config.InitConfig()
 	type fields struct {
 		client   *http.Client
 		Endpoint string
@@ -74,7 +162,7 @@ func TestBitcoinOrdGetter_GetOutput(t *testing.T) {
 			name: "common test",
 			fields: fields{
 				client:   http.NewClient(),
-				Endpoint: config.Config.BitCoinRpc.Host,
+				Endpoint: config.GlobalConfig.BitcoinRPC,
 			},
 			args: args{
 				txID:  "a071d2a7abb989bd47d186b6b4bfe74b9673d5529dbfcf8f76229720f6b867c4",
@@ -111,7 +199,8 @@ func TestBitcoinOrdGetter_GetOutput(t *testing.T) {
 	}
 }
 
-func TestBitcoinOrdGetter_GetBlock1(t *testing.T) {
+func TestBitcoinOrdGetterGetBlock1(t *testing.T) {
+	config.InitConfig()
 	type fields struct {
 		client   *http.Client
 		Endpoint string
@@ -130,7 +219,7 @@ func TestBitcoinOrdGetter_GetBlock1(t *testing.T) {
 			name: "common test",
 			fields: fields{
 				client:   http.NewClient(),
-				Endpoint: config.Config.BitCoinRpc.Host,
+				Endpoint: config.GlobalConfig.BitcoinRPC,
 			},
 			args: args{
 				hash: "0000000000000000000454a3a654c88ab5ad9824ca8506c1f7f65cc0ea193503",
@@ -155,7 +244,8 @@ func TestBitcoinOrdGetter_GetBlock1(t *testing.T) {
 	}
 }
 
-func TestBitcoinOrdGetter_GetBlock2(t *testing.T) {
+func TestBitcoinOrdGetterGetBlock2(t *testing.T) {
+	config.InitConfig()
 	type fields struct {
 		client   *http.Client
 		Endpoint string
@@ -174,7 +264,7 @@ func TestBitcoinOrdGetter_GetBlock2(t *testing.T) {
 			name: "common test",
 			fields: fields{
 				client:   http.NewClient(),
-				Endpoint: config.Config.BitCoinRpc.Host,
+				Endpoint: config.GlobalConfig.BitcoinRPC,
 			},
 			args: args{
 				hash: "0000000000000000000454a3a654c88ab5ad9824ca8506c1f7f65cc0ea193503",
@@ -199,7 +289,8 @@ func TestBitcoinOrdGetter_GetBlock2(t *testing.T) {
 	}
 }
 
-func TestBitcoinOrdGetter_GetAllInscriptions(t *testing.T) {
+func TestBitcoinOrdGetterGetAllInscriptions(t *testing.T) {
+	config.InitConfig()
 	type fields struct {
 		client   *http.Client
 		Endpoint string
@@ -218,7 +309,7 @@ func TestBitcoinOrdGetter_GetAllInscriptions(t *testing.T) {
 			name: "common test",
 			fields: fields{
 				client:   http.NewClient(),
-				Endpoint: config.Config.BitCoinRpc.Host,
+				Endpoint: config.GlobalConfig.BitcoinRPC,
 			},
 			args: args{
 				txID: "9db3938b6ae166668e35e6f219a5c3a6146b613eed2f088644ce1fe829309b55",

@@ -1,105 +1,74 @@
 package apis
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
-	"sync"
+	"time"
 
-	"github.com/RiemaLabs/modular-indexer-light/config"
 	"github.com/RiemaLabs/modular-indexer-light/constant"
-	"github.com/RiemaLabs/modular-indexer-light/transfer"
+	"github.com/RiemaLabs/modular-indexer-light/runtime"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-type RoundRobinBalancer struct {
-	sync.Mutex
-	index    int
-	backends []string
-}
+func StartService(df *runtime.RuntimeState, enableDebug bool) {
 
-func (r *RoundRobinBalancer) Next() string {
-	r.Lock()
-	defer r.Unlock()
-
-	if len(r.backends) == 0 {
-		return ""
+	if !enableDebug {
+		gin.SetMode(gin.ReleaseMode)
 	}
 
-	next := r.backends[r.index]
-	r.index = (r.index + 1) % len(r.backends)
-	return next
-}
-
-func NewRoundRobinBalancer(backends []string) *RoundRobinBalancer {
-	return &RoundRobinBalancer{index: -1, backends: backends}
-}
-
-func setupReverseProxy(proxyPath string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Request.URL.Path = proxyPath
-		balancer := NewRoundRobinBalancer(config.GetCommitteeIndexerApi(config.Config))
-		target := balancer.Next()
-		if target == "" {
-			c.String(http.StatusForbidden, "No available backends")
-			return
-		}
-		targetURL, err := url.Parse(target)
-		if err != nil {
-			c.String(http.StatusForbidden, fmt.Sprintf("Failed to parse backend URL: %s", err))
-			return
-		}
-		proxy := httputil.NewSingleHostReverseProxy(targetURL)
-		proxy.ServeHTTP(c.Writer, c.Request)
-	}
-}
-
-func Start() {
 	r := gin.Default()
 
-	r.Use(gin.Recovery(), CheckState(), gin.Logger())
+	// TODO: Medium. Add the TRUSTED_PROXIES to our config
+	// trustedProxies := os.Getenv("TRUSTED_PROXIES")
+	// if trustedProxies != "" {
+	//     r.SetTrustedProxies([]string{trustedProxies})
+	// }
 
-	r.GET(constant.LightBlockHigh, setupReverseProxy(constant.BlockHigh))
+	r.Use(gin.Recovery(), CheckState(), gin.Logger(), cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"POST", "GET"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
-	r.GET(constant.LightState, func(context *gin.Context) {
-		context.JSON(http.StatusOK, Brc20VerifiableLightStateResponse{
-			State: constant.ApiState,
+	r.GET(constant.LightBlockHeight, func(c *gin.Context) {
+		c.Data(http.StatusOK, "text/plain", []byte(fmt.Sprintf("%d", df.CurrentHeight())))
+	})
+
+	r.GET(constant.LightState, func(c *gin.Context) {
+		c.JSON(http.StatusOK, Brc20VerifiableLightStateResponse{
+			State: constant.ApiState.String(),
 		})
 	})
 
-	r.GET(constant.LightBalance, GetcurrentBalanceOfWallet)
+	r.GET(constant.LightCurrentBalanceOfWallet, func(c *gin.Context) {
+		ck := df.CurrentFirstCheckpoint().Checkpoint
 
-	r.GET(constant.LightCheckpoint, func(context *gin.Context) {
-		//TODO::
-		context.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{})
+		GetCurrentBalanceOfWallet(c, ck)
 	})
 
-	r.GET(constant.LightLastCheckpoint, func(context *gin.Context) {
-		//TODO::
-		context.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{})
+	r.GET(constant.LightCurrentBalanceOfPkscript, func(c *gin.Context) {
+		ck := df.CurrentFirstCheckpoint().Checkpoint
+
+		GetCurrentBalanceOfPkscript(c, ck)
 	})
 
-	r.POST(constant.LightTransfer, func(ctx *gin.Context) {
-		req := Brc20VerifiableLightTransferVerifyRequest{}
-		if err := ctx.BindJSON(&req); nil != err {
-			ctx.JSON(http.StatusBadRequest, Brc20VerifiableLightTransferVerifyResponse{false, errors.New("unauthed parameter")})
-			return
-		}
-
-		if is, msg := req.Check(); !is {
-			ctx.JSON(http.StatusOK, Brc20VerifiableLightTransferVerifyResponse{false, errors.New(msg)})
-			return
-		}
-
-		is, err := transfer.Verify(req.Transfers, req.BlockHeight)
-		ctx.JSON(http.StatusOK, Brc20VerifiableLightTransferVerifyResponse{is, err})
+	r.GET(constant.LightCurrentCheckpoints, func(c *gin.Context) {
+		cur := df.CurrentCheckpoints()
+		c.JSON(http.StatusOK, Brc20VerifiableLightCheckpointsResponse{
+			Checkpoints: cur,
+		})
 	})
 
-	fmt.Println("Starting Gin HTTP reverse proxy server on :8081...")
-	err := r.Run(":8080")
-	if err != nil {
-		panic(err)
-	}
+	r.GET(constant.LightLastCheckpoint, func(c *gin.Context) {
+		lt := df.LastCheckpoint()
+		c.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{
+			Checkpoint: lt,
+		})
+	})
+
+	// TODO: Medium. Allow user to setup port.
+	r.Run(":8080")
 }

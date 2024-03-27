@@ -10,8 +10,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/RiemaLabs/modular-indexer-committee/ord/getter"
+
 	"github.com/RiemaLabs/modular-indexer-light/config"
-	"github.com/RiemaLabs/modular-indexer-light/getter"
+	client "github.com/RiemaLabs/modular-indexer-light/ord/getter"
 	"github.com/balletcrypto/bitcoin-inscription-parser/parser"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -20,19 +22,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type OrdTransfer struct {
-	ID            uint
-	InscriptionID string
-	OldSatpoint   string
-	NewSatpoint   string
-	NewPkscript   string
-	NewWallet     string
-	SentAsFee     bool
-	Content       string
-	ContentType   string
-}
+// TODO: High.
+// Retrieve OrdTransfer directly from the Bitcoin block using the mapping between oldSatPoint and newSatPoint,
+// bypassing the need for OrdTransfers verification.
 
-func (o OrdTransfer) Check() (bool, string) {
+func CheckOrdTransfer(o getter.OrdTransfer) (bool, string) {
 	if len(o.InscriptionID) < 66 || len(strings.Split(o.InscriptionID, "i")) != 2 {
 		return false, fmt.Sprintf("invalid inscription_id: %s", o.InscriptionID)
 	}
@@ -52,18 +46,18 @@ func (o OrdTransfer) Check() (bool, string) {
 	return true, ""
 }
 
-func (o OrdTransfer) Offset() uint64 {
+func OffsetSat(o getter.OrdTransfer) uint64 {
 	offset, _ := strconv.ParseInt(strings.Split(o.InscriptionID, "i")[1], 10, 32)
 	return uint64(offset)
 }
 
-func Verify(transfers TransferByInscription, blockHeight uint) (bool, error) {
+func VerifyOrdTransfer(transfers TransferByInscription, blockHeight uint) (bool, error) {
 	if len(transfers) == 0 {
 		return false, errors.New("enpty tranfer data")
 	}
 
 	sort.Sort(transfers)
-	chainClient, _ := getter.NewGetter(config.Config)
+	chainClient, _ := client.NewBitcoinOrdGetter(config.GlobalConfig.BitcoinRPC)
 
 	batch := make(map[string]TransferByInscription)
 	// find a batch of inscriptions in same txid
@@ -82,18 +76,18 @@ func Verify(transfers TransferByInscription, blockHeight uint) (bool, error) {
 	batch[strings.Split(transfers[f].NewSatpoint, ":")[0]] = transfers[f:n]
 
 	hash, err := chainClient.GetBlockHash(blockHeight)
-	if nil != err {
+	if err != nil {
 		return false, err
 	}
 	blockBody, err := chainClient.GetBlock2(hash)
-	if nil != err {
+	if err != nil {
 		return false, err
 	}
 
 	for _, tx := range blockBody.Tx {
 		if trans, exist := batch[tx.Txid]; exist {
-			is, err := envelopVerify(chainClient, trans, tx)
-			if nil != err {
+			is, err := VerifyEnvelop(chainClient, trans, tx)
+			if err != nil {
 				logrus.Warnf("envelopVerify failed txid: %s, err %v", tx.Txid, err)
 			}
 			if !is {
@@ -105,15 +99,15 @@ func Verify(transfers TransferByInscription, blockHeight uint) (bool, error) {
 	return true, nil
 }
 
-func envelopVerify(chainClient *getter.BitcoinOrdGetter, transfers []OrdTransfer, tx btcjson.TxRawResult) (bool, error) {
+func VerifyEnvelop(chainClient *client.BitcoinOrdGetter, transfers []getter.OrdTransfer, tx btcjson.TxRawResult) (bool, error) {
 	sort.Sort(TransferByInscription(transfers))
 
 	buf, err := hex.DecodeString(tx.Hex)
-	if nil != err {
+	if err != nil {
 		return false, err
 	}
 	msgTx := new(wire.MsgTx)
-	if err := msgTx.Deserialize(bytes.NewReader(buf)); nil != err {
+	if err := msgTx.Deserialize(bytes.NewReader(buf)); err != nil {
 		return false, err
 	}
 
@@ -130,7 +124,7 @@ func envelopVerify(chainClient *getter.BitcoinOrdGetter, transfers []OrdTransfer
 				offset := total_input_value + uint64(satOff)
 				// find old inscription content && content type
 				beforeIns, err := chainClient.GetAllInscriptions(arr[0])
-				if nil != err {
+				if err != nil {
 					return false, err
 				}
 				body, exist := beforeIns[obj.InscriptionID]
@@ -148,7 +142,7 @@ func envelopVerify(chainClient *getter.BitcoinOrdGetter, transfers []OrdTransfer
 		// parse new Inscripitons
 		offset := total_input_value
 		pOut, err := chainClient.GetOutput(tx_in.PreviousOutPoint.Hash.String(), int(tx_in.PreviousOutPoint.Index))
-		if nil != err {
+		if err != nil {
 			return false, err
 		}
 		total_input_value += uint64(pOut.Value * math.Pow10(8))
@@ -159,7 +153,10 @@ func envelopVerify(chainClient *getter.BitcoinOrdGetter, transfers []OrdTransfer
 						tx.Txid,
 						id_counter,
 					},
-					Offset: offset, // TODO parser lib missing pointer, So we default inscription first sat at outpoint
+					// TODO: Low.
+					// The parser library is missing the functionality to parse the pointer.
+					// So we default to setting the first inscription at the outpoint.
+					Offset: offset,
 					Body:   ii,
 				})
 				id_counter++
@@ -189,37 +186,25 @@ func envelopVerify(chainClient *getter.BitcoinOrdGetter, transfers []OrdTransfer
 
 	p1, p2 := 0, 0
 	for p1 < len(transfers) && p2 < len(new_location) {
-		offset := transfers[p1].Offset()
+		offset := OffsetSat(transfers[p1])
 
 		tmpTr := transfers[p1]
 		tmpNewl := new_location[p2]
 
-		if tmpTr.Offset() == new_location[p2].Flotsam.Offset {
-			// pkscript verify ||  wallet  verify
+		if OffsetSat(tmpTr) == new_location[p2].Flotsam.Offset {
+			// Verify pkscript
 			pkOBj, err := txscript.ParsePkScript(tmpNewl.TxOut.PkScript)
-			if nil != err {
+			if err != nil {
 				return false, err
 			}
 			addr, _ := pkOBj.Address(&chaincfg.MainNetParams)
 
-			// fmt.Println(tmpTr.NewPkscript)
-			// fmt.Println(hex.EncodeToString(tmpNewl.TxOut.PkScript))
-
-			// fmt.Println(tmpTr.NewWallet)
-			// fmt.Println(addr.String())
-
-			// fmt.Println([]byte(tmpTr.Content))
-			// fmt.Println(tmpNewl.Flotsam.Body.Inscription.ContentBody)
-
-			// fmt.Println(tmpTr.ContentType)
-			// fmt.Println(hex.EncodeToString(tmpNewl.Flotsam.Body.Inscription.ContentType))
-
-			//TODO verify content,why ?
-			if tmpTr.NewPkscript != hex.EncodeToString(tmpNewl.TxOut.PkScript) || tmpTr.NewWallet != addr.String() ||
+			//TODO: Low. Verify content.
+			if string(tmpTr.NewPkscript) != hex.EncodeToString(tmpNewl.TxOut.PkScript) || string(tmpTr.NewWallet) != addr.String() ||
 				tmpTr.ContentType != hex.EncodeToString(tmpNewl.Body.Inscription.ContentType) {
 				return false, nil
 			}
-			// TODO verify newSatPoint
+			// TODO: Low. Verify newSatPoint.
 			p1++
 			p2++
 		} else if offset > inscriptions[p2].TxInOffset {

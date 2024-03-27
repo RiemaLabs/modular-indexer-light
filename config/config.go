@@ -1,57 +1,92 @@
 package config
 
 import (
+	"bufio"
 	_ "embed"
 	"encoding/json"
+	"fmt"
+	"io"
 	"os"
+	"strings"
 
-	"github.com/RiemaLabs/modular-indexer-light/constant"
-	"github.com/RiemaLabs/modular-indexer-light/types"
+	"github.com/RiemaLabs/modular-indexer-light/log"
 )
+
+var BlacklistFile = "./blacklist.jsonlines"
 
 //go:embed config.json
 var configBody []byte
 
-var Config *types.Config
+var GlobalConfig *Config
 
-func init() {
-	Config = &types.Config{}
-	err := json.Unmarshal(configBody, &Config)
+func InitConfig() {
+	GlobalConfig = &Config{}
+	err := json.Unmarshal(configBody, &GlobalConfig)
 	if err != nil {
 		return
 	}
+
+	blacks := LoadBlacklist()
+
+	for _, b := range blacks {
+		if b.SourceDA != nil {
+			for i, source := range GlobalConfig.CommitteeIndexers.DA {
+				if source.Name == b.SourceDA.Name && source.NamespaceID == b.SourceDA.NamespaceID && source.Network == b.SourceDA.Network {
+					GlobalConfig.CommitteeIndexers.DA[0], GlobalConfig.CommitteeIndexers.DA[i] = GlobalConfig.CommitteeIndexers.DA[i], GlobalConfig.CommitteeIndexers.DA[0]
+					GlobalConfig.CommitteeIndexers.DA = GlobalConfig.CommitteeIndexers.DA[1:]
+					break
+				}
+			}
+		}
+
+		if b.SourceS3 != nil {
+			for i, source := range GlobalConfig.CommitteeIndexers.S3 {
+				if source.Name == b.SourceS3.Name && source.Region == b.SourceS3.Region && source.Bucket == b.SourceS3.Bucket {
+					GlobalConfig.CommitteeIndexers.S3[0], GlobalConfig.CommitteeIndexers.S3[i] = GlobalConfig.CommitteeIndexers.S3[i], GlobalConfig.CommitteeIndexers.S3[0]
+					GlobalConfig.CommitteeIndexers.S3 = GlobalConfig.CommitteeIndexers.S3[1:]
+					break
+				}
+			}
+		}
+
+	}
 }
 
-func GetCommitteeIndexerApi(config *types.Config) []string {
-	var url []string
-	if config == nil || config.CommitteeIndexer == nil {
-		return url
+func AppendBlacklist(in *Blacklist) {
+	f, err := os.OpenFile(BlacklistFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		log.Error(fmt.Sprintf("failed to open the blacklist file, error: %v", err))
 	}
-	if config.CommitteeIndexer.Da != nil {
-		for i, _ := range config.CommitteeIndexer.Da {
-			url = append(url, config.CommitteeIndexer.Da[i].ApiUrl)
-		}
+	defer f.Close()
+
+	data, err := json.Marshal(in)
+	if err != nil {
+		log.Error(fmt.Sprintf("failed to open the blacklist file, error: %v", err))
 	}
-	if config.CommitteeIndexer.S3 != nil {
-		for i, _ := range config.CommitteeIndexer.S3 {
-			url = append(url, config.CommitteeIndexer.S3[i].ApiUrl)
-		}
-	}
-	return url
+	f.WriteString(string(data) + "\n")
 }
 
-func UpdateConfig(config *types.Config) error {
-	file, err := os.OpenFile(constant.ConfigFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+func LoadBlacklist() []*Blacklist {
+
+	f, err := os.Open(BlacklistFile)
 	if err != nil {
-		return err
+		return []*Blacklist{}
 	}
-	marshal, err := json.Marshal(config)
-	if err != nil {
-		return err
+	defer f.Close()
+
+	r := bufio.NewReader(f)
+	body := []*Blacklist{}
+	for {
+		line, err := r.ReadString('\n')
+		if err == io.EOF || err != nil {
+			break
+		}
+		line = strings.TrimRight(line, "\n")
+		tmp := Blacklist{}
+		if err := json.Unmarshal([]byte(line), &tmp); err != nil {
+			return body
+		}
+		body = append(body, &tmp)
 	}
-	_, err = file.Write(marshal)
-	if err != nil {
-		return err
-	}
-	return nil
+	return body
 }

@@ -21,7 +21,7 @@
     ]
   },
 
-  "bitcoinRPC": "https://hardworking-light-meme.btc.quiknode.pro/12fbc8204dea881e41de39337dc91fd580642dce",
+  "bitcoinRPC": "",
   "metaProtocol": "brc-20",
   "minimalCheckpoint": 2,
   "version": "v0.1.0-rc.1"

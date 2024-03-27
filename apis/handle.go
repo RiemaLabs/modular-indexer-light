@@ -3,12 +3,11 @@ package apis
 import (
 	"encoding/base64"
 	"net/http"
-	"strconv"
 
-	"github.com/RiemaLabs/modular-indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-committee/apis"
+	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
+	"github.com/RiemaLabs/modular-indexer-light/clients/committee"
 	"github.com/RiemaLabs/modular-indexer-light/constant"
-	"github.com/RiemaLabs/modular-indexer-light/indexer"
-	"github.com/RiemaLabs/modular-indexer-light/verify"
 	"github.com/ethereum/go-verkle"
 	"github.com/gin-gonic/gin"
 )
@@ -16,72 +15,83 @@ import (
 func CheckState() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		switch constant.ApiState {
-		case constant.ApiStateSync:
-			c.JSON(http.StatusForbidden, "API is syncing")
+		case constant.StateActive:
+			c.Next()
+		default:
+			c.JSON(http.StatusForbidden, constant.ApiState.String())
 			return
-		case constant.ApiStateLoading:
-			c.JSON(http.StatusForbidden, "API is loading")
-			return
-		case constant.ApiStateActive:
 		}
-		c.Next()
 	}
 }
 
-func GetcurrentBalanceOfWallet(c *gin.Context) {
-	balancer := NewRoundRobinBalancer(config.GetCommitteeIndexerApi(config.Config))
-	target := balancer.Next()
-	if target == "" {
-		c.String(http.StatusForbidden, "No available backends")
-		return
-	}
-	req := &Brc20VerifiableLightGetCurrentBalanceOfWalletRequest{}
-	err := c.BindJSON(req)
+func GetCurrentBalanceOfWallet(c *gin.Context, ck *checkpoint.Checkpoint) {
+	tick := c.DefaultQuery("tick", "")
+	wallet := c.DefaultQuery("wallet", "")
+
+	balance, err := committee.NewCommitteeIndexerClient(c, ck.Name, ck.URL).CurrentBalanceOfWallet(tick, wallet)
 	if err != nil {
-		c.String(http.StatusForbidden, "Parameter error")
-		return
-	}
-	balance, err := indexer.NewClient(c, target, target).GetBalance(req.Tick, req.Pkscript)
-	if err != nil {
-		return
-	}
-	if balance != nil {
-		prePointByte, err := base64.StdEncoding.DecodeString(verify.DefiniteState.PreCheckpoint.Commitment)
-		if err != nil {
-			c.JSON(http.StatusOK, "")
-			return
-		}
-		prePoint := &verkle.Point{}
-		err = prePoint.SetBytes(prePointByte)
-		if err != nil {
-			c.JSON(http.StatusOK, "")
-			return
-		}
-
-		preProofByte, err := base64.StdEncoding.DecodeString(*balance.Proof)
-		if err != nil {
-			return
-		}
-		preVProof := &verkle.VerkleProof{}
-		err = preVProof.UnmarshalJSON(preProofByte)
-		if err != nil {
-			return
-		}
-
-		preProof, err := verkle.DeserializeProof(preVProof, nil)
-		if err != nil {
-			return
-		}
-
-		err = verify.VerifyProof(preProof, prePoint)
-		if err != nil {
-			c.JSON(http.StatusOK, "")
-			return
-		}
-		h, _ := strconv.Atoi(verify.DefiniteState.PostCheckpoint.Height)
-		c.JSON(http.StatusOK, Brc20VerifiableLightGetCurrentBalanceOfWalletResponse{
-			Result:      balance.Result.AvailableBalance,
-			BlockHeight: h,
+		msg := err.Error()
+		c.JSON(http.StatusOK, apis.Brc20VerifiableCurrentBalanceOfWalletResponse{
+			Error: &msg,
 		})
+		return
 	}
+
+	pbytes, _ := base64.StdEncoding.DecodeString(ck.Commitment)
+	var point verkle.Point
+	point.SetBytes(pbytes)
+
+	ok, err := apis.VerifyCurrentBalanceOfWallet(&point, tick, wallet, balance)
+	if err != nil {
+		msg := err.Error()
+		c.JSON(http.StatusOK, apis.Brc20VerifiableCurrentBalanceOfWalletResponse{
+			Error: &msg,
+		})
+		return
+	}
+
+	if !ok {
+		msg := "Failed to verify the result obtained from the committee indexer."
+		c.JSON(http.StatusOK, apis.Brc20VerifiableCurrentBalanceOfWalletResponse{
+			Error: &msg,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, balance)
+}
+
+func GetCurrentBalanceOfPkscript(c *gin.Context, ck *checkpoint.Checkpoint) {
+	tick := c.DefaultQuery("tick", "")
+	pkscript := c.DefaultQuery("pkscript", "")
+
+	balance, err := committee.NewCommitteeIndexerClient(c, ck.Name, ck.URL).CurrentBalanceOfPkscript(tick, pkscript)
+	if err != nil {
+		msg := err.Error()
+		c.JSON(http.StatusOK, apis.Brc20VerifiableCurrentBalanceOfWalletResponse{
+			Error: &msg,
+		})
+		return
+	}
+
+	pbytes, _ := base64.StdEncoding.DecodeString(ck.Commitment)
+	var point verkle.Point
+	point.SetBytes(pbytes)
+
+	ok, err := apis.VerifyCurrentBalanceOfPkscript(&point, tick, pkscript, balance)
+	if err != nil {
+		msg := err.Error()
+		c.JSON(http.StatusOK, apis.Brc20VerifiableCurrentBalanceOfWalletResponse{
+			Error: &msg,
+		})
+		return
+	}
+
+	if !ok {
+		msg := "Failed to verify the result obtained from the committee indexer."
+		c.JSON(http.StatusOK, apis.Brc20VerifiableCurrentBalanceOfWalletResponse{
+			Error: &msg,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, balance)
 }

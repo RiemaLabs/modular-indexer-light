@@ -1,6 +1,8 @@
 package transfer
 
-type TransferByInscription []OrdTransfer
+import "github.com/RiemaLabs/modular-indexer-committee/ord/getter"
+
+type TransferByInscription []getter.OrdTransfer
 
 func (a TransferByInscription) Len() int {
 	return len(a)
