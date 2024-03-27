@@ -105,19 +105,13 @@ Run Modular Indexer (Light): Start the application. You can also include additio
 ## Basic Usage
 After successfully launching `Light Indexer`, you have several functionalities at your disposal for interacting with the Bitcoin blockchain. These capabilities can be accessed through the `Indexer Dashboard` or [direct API calls](https://app.gitbook.com/o/CpG1oV8XXLDnYbUdhhqM/s/RvfNFdIQAghhQdWUByGF/developer-guides/introduction):
 
-#### Interacting with Bitcoin RPC
-The application can interact with the Bitcoin network via RPC calls, allowing operations like fetching the latest block height or retrieving block hashes.
-
 #### Querying Wallet Balances
 `Light Indexer` is capable of fetching the balance of specified Bitcoin wallets, a crucial feature for tracking transactions and managing wallet assets.
 
 #### Accessing and Verifying Checkpoint Data
 Working in conjunction with `Modular Indexer (Committee)`, this tool can access and verify checkpoint data for various meta-protocols, ensuring data accuracy and integrity.
 
-#### Real-time Data Processing
-The application efficiently processes and analyzes blockchain data in real-time, enabling up-to-date blockchain interactions and analytics.
-
-As `Light Indexer` is designed for efficiency and minimal resource usage, it provides a streamlined and accessible approach for users requiring interaction with Bitcoin's meta-protocols without intensive data processing needs.
+`Light Indexer` is optimized for efficiency, requiring minimal resources. This design provides a user-friendly approach for those needing to interact with Bitcoin's meta-protocols without the complexities of in-depth data processing.
 
 <!-- ## Service API -->
 
