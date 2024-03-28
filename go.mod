@@ -1,33 +1,6 @@
 module github.com/RiemaLabs/modular-indexer-light
 
 go 1.22.0
-<<<<<<< HEAD
-
-require (
-	github.com/btcsuite/btcd v0.24.0 // indirect
-	github.com/btcsuite/btcd/btcutil v1.1.5 // indirect
-)
-
-require (
-	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
-	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0 // indirect
-	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f // indirect
-	github.com/decred/dcrd/crypto/blake256 v1.0.1 // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-)
-
-replace (
-	github.com/RiemaLabs/indexer-committee => ../indexer-committee
-	github.com/RiemaLabs/nubit-da-sdk => ../nubit-da-sdk
-)
-
-require (
-	github.com/RiemaLabs/indexer-committee v0.0.0-202202171455
-	github.com/RiemaLabs/nubit-da-sdk v0.0.0-00010101000000-000000000000
-=======
 
 require (
 	github.com/RiemaLabs/modular-indexer-committee v0.1.0-rc.1
@@ -36,7 +9,6 @@ require (
 	github.com/btcsuite/btcd v0.24.2-beta.rc1
 	github.com/ethereum/go-verkle v0.1.1-0.20240119133216-f8289fc59149
 	github.com/gin-contrib/cors v1.7.1
->>>>>>> origin/lewis
 	github.com/gin-gonic/gin v1.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
