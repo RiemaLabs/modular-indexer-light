@@ -57,16 +57,12 @@ func StartService(df *runtime.RuntimeState, enableDebug bool) {
 
 	r.GET(constant.LightCurrentCheckpoints, func(c *gin.Context) {
 		cur := df.CurrentCheckpoints()
-		c.JSON(http.StatusOK, Brc20VerifiableLightCheckpointsResponse{
-			Checkpoints: cur,
-		})
+		c.JSON(http.StatusOK, cur)
 	})
 
 	r.GET(constant.LightLastCheckpoint, func(c *gin.Context) {
 		lt := df.LastCheckpoint()
-		c.JSON(http.StatusOK, Brc20VerifiableLightLastCheckpointResponse{
-			Checkpoint: lt,
-		})
+		c.JSON(http.StatusOK, lt)
 	})
 
 	// TODO: Medium. Allow user to setup port.

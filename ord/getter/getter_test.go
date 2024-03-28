@@ -12,8 +12,7 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 )
 
-func TestBitcoinOrdGetterGetLatestBlockHeight(t *testing.T) {
-	config.InitConfig()
+func TestBitcoinOrdGetter_GetLatestBlockHeight(t *testing.T) {
 	type fields struct {
 		client   *http.Client
 		Endpoint string
@@ -50,7 +49,7 @@ func TestBitcoinOrdGetterGetLatestBlockHeight(t *testing.T) {
 	}
 }
 
-func TestBitcoinOrdGetterGetBlockHash(t *testing.T) {
+func TestBitcoinOrdGetter_GetBlockHash(t *testing.T) {
 	config.InitConfig()
 	type fields struct {
 		client   *http.Client
@@ -96,7 +95,7 @@ func TestBitcoinOrdGetterGetBlockHash(t *testing.T) {
 	}
 }
 
-func TestBitcoinOrdGetterGetRawTransaction(t *testing.T) {
+func TestBitcoinOrdGetter_GetRawTransaction(t *testing.T) {
 	config.InitConfig()
 	type fields struct {
 		client   *http.Client
@@ -141,7 +140,7 @@ func TestBitcoinOrdGetterGetRawTransaction(t *testing.T) {
 	}
 }
 
-func TestBitcoinOrdGetterGetOutput(t *testing.T) {
+func TestBitcoinOrdGetter_GetOutput(t *testing.T) {
 	config.InitConfig()
 	type fields struct {
 		client   *http.Client
@@ -199,7 +198,7 @@ func TestBitcoinOrdGetterGetOutput(t *testing.T) {
 	}
 }
 
-func TestBitcoinOrdGetterGetBlock1(t *testing.T) {
+func TestBitcoinOrdGetter_GetBlock(t *testing.T) {
 	config.InitConfig()
 	type fields struct {
 		client   *http.Client
@@ -232,7 +231,7 @@ func TestBitcoinOrdGetterGetBlock1(t *testing.T) {
 				client:   tt.fields.client,
 				Endpoint: tt.fields.Endpoint,
 			}
-			got, err := r.GetBlock1(tt.args.hash)
+			got, err := r.GetBlock(tt.args.hash)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BitcoinOrdGetter.GetBlock1() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -244,7 +243,7 @@ func TestBitcoinOrdGetterGetBlock1(t *testing.T) {
 	}
 }
 
-func TestBitcoinOrdGetterGetBlock2(t *testing.T) {
+func TestBitcoinOrdGetter_GetBlockDetail(t *testing.T) {
 	config.InitConfig()
 	type fields struct {
 		client   *http.Client
@@ -277,7 +276,7 @@ func TestBitcoinOrdGetterGetBlock2(t *testing.T) {
 				client:   tt.fields.client,
 				Endpoint: tt.fields.Endpoint,
 			}
-			got, err := r.GetBlock2(tt.args.hash)
+			got, err := r.GetBlockDetail(tt.args.hash)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BitcoinOrdGetter.GetBlock2() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -289,7 +288,7 @@ func TestBitcoinOrdGetterGetBlock2(t *testing.T) {
 	}
 }
 
-func TestBitcoinOrdGetterGetAllInscriptions(t *testing.T) {
+func TestBitcoinOrdGetter_GetAllInscriptions(t *testing.T) {
 	config.InitConfig()
 	type fields struct {
 		client   *http.Client

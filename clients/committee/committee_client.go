@@ -95,7 +95,7 @@ func (c *CommitteeIndexerClient) CurrentBalanceOfWallet(tick, wallet string) (*a
 
 func (c *CommitteeIndexerClient) CurrentBalanceOfPkscript(tick, pkscript string) (*apis.Brc20VerifiableCurrentBalanceOfPkscriptResponse, error) {
 	var data *apis.Brc20VerifiableCurrentBalanceOfPkscriptResponse
-	path, err := c.JoinPath(constant.CurrentBalanceOfWallet)
+	path, err := c.JoinPath(constant.CurrentBalanceOfPkscript)
 	if err != nil {
 		return nil, err
 	}

@@ -37,8 +37,8 @@ type (
 
 	CheckpointExport struct {
 		Checkpoint *checkpoint.Checkpoint `json:"checkPoint"`
-		SourceS3   *SourceS3              `json:"*sourceS3,omitempty"`
-		SourceDA   *SourceDA              `json:"*sourceDa,omitempty"`
+		SourceS3   *SourceS3              `json:"sourceS3,omitempty"`
+		SourceDA   *SourceDA              `json:"sourceDa,omitempty"`
 	}
 
 	Evidence struct {

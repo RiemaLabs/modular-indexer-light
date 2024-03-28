@@ -78,7 +78,6 @@ OuterLoop:
 	if err != nil {
 		return nil, err
 	}
-
 	return &config.CheckpointExport{
 		Checkpoint: ck,
 		SourceDA:   p.Config,
