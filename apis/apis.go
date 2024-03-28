@@ -38,6 +38,11 @@ func StartService(df *runtime.RuntimeState, enableDebug bool) {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})
 
+	r.StaticFile("/logo192.png", "./build/logo192.png")
+	r.StaticFile("/manifest.json", "./build/manifest.json")
+	r.StaticFile("/favicon.ico", "./build/favicon.ico")
+	r.Static("/static", "./build/static")
+
 	r.GET(constant.LightBlockHeight, func(c *gin.Context) {
 		c.Data(http.StatusOK, "text/plain", []byte(fmt.Sprintf("%d", df.CurrentHeight())))
 	})
