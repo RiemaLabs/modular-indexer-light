@@ -33,6 +33,11 @@ func StartService(df *runtime.RuntimeState, enableDebug bool) {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	r.LoadHTMLFiles("build/index.html")
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", nil)
+	})
+
 	r.GET(constant.LightBlockHeight, func(c *gin.Context) {
 		c.Data(http.StatusOK, "text/plain", []byte(fmt.Sprintf("%d", df.CurrentHeight())))
 	})
