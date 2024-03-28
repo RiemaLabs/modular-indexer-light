@@ -9,7 +9,7 @@ import (
 	"github.com/RiemaLabs/modular-indexer-light/config"
 )
 
-func TestProviderS3GetCheckpoint(t *testing.T) {
+func TestProviderS3_GetCheckpoint(t *testing.T) {
 	config.InitConfig()
 	type fields struct {
 		Config       *config.SourceS3
@@ -31,8 +31,12 @@ func TestProviderS3GetCheckpoint(t *testing.T) {
 		{
 			name: "comnon test",
 			fields: fields{
-				Config:       &config.GlobalConfig.CommitteeIndexers.S3[0],
-				MetaProtocol: config.GlobalConfig.MetaProtocol,
+				Config: &config.SourceS3{
+					Region: "us-west-2",
+					Bucket: "nubit-modular-indexer-brc-20",
+					Name:   "nubit-official-02",
+				},
+				MetaProtocol: "brc-20",
 				Retry:        1,
 			},
 			args: args{
@@ -42,7 +46,11 @@ func TestProviderS3GetCheckpoint(t *testing.T) {
 			},
 			want: &config.CheckpointExport{
 				Checkpoint: &checkpoint.Checkpoint{Commitment: "QVzPh4JnwHGuPz9qRWm+q0z2HED4SvxY1uS0prvW+ZE=", Hash: "000000000000000000020443905dc3ba40f729313523fba9a01d0d0c44fdd693", Height: "836223", MetaProtocol: "brc-20", Name: "nubit-official-02", URL: "https://committee.modular.nubit.org", Version: "v0.1.0-rc.0"},
-				SourceS3:   &config.GlobalConfig.CommitteeIndexers.S3[0],
+				SourceS3: &config.SourceS3{
+					Region: "us-west-2",
+					Bucket: "nubit-modular-indexer-brc-20",
+					Name:   "nubit-official-02",
+				},
 			},
 		},
 	}

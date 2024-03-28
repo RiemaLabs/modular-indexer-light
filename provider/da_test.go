@@ -10,7 +10,6 @@ import (
 )
 
 func TestProviderDA_GetCheckpoint(t *testing.T) {
-	config.InitConfig()
 	type fields struct {
 		Config               *config.SourceDA
 		MetaProtocol         string
@@ -32,18 +31,22 @@ func TestProviderDA_GetCheckpoint(t *testing.T) {
 		{
 			name: "common test",
 			fields: fields{
-				Config:               &config.GlobalConfig.CommitteeIndexers.DA[0],
-				MetaProtocol:         config.GlobalConfig.MetaProtocol,
+				Config: &config.SourceDA{
+					Network:     "Pre-Alpha Testnet",
+					NamespaceID: "0x00000003",
+					Name:        "nubit-official-00",
+				},
+				MetaProtocol:         "brc-20",
 				Retry:                1,
-				LastCheckpointOffset: 685,
+				LastCheckpointOffset: 709,
 			},
 			args: args{
 				ctx:    context.TODO(),
-				height: 836595,
-				hash:   "00000000000000000001b813fe10fb6db185d9a8ccf92541951044a3c92a2bbd",
+				height: 836614,
+				hash:   "0000000000000000000303c500b5359801231aa44ef53e6f4d8017aa2e97aeb0",
 			},
 			want: &config.CheckpointExport{
-				Checkpoint: &checkpoint.Checkpoint{Commitment: "Ms1MH3NxzKNnaLiIHI/NwhTqhg0DC4cI8qW9Zq4mYzk=", Hash: "00000000000000000001b813fe10fb6db185d9a8ccf92541951044a3c92a2bbd", Height: "836595", MetaProtocol: "brc-20", Name: "nubit-official-00", URL: "https://committee.modular.nubit.org", Version: "v0.1.0-rc.0"},
+				Checkpoint: &checkpoint.Checkpoint{Commitment: "KiHR43Oqvcl5Bbunbc69/ObmqakjfPiyT9v8jJ9DDBU=", Hash: "0000000000000000000303c500b5359801231aa44ef53e6f4d8017aa2e97aeb0", Height: "836614", MetaProtocol: "brc-20", Name: "nubit-official-00", URL: "https://committee.modular.nubit.org", Version: "v0.1.0-rc.0"},
 				SourceDA: &config.SourceDA{
 					Network:     "Pre-Alpha Testnet",
 					NamespaceID: "0x00000003",
