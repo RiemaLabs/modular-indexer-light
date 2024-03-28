@@ -13,17 +13,19 @@ import (
 )
 
 var BlacklistFile = "./blacklist.jsonlines"
-
-//go:embed config.json
-var configBody []byte
+var ConfigFile = "./config.json"
 
 var GlobalConfig *Config
 
 func InitConfig() {
-	GlobalConfig = &Config{}
-	err := json.Unmarshal(configBody, &GlobalConfig)
+	configFile, err := os.ReadFile(ConfigFile)
 	if err != nil {
-		return
+		log.Panicf(fmt.Errorf("failed to read config file: %v", err))
+	}
+
+	err = json.Unmarshal(configFile, &GlobalConfig)
+	if err != nil {
+		log.Panicf(fmt.Errorf("failed to parse config file: %v", err))
 	}
 
 	blacks := LoadBlacklist()
