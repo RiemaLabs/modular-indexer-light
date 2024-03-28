@@ -199,7 +199,7 @@ func TestBitcoinOrdGetterGetOutput(t *testing.T) {
 	}
 }
 
-func TestBitcoinOrdGetterGetBlock1(t *testing.T) {
+func TestBitcoinOrdGetterGetBlock(t *testing.T) {
 	config.InitConfig()
 	type fields struct {
 		client   *http.Client
@@ -232,7 +232,7 @@ func TestBitcoinOrdGetterGetBlock1(t *testing.T) {
 				client:   tt.fields.client,
 				Endpoint: tt.fields.Endpoint,
 			}
-			got, err := r.GetBlock1(tt.args.hash)
+			got, err := r.GetBlock(tt.args.hash)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BitcoinOrdGetter.GetBlock1() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -244,7 +244,7 @@ func TestBitcoinOrdGetterGetBlock1(t *testing.T) {
 	}
 }
 
-func TestBitcoinOrdGetterGetBlock2(t *testing.T) {
+func TestBitcoinOrdGetterGetBlockDetail(t *testing.T) {
 	config.InitConfig()
 	type fields struct {
 		client   *http.Client
@@ -277,7 +277,7 @@ func TestBitcoinOrdGetterGetBlock2(t *testing.T) {
 				client:   tt.fields.client,
 				Endpoint: tt.fields.Endpoint,
 			}
-			got, err := r.GetBlock2(tt.args.hash)
+			got, err := r.GetBlockDetail(tt.args.hash)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BitcoinOrdGetter.GetBlock2() error = %v, wantErr %v", err, tt.wantErr)
 				return

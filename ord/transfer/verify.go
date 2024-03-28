@@ -79,7 +79,7 @@ func VerifyOrdTransfer(transfers TransferByInscription, blockHeight uint) (bool,
 	if err != nil {
 		return false, err
 	}
-	blockBody, err := chainClient.GetBlock2(hash)
+	blockBody, err := chainClient.GetBlockDetail(hash)
 	if err != nil {
 		return false, err
 	}

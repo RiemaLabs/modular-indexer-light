@@ -18,8 +18,7 @@ func CheckState() gin.HandlerFunc {
 		case constant.StateActive:
 			c.Next()
 		default:
-			c.JSON(http.StatusForbidden, constant.ApiState.String())
-			return
+			c.AbortWithStatusJSON(http.StatusForbidden, constant.ApiState.String())
 		}
 	}
 }
@@ -74,10 +73,10 @@ func GetCurrentBalanceOfPkscript(c *gin.Context, ck *checkpoint.Checkpoint) {
 	}
 
 	pbytes, _ := base64.StdEncoding.DecodeString(ck.Commitment)
-	var point verkle.Point
+	point := &verkle.Point{}
 	point.SetBytes(pbytes)
 
-	ok, err := apis.VerifyCurrentBalanceOfPkscript(&point, tick, pkscript, balance)
+	ok, err := apis.VerifyCurrentBalanceOfPkscript(point, tick, pkscript, balance)
 	if err != nil {
 		msg := err.Error()
 		c.JSON(http.StatusOK, apis.Brc20VerifiableCurrentBalanceOfWalletResponse{

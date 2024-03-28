@@ -151,7 +151,8 @@ func (r *BitcoinOrdGetter) GetOutput(txID string, index int) (*btcjson.Vout, err
 	return &ret.Result.Vout[index], nil
 }
 
-func (r *BitcoinOrdGetter) GetBlock1(hash string) (*btcjson.GetBlockVerboseResult, error) {
+// Getblock returns an Object with information about block ‘hash’
+func (r *BitcoinOrdGetter) GetBlock(hash string) (*btcjson.GetBlockVerboseResult, error) {
 	type param struct {
 		Method string        `json:"method"`
 		Params []interface{} `json:"params"`
@@ -178,7 +179,8 @@ func (r *BitcoinOrdGetter) GetBlock1(hash string) (*btcjson.GetBlockVerboseResul
 	return ret.Result, nil
 }
 
-func (r *BitcoinOrdGetter) GetBlock2(hash string) (*btcjson.GetBlockVerboseTxResult, error) {
+// GetBlockDetail returns an Object with information about block ‘hash’ and information about each transaction.
+func (r *BitcoinOrdGetter) GetBlockDetail(hash string) (*btcjson.GetBlockVerboseTxResult, error) {
 	type param struct {
 		Method string        `json:"method"`
 		Params []interface{} `json:"params"`
