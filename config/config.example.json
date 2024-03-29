@@ -10,12 +10,12 @@
     "da": [
       {
         "network": "Pre-Alpha Testnet",
-        "namespaceID": "0x00000003",
+        "namespaceID": "0x00000001",
         "name": "nubit-official-00"
       },
       {
         "network": "Pre-Alpha Testnet",
-        "namespaceID": "0x00000005",
+        "namespaceID": "0x00000002",
         "name": "nubit-official-01"
       }
     ]

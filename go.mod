@@ -1,5 +1,9 @@
 module github.com/RiemaLabs/modular-indexer-light
 
+replace (
+	modular-indexer-committee => ../modular-indexer-committee
+)
+
 go 1.22.0
 
 require (
