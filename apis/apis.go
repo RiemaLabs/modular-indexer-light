@@ -33,10 +33,12 @@ func StartService(df *runtime.RuntimeState, enableDebug bool) {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// r.LoadHTMLFiles("build/index.html")
-	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "./build/index.html", nil)
-	})
+	// r.LoadHTMLGlob("index/*")
+	// r.GET("/", func(c *gin.Context) {
+	// 	c.HTML(http.StatusOK, "index.html", nil)
+	// })
+
+	r.StaticFile("/", "./build/index.html")
 	r.StaticFile("/logo192.png", "./build/logo192.png")
 	r.StaticFile("/manifest.json", "./build/manifest.json")
 	r.StaticFile("/favicon.ico", "./build/favicon.ico")
