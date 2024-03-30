@@ -183,7 +183,7 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 		}
 		trustCommitment := succVerify[champion].commitment
 
-		s.currentCheckpoints = []*config.CheckpointExport{aggs[trustCommitment]}
+		s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), []*config.CheckpointExport{aggs[trustCommitment]}
 		constant.ApiState = constant.StateActive
 
 		// black untrust provider
@@ -194,7 +194,7 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 		}
 	}
 
-	s.currentCheckpoints = checkpoints
+	s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), checkpoints
 	constant.ApiState = constant.StateActive
 
 	c := s.CurrentFirstCheckpoint().Checkpoint.Commitment
