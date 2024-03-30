@@ -3,8 +3,8 @@ module github.com/RiemaLabs/modular-indexer-light
 go 1.22.1
 
 require (
-	github.com/RiemaLabs/modular-indexer-committee v0.1.0-rc.1.0.20240328051354-e82005ce62a5
-	github.com/RiemaLabs/nubit-da-sdk v0.1.0-rc.1
+	github.com/RiemaLabs/modular-indexer-committee v0.1.0-rc.2.0.20240329234915-fc0c3075e48f
+	github.com/RiemaLabs/nubit-da-sdk v0.1.0-rc.2
 	github.com/balletcrypto/bitcoin-inscription-parser v0.1.4
 	github.com/btcsuite/btcd v0.24.2-beta.rc1
 	github.com/ethereum/go-verkle v0.1.1-0.20240119133216-f8289fc59149
