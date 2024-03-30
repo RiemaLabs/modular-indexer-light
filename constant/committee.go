@@ -17,5 +17,5 @@ const (
 	LightCurrentCheckpoints       = "/brc20_verifiable/light/checkpoints"
 	LightLastCheckpoint           = "/brc20_verifiable/light/last_checkpoint"
 	LightBlockHeight              = "/brc20_verifiable/light/block_height"
-	LightState                    = "/brc20_verifiable/light/state"
+	LightState                    = "/v1/brc20_verifiable/light/state"
 )

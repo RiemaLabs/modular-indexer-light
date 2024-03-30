@@ -44,17 +44,17 @@ func StartService(df *runtime.RuntimeState, enableDebug bool) {
 	r.StaticFile("/favicon.ico", "./build/favicon.ico")
 	r.Static("/static", "./build/static")
 
+	r.GET(constant.LightState, func(c *gin.Context) {
+		c.JSON(http.StatusOK, Brc20VerifiableLightStateResponse{
+			State: constant.ApiState.String(),
+		})
+	})
+
 	serv := r.Group("v1")
 	{
 		serv.Use(CheckState())
 		serv.GET(constant.LightBlockHeight, func(c *gin.Context) {
 			c.Data(http.StatusOK, "text/plain", []byte(fmt.Sprintf("%d", df.CurrentHeight())))
-		})
-
-		serv.GET(constant.LightState, func(c *gin.Context) {
-			c.JSON(http.StatusOK, Brc20VerifiableLightStateResponse{
-				State: constant.ApiState.String(),
-			})
 		})
 
 		serv.GET(constant.LightCurrentBalanceOfWallet, func(c *gin.Context) {
