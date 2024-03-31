@@ -3,6 +3,7 @@ package apis
 import (
 	"encoding/base64"
 	"net/http"
+	"strings"
 
 	"github.com/RiemaLabs/modular-indexer-committee/apis"
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
@@ -43,6 +44,9 @@ func GetCurrentBalanceOfWallet(c *gin.Context, ck *checkpoint.Checkpoint) {
 	ok, err := apis.VerifyCurrentBalanceOfWallet(&point, tick, wallet, balance)
 	if err != nil {
 		msg := err.Error()
+		if strings.HasPrefix(msg, "proof of absence") {
+			msg = "Balance does not exist"
+		}
 		c.JSON(http.StatusOK, apis.Brc20VerifiableCurrentBalanceOfWalletResponse{
 			Error: &msg,
 		})

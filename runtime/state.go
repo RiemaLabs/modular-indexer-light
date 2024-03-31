@@ -116,13 +116,13 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 					ordTransfers = append(ordTransfers, getter.OrdTransfer{
 						ID:            tran.ID,
 						InscriptionID: tran.InscriptionID,
-						OldSatpoint:   tran.NewSatpoint,
-						NewSatpoint:   tran.NewSatpoint,
-						NewPkscript:   tran.NewPkscript,
-						NewWallet:     tran.NewWallet,
-						SentAsFee:     tran.SentAsFee,
-						Content:       contentBytes,
-						ContentType:   tran.ContentType,
+						//OldSatpoint:   tran.NewSatpoint,
+						NewSatpoint: tran.NewSatpoint,
+						NewPkscript: tran.NewPkscript,
+						NewWallet:   tran.NewWallet,
+						SentAsFee:   tran.SentAsFee,
+						Content:     contentBytes,
+						ContentType: tran.ContentType,
 					})
 				}
 
@@ -143,7 +143,7 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 					return
 				}
 
-				node, err := apis.GenerateCorrectPostRoot(prePoint, height, stateProof)
+				node, err := apis.GeneratePostRoot(prePoint, height, stateProof)
 				if err != nil {
 					return
 				}
@@ -183,7 +183,7 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 		}
 		trustCommitment := succVerify[champion].commitment
 
-		s.currentCheckpoints = []*config.CheckpointExport{aggs[trustCommitment]}
+		s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), []*config.CheckpointExport{aggs[trustCommitment]}
 		constant.ApiState = constant.StateActive
 
 		// black untrust provider
@@ -194,7 +194,7 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 		}
 	}
 
-	s.currentCheckpoints = checkpoints
+	s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), checkpoints
 	constant.ApiState = constant.StateActive
 
 	c := s.CurrentFirstCheckpoint().Checkpoint.Commitment
