@@ -10,15 +10,16 @@ RUN go build -v -o light-indexer .
 FROM node:lts-alpine as builder-node
 WORKDIR /usr/src/dashboard
 # It should be changed to git clone in the future
-copy ./modular-indexer-light-dashboard .
+COPY ./modular-indexer-light-dashboard .
 RUN  yarn install
 RUN yarn build:prod
 
 
-FROM alpine:latest
+FROM nginx
 WORKDIR /deploy
 COPY --from=builder-go /usr/src/light-indexer/light-indexer .
-COPY --from=builder-go /usr/src/light-indexer/config.json .
-copy --from=builder-node  /usr/src/dashboard/build  ./build
+COPY ./config.json .
+COPY --from=builder-node  /usr/src/dashboard/build  ./html
+COPY ./deploy/light-indexer.conf /etc/nginx/conf.d/default.conf
 
-CMD ["./light-indexer"]
+CMD ["sh", "-c", "nginx && ./light-indexer"]
