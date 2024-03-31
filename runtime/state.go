@@ -116,13 +116,13 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 					ordTransfers = append(ordTransfers, getter.OrdTransfer{
 						ID:            tran.ID,
 						InscriptionID: tran.InscriptionID,
-						//OldSatpoint:   tran.NewSatpoint,
-						NewSatpoint: tran.NewSatpoint,
-						NewPkscript: tran.NewPkscript,
-						NewWallet:   tran.NewWallet,
-						SentAsFee:   tran.SentAsFee,
-						Content:     contentBytes,
-						ContentType: tran.ContentType,
+						OldSatpoint:   tran.OldSatpoint,
+						NewSatpoint:   tran.NewSatpoint,
+						NewPkscript:   tran.NewPkscript,
+						NewWallet:     tran.NewWallet,
+						SentAsFee:     tran.SentAsFee,
+						Content:       contentBytes,
+						ContentType:   tran.ContentType,
 					})
 				}
 

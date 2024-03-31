@@ -33,23 +33,11 @@ func StartService(df *runtime.RuntimeState, enableDebug bool) {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// r.LoadHTMLGlob("index/*")
-	// r.GET("/", func(c *gin.Context) {
-	// 	c.HTML(http.StatusOK, "index.html", nil)
-	// })
-
-	r.StaticFile("/", "./build/index.html")
-	r.StaticFile("/logo192.png", "./build/logo192.png")
-	r.StaticFile("/manifest.json", "./build/manifest.json")
-	r.StaticFile("/favicon.ico", "./build/favicon.ico")
-	r.Static("/static", "./build/static")
-
 	r.GET(constant.LightState, func(c *gin.Context) {
 		c.JSON(http.StatusOK, Brc20VerifiableLightStateResponse{
 			State: constant.ApiState.String(),
 		})
 	})
-
 	serv := r.Group("v1")
 	{
 		serv.Use(CheckState())
