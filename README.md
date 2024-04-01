@@ -13,7 +13,7 @@ For a detailed understanding, refer to our paper: ["Modular Indexer: Fully User-
 ## Getting Started
 
 ### 1. Requirements
-Before we stepped into the installation, ensure your machine is equipped with the minimum requirements: (Such low configuration requirements are absolutely insane!)
+Before stepping into the installation, ensure your machine is equipped with the minimum requirements: (Too easy to be met!)
 
 | Metric       | Minimum Requirements     |
 |--------------|------------------------- |
@@ -32,21 +32,22 @@ go mod tidy
 ```
 
 ### 3. Configuration Instructions
-To set up Light Indexer, begin by copying the example configuration file. Then, customize it to match your specific requirements.
+To set up Light Indexer, begin by copying the example configuration file. 
 ```Bash
 cp config.example.json config.json
 # Edit config.json according to your needs
 ```
+Then, customize it to match your specific requirements as follows.
 
 ### Detailed Configuration Instructions:
-After copying the `config.example.json` to create your `config.json`, you'll need to provide detailed information. Here's a breakdown of what each section in the configuration file means:
+After copying the `config.example.json` and creating your `config.json`, more detailed information is requried. Here's an brief outline of necessary variables to be configured:
 
 #### Setting Up `report`:
-Set up this field to allow your light indexer to upload checkpoints to Nubit DA and participate in the Pre-Alpha Testnet of the Nubit DA Layer. To get gasCoupon, please follow the guiline of [Nubit website](points.nubit.org)
+Set up this field to allow your light indexer to upload checkpoints to Nubit DA Layer and participate in the Pre-Alpha Testnet! To get gasCoupon, please follow the guiline of [Nubit website](points.nubit.org).
 - `name`: A unique name for your light indexer instance.
 - `network`: Specify the network (current: 'Pre-Alpha Testnet').
 - `namespaceID`: Your designated namespace identifier. Leave it to empty to create a namespace following the instruction.
-- `gasCoupon`: Custom code for managing transaction fees.
+- `gasCoupon`: Customized code for managing transaction fees.
 - `privateKey`: Your private key for secure transactions.
 - `timeout`: The timeout to upload a checkpoint to the Nubit DA Layer.
 
@@ -55,7 +56,7 @@ As of now, the Light Indexer does not have the capability to automatically detec
 
 Still, you could add information provided by committee indexer runners:
 - **da**:
-  - `network`: Specify the network for DA Layer (current: 'Pre-Alpha Testnet').
+  - `network`: Specification of the network for DA Layer (current: 'Pre-Alpha Testnet').
   - `namespaceID`: The namespace ID used by the committee indexer.
   - `name`: The name of the committee indexer.
 - **s3**:
@@ -65,19 +66,19 @@ Still, you could add information provided by committee indexer runners:
 
 #### Setting Up `verification`:
 Set up this field to change the verification process.
-- `bitcoinRPC`: Enter the URL of your Bitcoin RPC server for direct blockchain interactions.
-- `metaProtocol`: Define the meta-protocol used (current: 'brc-20').
-- `minimalCheckpoint`: Specify the minimum number of checkpoints obtained from committee indexers. It is considered as the threshold of validity.
+- `bitcoinRPC`: The URL of your Bitcoin RPC server for direct blockchain interactions.
+- `metaProtocol`: Definition of the meta-protocol used (current: 'brc-20').
+- `minimalCheckpoint`: The minimum number of checkpoints to be obtained from committee indexers (the validity threshold).
 
 ### 4. Running the Program
-Run those commands, light indexer will provide API service and upload checkpoint to DA:
+Run the commands below, the light indexer will initate API services and upload checkpoints to DA:
 ```Bash
 go build
 ./modular-indexer-light
 ```
 
 ## Basic Usage
-Light Indexer is optimized for efficiency, requiring minimal resources. This design provides a user-friendly approach for those needing to interact with Bitcoin's meta-protocols (such as brc-20) without the ability of in-depth data processing.
+Light Indexer is optimized for cost-efficiency. This design provides a user-friendly approach for those needing to interact with Bitcoin's meta-protocols (such as brc-20) without expensive data processing.
 
 After successfully launching Light Indexer, you have several functionalities at your disposal. These capabilities can be accessed through the [direct API calls](https://docs.nubit.org/modular-indexer/nubit-light-indexer-apis). The brc-20 balances provided by the light indexer are fully verified and trustworthy.
 
@@ -88,7 +89,7 @@ After successfully launching Light Indexer, you have several functionalities at 
 
 ## FAQ
 - **How is the set of committee indexers determined?**
-    - committee indexers must publish checkpoints to the DA Layer for access by other participants. Users can maintain their list of committee indexers. Since the user's light indexer can verify the correctness of checkpoints, attackers can be removed from the committee indexer set upon detection of malicious behavior; the judgment of malicious behavior is not based on a 51% vote but on a challenge-proof mechanism. Even if the vast majority of committee indexers are malicious, if there is one honest committee indexer, the correct checkpoint can be calculated/verified, allowing the service to continue.
+    - Committee indexers must publish checkpoints to the DA Layer for access by other participants. Users can maintain their list of committee indexers. Since a light indexer (common user) can verify the correctness of checkpoints, attackers can be removed from the committee indexer set upon detection of malicious behavior; the judgment of malicious behavior is not based on a 51% vote but on a challenge-proof mechanism. Even if the vast majority of committee indexers are malicious, if there is one honest committee indexer, the correct checkpoint can be calculated/verified, allowing the service to continue.
 - **Why do users need to verify data through checkpoints instead of looking at the simple majority of the indexer network?**
     - This would lead to Sybil attacks: joining the indexer network is permissionless, without a staking model or proof of work, so the economic cost of setting up an indexer attacker cluster is very low, requiring only the cost of server resources. This allows attackers to achieve a simple majority at a low economic cost; even by introducing historical reputation proof, without a slashing mechanism, attackers can still achieve a 51% attack at a very low cost.
 - **Why are there no attacks like double-spending in the Modular Indexer architecture?**
