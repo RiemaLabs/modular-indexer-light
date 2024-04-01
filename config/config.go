@@ -16,6 +16,7 @@ var BlacklistFile = "./blacklist.jsonlines"
 var ConfigFile = "./config.json"
 
 var GlobalConfig *Config
+var Version string
 
 func InitConfig() {
 	configFile, err := os.ReadFile(ConfigFile)

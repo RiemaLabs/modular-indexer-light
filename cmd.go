@@ -6,8 +6,8 @@ import (
 )
 
 type RuntimeArguments struct {
-	EnableTest           bool
-	TestBlockHeightLimit uint
+	EnableTest     bool
+	EnableDAReport bool
 }
 
 func NewRuntimeArguments() *RuntimeArguments {
@@ -24,14 +24,21 @@ It enables typical users to verify Bitcoin meta-protocols without requiring subs
 This command offers multiple flags to tailor the indexer's functionality according to the user's needs.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if arguments.EnableTest && arguments.TestBlockHeightLimit != 0 {
-				log.Info("Use the test mode and limit the max blockheight %d to avoid catching up to the real latest block.\n", arguments.TestBlockHeightLimit)
+			if arguments.EnableTest {
+				log.Info("Use the test mode to setup gin as debug mode.")
 			}
+
+			if arguments.EnableDAReport {
+				log.Info("Report to DA is enabled.")
+			} else {
+				log.Info("Report to DA is disabled.")
+			}
+
 			Execution(arguments)
 		},
 	}
 
 	rootCmd.Flags().BoolVarP(&arguments.EnableTest, "test", "t", false, "Enable this flag to hijack the blockheight to test the service")
-	rootCmd.Flags().UintVarP(&arguments.TestBlockHeightLimit, "blockheight", "", 0, "When -test enabled, you can set TestBlockHeightLimit as a fixed value you want.")
+	rootCmd.Flags().BoolVarP(&arguments.EnableDAReport, "report", "", true, "Enable this flag to upload verified checkpoint to DA")
 	return rootCmd
 }

@@ -10,15 +10,29 @@ type (
 	Config struct {
 		CommitteeIndexers CommitteeIndexers `json:"committeeIndexers"`
 
-		BitcoinRPC        string `json:"bitcoinRPC"`
-		MinimalCheckpoint int    `json:"minimalCheckpoint"`
-		MetaProtocol      string `json:"metaProtocol"`
-		Version           string `json:"version"`
+		Verification Verification `json:"verification"`
+
+		Report Report `json:"report"`
 	}
 
 	CommitteeIndexers struct {
 		S3 []SourceS3 `json:"s3"`
 		DA []SourceDA `json:"da"`
+	}
+
+	Verification struct {
+		BitcoinRPC        string `json:"bitcoinRPC"`
+		MinimalCheckpoint int    `json:"minimalCheckpoint"`
+		MetaProtocol      string `json:"metaProtocol"`
+	}
+
+	Report struct {
+		Name        string `json:"name"`
+		Network     string `json:"network"`
+		NamespaceID string `json:"namespaceID"`
+		GasCoupon   string `json:"gasCoupon"`
+		PrivateKey  string `json:"privateKey"`
+		Timeout     int    `json:"timeout"`
 	}
 
 	// data source

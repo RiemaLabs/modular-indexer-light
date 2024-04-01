@@ -192,6 +192,9 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 				provider.RecordBlacklist(aggs[trustCommitment], ck)
 			}
 		}
+	} else {
+		s.currentCheckpoints = checkpoints
+		constant.ApiState = constant.StateActive
 	}
 
 	s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), checkpoints
