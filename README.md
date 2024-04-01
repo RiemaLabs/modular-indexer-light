@@ -83,9 +83,9 @@ Light Indexer is optimized for cost-efficiency. This design provides a user-frie
 After successfully launching Light Indexer, you have several functionalities at your disposal. These capabilities can be accessed through the [direct API calls](https://docs.nubit.org/modular-indexer/nubit-light-indexer-apis). The brc-20 balances provided by the light indexer are fully verified and trustworthy.
 
 ## Useful Links
-:spider_web: <https://www.nubit.org>
-:beetle: <https://github.com/RiemaLabs/modular-indexer-light/issues>
-:book: <https://docs.nubit.org/developer-guides/introduction>
+- :spider_web: <https://www.nubit.org>
+- :beetle: <https://github.com/RiemaLabs/modular-indexer-light/issues>
+- :book: <https://docs.nubit.org/developer-guides/introduction>
 
 ## FAQ
 - **How is the set of committee indexers determined?**
