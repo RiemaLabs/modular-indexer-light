@@ -163,7 +163,7 @@ func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState
 				if err != nil {
 					log.Error(fmt.Sprintf("Unable to upload the checkpoint by DA due to: %v", err))
 				} else {
-					log.Info(fmt.Sprintf("Succeed to upload the checkpoint by DA at height: %s\n", newCheckpoint.Height))
+					log.Info(fmt.Sprintf("Succeed to upload the checkpoint by DA at height: %s", newCheckpoint.Height))
 				}
 			}
 		}
