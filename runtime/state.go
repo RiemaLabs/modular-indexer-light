@@ -193,12 +193,9 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 			}
 		}
 	} else {
-		s.currentCheckpoints = checkpoints
+		s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), checkpoints
 		constant.ApiState = constant.StateActive
 	}
-
-	s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), checkpoints
-	constant.ApiState = constant.StateActive
 
 	c := s.CurrentFirstCheckpoint().Checkpoint.Commitment
 	if inconsistent {
