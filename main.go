@@ -1,10 +1,15 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
 	"github.com/RiemaLabs/modular-indexer-light/apis"
 	"github.com/RiemaLabs/modular-indexer-light/config"
 	"github.com/RiemaLabs/modular-indexer-light/log"
@@ -17,9 +22,44 @@ func Execution(arguments *RuntimeArguments) {
 	getCheckpointsTimeout := time.Minute * 2
 	retry := 3
 	cfg := config.GlobalConfig
+	reportCfg := &cfg.Report
+	verifyCfg := &cfg.Verification
+
+	if arguments.EnableDAReport {
+		if !checkpoint.IsValidNamespaceID(reportCfg.NamespaceID) {
+			log.Info("Got invalid Namespace ID from the config.json. Initializing a new namespace.")
+			scanner := bufio.NewScanner(os.Stdin)
+			namespaceName := ""
+			for {
+				fmt.Print("Please enter the namespace name: ")
+				if scanner.Scan() {
+					namespaceName = scanner.Text()
+					if strings.TrimSpace(namespaceName) == "" {
+						fmt.Print("Namespace name couldn't be empty!")
+					} else {
+						break
+					}
+				}
+			}
+			nid, err := checkpoint.CreateNamespace(reportCfg.PrivateKey, reportCfg.GasCoupon, namespaceName, reportCfg.Network)
+			if err != nil {
+				log.Panicf(fmt.Errorf("failed to create namespace due to %v", err))
+			}
+			reportCfg.NamespaceID = nid
+			bytes, err := json.Marshal(config.GlobalConfig)
+			if err != nil {
+				log.Panicf(fmt.Errorf("failed to save namespace ID to local file due to %v", err))
+			}
+			err = os.WriteFile("./config.json", bytes, 0644)
+			if err != nil {
+				log.Panicf(fmt.Errorf("failed to save namespace ID to local file due to %v", err))
+			}
+			fmt.Printf("Succeed to create namespace, ID: %s!", nid)
+		}
+	}
 
 	// Create Bitcoin getter.
-	bitcoinGetter, err := getter.NewBitcoinOrdGetter(cfg.BitcoinRPC)
+	bitcoinGetter, err := getter.NewBitcoinOrdGetter(verifyCfg.BitcoinRPC)
 	if err != nil {
 		log.Panicf(fmt.Errorf("failed to initiate Bitcoin Getter, error: %v", err))
 	}
@@ -39,17 +79,17 @@ func Execution(arguments *RuntimeArguments) {
 	providers := make([]provider.CheckpointProvider, 0)
 
 	for _, sourceS3 := range cfg.CommitteeIndexers.S3 {
-		prov := provider.NewProviderS3(&sourceS3, cfg.MetaProtocol, retry)
+		prov := provider.NewProviderS3(&sourceS3, verifyCfg.MetaProtocol, retry)
 		providers = append(providers, prov)
 	}
 
 	for _, sourceDA := range cfg.CommitteeIndexers.DA {
-		prov := provider.NewProviderDA(&sourceDA, cfg.MetaProtocol, retry)
+		prov := provider.NewProviderDA(&sourceDA, verifyCfg.MetaProtocol, retry)
 		providers = append(providers, prov)
 	}
 
-	if len(providers) < cfg.MinimalCheckpoint {
-		log.Panicf(fmt.Errorf("the number of checkpoint providers is below the minimum required amount: %d", cfg.MinimalCheckpoint))
+	if len(providers) < verifyCfg.MinimalCheckpoint {
+		log.Panicf(fmt.Errorf("the number of checkpoint providers is below the minimum required amount: %d", verifyCfg.MinimalCheckpoint))
 	}
 
 	// Get last checkpoint.
@@ -69,12 +109,15 @@ func Execution(arguments *RuntimeArguments) {
 	lastCheckpoint := checkpoints[0]
 
 	// Create runtime state
-	df := runtime.NewRuntimeState(providers, lastCheckpoint, cfg.MinimalCheckpoint, getCheckpointsTimeout)
+	df := runtime.NewRuntimeState(providers, lastCheckpoint, verifyCfg.MinimalCheckpoint, getCheckpointsTimeout)
 
 	syncCommitteeIndexers(arguments, df, bitcoinGetter)
 }
 
 func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState, bitcoinGetter *getter.BitcoinOrdGetter) {
+	cfg := config.GlobalConfig
+	reportCfg := &cfg.Report
+	verifyCfg := &cfg.Verification
 	log.Info("Providing API service at: 8080")
 	go apis.StartService(df, arguments.EnableTest)
 
@@ -103,6 +146,26 @@ func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState
 			if err != nil {
 				log.Panicf(fmt.Errorf("failed to UpdateCheckpoints in syncCommitteeIndexers, error: %v", err))
 			}
+
+			if arguments.EnableDAReport {
+				// upload verified checkpoint to DA
+				curCheckpoint := df.CurrentFirstCheckpoint().Checkpoint
+				newCheckpoint := checkpoint.Checkpoint{
+					Commitment:   curCheckpoint.Commitment,
+					Hash:         curCheckpoint.Hash,
+					Height:       curCheckpoint.Height,
+					MetaProtocol: verifyCfg.MetaProtocol,
+					Name:         reportCfg.Name,
+					URL:          "",
+					Version:      config.Version,
+				}
+				err := checkpoint.UploadCheckpointByDA(&newCheckpoint, reportCfg.PrivateKey, reportCfg.GasCoupon, reportCfg.NamespaceID, reportCfg.Network, time.Duration(reportCfg.Timeout)*time.Millisecond)
+				if err != nil {
+					log.Error(fmt.Sprintf("Unable to upload the checkpoint by DA due to: %v", err))
+				} else {
+					log.Info(fmt.Sprintf("Succeed to upload the checkpoint by DA at height: %s\n", newCheckpoint.Height))
+				}
+			}
 		}
 
 		log.Info(fmt.Sprintf("Listening for new Bitcoin block, current height: %d", df.CurrentHeight()))
@@ -115,12 +178,14 @@ func main() {
 	arguments := NewRuntimeArguments()
 	rootCmd := arguments.MakeCmd()
 
+	config.Version = "v0.1.0-rc.3"
+
 	config.InitConfig()
 	log.SetLevel(log.LevelError)
 	if arguments.EnableTest {
 		log.SetLevel(log.LevelDebug)
 	}
-	log.SetVerion(config.GlobalConfig.Version, time.Now().Format("20060102"))
+	log.SetVerion(config.Version, time.Now().Format("20060102"))
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Panicf(fmt.Errorf("failed to execute: %v", err))

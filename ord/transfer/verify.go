@@ -57,7 +57,7 @@ func VerifyOrdTransfer(transfers TransferByInscription, blockHeight uint) (bool,
 	}
 
 	sort.Sort(transfers)
-	chainClient, _ := client.NewBitcoinOrdGetter(config.GlobalConfig.BitcoinRPC)
+	chainClient, _ := client.NewBitcoinOrdGetter(config.GlobalConfig.Verification.BitcoinRPC)
 
 	batch := make(map[string]TransferByInscription)
 	// find a batch of inscriptions in same txid
