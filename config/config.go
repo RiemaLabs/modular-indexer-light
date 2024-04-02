@@ -13,7 +13,6 @@ import (
 	"github.com/RiemaLabs/modular-indexer-light/log"
 	"github.com/RiemaLabs/modular-indexer-light/utils"
 	"github.com/RiemaLabs/modular-indexer-light/wallet"
-	"golang.org/x/term"
 )
 
 var BlacklistFile = "./blacklist.jsonlines"
@@ -112,12 +111,6 @@ func ReadPrivate() string {
 
 	log.Info("Failed to read the private key from the local directory. Generate a new one")
 	var pwd = constant.DefaultPassword
-
-	fmt.Print("Enter a wallet password: ")
-	bytePri, _ := term.ReadPassword(int(os.Stdin.Fd()))
-	if string(bytePri) != "" {
-		pwd = string(bytePri)
-	}
 
 	wall := wallet.NewWallet(&pwd)
 	if !wall.GenerateBip39Seed(&pwd, &pwd) {
