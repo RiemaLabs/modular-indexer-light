@@ -48,7 +48,6 @@ Set up this field to allow your light indexer to upload checkpoints to Nubit DA 
 - `network`: Specify the network (current: 'Pre-Alpha Testnet').
 - `namespaceID`: Your designated namespace identifier. Leave it to empty to create a namespace following the instruction.
 - `gasCoupon`: Customized code for managing transaction fees.
-- `privateKey`: Your private key for secure transactions.
 - `timeout`: The timeout to upload a checkpoint to the Nubit DA Layer.
 
 #### Setting Up `committeeIndexers`:
@@ -66,7 +65,7 @@ Still, you could add information provided by committee indexer runners:
 
 #### Setting Up `verification`:
 Set up this field to change the verification process.
-- `bitcoinRPC`: The URL of your Bitcoin RPC server for direct blockchain interactions.
+- `bitcoinRPC`: The URL of your Bitcoin (mainnet) RPC server for direct blockchain interactions. You have the option to use a public RPC server such as https://bitcoin-mainnet-archive.allthatnode.com, or you can acquire your own through QuickNode.
 - `metaProtocol`: Definition of the meta-protocol used (current: 'brc-20').
 - `minimalCheckpoint`: The minimum number of checkpoints to be obtained from committee indexers (the validity threshold).
 
