@@ -43,7 +43,7 @@ Then, customize it to match your specific requirements as follows.
 After copying the `config.example.json` and creating your `config.json`, more detailed information is requried. Here's an brief outline of necessary variables to be configured:
 
 #### Setting Up `report`:
-Set up this field to allow your light indexer to upload checkpoints to Nubit DA Layer and participate in the Pre-Alpha Testnet! To get gasCoupon, please follow the guiline of [Nubit website](points.nubit.org).
+Set up this field to allow your light indexer to upload checkpoints to Nubit DA Layer and participate in the Pre-Alpha Testnet! To get gasCoupon, please follow the guiline of [Nubit website](https://points.nubit.org).
 - `name`: A unique name for your light indexer instance.
 - `network`: Specify the network (current: 'Pre-Alpha Testnet').
 - `namespaceID`: Your designated namespace identifier. Leave it to empty to create a namespace following the instruction.

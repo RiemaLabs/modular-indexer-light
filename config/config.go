@@ -138,5 +138,6 @@ func ReadPrivate() string {
 	if err != nil {
 		panic("Failed to write private key")
 	}
+	log.Info("Store your private file carefully and don't share it!")
 	return pri
 }
