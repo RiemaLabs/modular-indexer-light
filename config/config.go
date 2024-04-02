@@ -8,12 +8,18 @@ import (
 	"io"
 	"os"
 	"strings"
+	"syscall"
 
+	"github.com/RiemaLabs/modular-indexer-light/constant"
 	"github.com/RiemaLabs/modular-indexer-light/log"
+	"github.com/RiemaLabs/modular-indexer-light/utils"
+	"github.com/RiemaLabs/modular-indexer-light/wallet"
+	"golang.org/x/term"
 )
 
 var BlacklistFile = "./blacklist.jsonlines"
 var ConfigFile = "./config.json"
+var PrivateFile = "./private"
 
 var GlobalConfig *Config
 var Version string
@@ -70,7 +76,6 @@ func AppendBlacklist(in *Blacklist) {
 }
 
 func LoadBlacklist() []*Blacklist {
-
 	f, err := os.Open(BlacklistFile)
 	if err != nil {
 		return []*Blacklist{}
@@ -92,4 +97,46 @@ func LoadBlacklist() []*Blacklist {
 		body = append(body, &tmp)
 	}
 	return body
+}
+
+func ReadPrivate() string {
+	_, err := os.Stat(PrivateFile)
+	if err == nil {
+		// read private key
+		data, err := os.ReadFile(PrivateFile)
+		if err == nil {
+			log.Info("Read private key from", "file", PrivateFile)
+			return string(data)
+		}
+
+	}
+
+	log.Info("Failed to read the private key from the local directory. Generate a new one")
+	var pwd = constant.DefaultPassword
+
+	fmt.Print("Enter a wallet password: ")
+	bytePri, _ := term.ReadPassword(syscall.Stdin)
+	if string(bytePri) != "" {
+		pwd = string(bytePri)
+	}
+
+	wall := wallet.NewWallet(&pwd)
+	if !wall.GenerateBip39Seed(&pwd, &pwd) {
+		panic("Failed to generate seeds")
+	}
+	account := wall.GenerateAccount(&pwd)
+
+	pri := utils.EcdsaToPrivateStr(account.PrivateKey(&pwd))
+
+	file, err := os.OpenFile(PrivateFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(pri)
+	if err != nil {
+		panic("Failed to write private key")
+	}
+	return pri
 }

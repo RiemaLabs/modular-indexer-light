@@ -31,7 +31,7 @@ type (
 		Network     string `json:"network"`
 		NamespaceID string `json:"namespaceID"`
 		GasCoupon   string `json:"gasCoupon"`
-		PrivateKey  string `json:"privateKey"`
+		PrivateKey  string `json:"-"`
 		Timeout     int    `json:"timeout"`
 	}
 

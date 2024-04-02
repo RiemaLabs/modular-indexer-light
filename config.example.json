@@ -21,7 +21,7 @@
     ]
   },
   "verification": {
-    "bitcoinRPC": "YourOwnBitcoinRPC",
+    "bitcoinRPC": "https://bitcoin-mainnet-archive.allthatnode.com",
     "metaProtocol": "brc-20",
     "minimalCheckpoint": 2
   },
@@ -30,7 +30,6 @@
     "network": "Pre-Alpha Testnet",
     "namespaceID": "YourOwnNamespace. Left to empty and follow the instruction to create automatically.",
     "gasCoupon": "YourGasCoupon",
-    "privateKey": "YourPrivateKey",
     "timeout": 15000
   }
 }
