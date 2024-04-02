@@ -26,6 +26,8 @@ func Execution(arguments *RuntimeArguments) {
 	verifyCfg := &cfg.Verification
 
 	if arguments.EnableDAReport {
+		reportCfg.PrivateKey = config.ReadPrivate()
+
 		if !checkpoint.IsValidNamespaceID(reportCfg.NamespaceID) {
 			log.Info("Got invalid Namespace ID from the config.json. Initializing a new namespace.")
 			scanner := bufio.NewScanner(os.Stdin)
@@ -41,6 +43,7 @@ func Execution(arguments *RuntimeArguments) {
 					}
 				}
 			}
+
 			nid, err := checkpoint.CreateNamespace(reportCfg.PrivateKey, reportCfg.GasCoupon, namespaceName, reportCfg.Network)
 			if err != nil {
 				log.Panicf(fmt.Errorf("failed to create namespace due to %v", err))
@@ -56,7 +59,6 @@ func Execution(arguments *RuntimeArguments) {
 			}
 			fmt.Printf("Succeed to create namespace, ID: %s!", nid)
 		}
-		reportCfg.PrivateKey = config.ReadPrivate()
 	}
 
 	// Create Bitcoin getter.
