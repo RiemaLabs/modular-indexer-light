@@ -18,7 +18,6 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0
 	go.uber.org/atomic v1.11.0
 	golang.org/x/crypto v0.21.0
-	golang.org/x/term v0.18.0
 )
 
 require (
@@ -196,6 +195,7 @@ require (
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.18.0 // indirect

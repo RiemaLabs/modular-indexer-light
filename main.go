@@ -124,7 +124,7 @@ func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState
 	log.Info("Providing API service at: 8080")
 	go apis.StartService(df, arguments.EnableTest)
 
-	sleepInterval := time.Minute * 1
+	sleepInterval := time.Second * 3
 	for {
 		currentHeight, err := bitcoinGetter.GetLatestBlockHeight()
 		if err != nil {
