@@ -9,7 +9,6 @@ require (
 	github.com/btcsuite/btcd v0.24.2-beta.rc1
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/btcsuite/btcd/btcutil v1.1.5
-	github.com/ethereum/go-ethereum v1.13.14
 	github.com/ethereum/go-verkle v0.1.1-0.20240119133216-f8289fc59149
 	github.com/gin-contrib/cors v1.7.1
 	github.com/gin-gonic/gin v1.9.1
@@ -19,6 +18,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0
 	go.uber.org/atomic v1.11.0
 	golang.org/x/crypto v0.21.0
+	golang.org/x/term v0.18.0
 )
 
 require (
@@ -66,6 +66,7 @@ require (
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.1 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
+	github.com/cockroachdb/sentry-go v0.6.1-cockroachdb.2 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
@@ -195,7 +196,6 @@ require (
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.18.0 // indirect

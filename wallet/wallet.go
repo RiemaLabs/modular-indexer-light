@@ -11,6 +11,7 @@ import (
 	"github.com/RiemaLabs/modular-indexer-light/constant"
 	"github.com/RiemaLabs/modular-indexer-light/log"
 	"github.com/RiemaLabs/modular-indexer-light/utils"
+	sdk "github.com/RiemaLabs/nubit-da-sdk/utils"
 )
 
 // NewWallet creates a new empty wallet, encrypted with given password.
@@ -90,15 +91,6 @@ func (w *Wallet) GenerateAccount(walletPassword *string) *Account {
 		return nil
 	}
 	return a
-}
-
-func (w *Wallet) RecoverByMnemonic(words []string, walletPassword *string, mnemonicPassword *string) bool {
-	key := deriveAesKey(walletPassword)
-	if words == nil {
-		// may happen if wallet password is not correct
-		return false
-	}
-	return w.generateBip39Seed(key, words, mnemonicPassword)
 }
 
 // GenerateBip39Seed generates the seed used for key derivation (generated accounts). This
@@ -261,7 +253,7 @@ func (w *Wallet) AddPirKeyAccount(PrivateKey string, walletPassword *string) *Ac
 		return nil
 	}
 	a := w.newAccount()
-	a.privateKey = utils.PrivateStrToByte(PrivateKey)
+	a.privateKey = sdk.PrivateStrToByte(PrivateKey)
 	a.accountType = constant.AccountTypePrivateKey
 	a.publicKey = utils.PrivateStrToBtcAddress(PrivateKey)
 	a.active = true
@@ -376,21 +368,6 @@ func (w *Wallet) Accounts() []*Account {
 
 	for i, _ := range w.accounts {
 		if w.accounts[i].active && w.accounts[i].IsOwnAccount() {
-			accounts = append(accounts, &w.accounts[i])
-		}
-	}
-
-	return accounts
-}
-
-// SeedAccounts returns a slice containing all accounts with a private key,
-//
-//	i.e. generated and random accounts.
-func (w *Wallet) SeedAccounts() []*Account {
-	accounts := make([]*Account, 0, len(w.accounts))
-
-	for i, _ := range w.accounts {
-		if w.accounts[i].active && w.accounts[i].HasPrivateKey() {
 			accounts = append(accounts, &w.accounts[i])
 		}
 	}

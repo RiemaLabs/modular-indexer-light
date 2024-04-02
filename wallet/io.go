@@ -89,25 +89,6 @@ func readUint64(r io.Reader) (data uint64, err error) {
 	return d, err
 }
 
-func writeUint32(w io.Writer, data uint32) {
-	err := binary.Write(w, binary.BigEndian, data)
-	if err != nil {
-		panic("failed writing integer to buffer: " + err.Error())
-	}
-}
-
-func readUint32(r io.Reader) (data uint32, err error) {
-	var d uint32
-
-	err = binary.Read(r, binary.BigEndian, &d)
-
-	if err != nil {
-		err = errors.New("failed to read from buffer: " + err.Error())
-	}
-
-	return d, err
-}
-
 func writeBytes(w io.Writer, buf []byte) {
 	count := len(buf)
 

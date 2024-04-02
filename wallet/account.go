@@ -4,7 +4,8 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/crypto"
+	sdk "github.com/RiemaLabs/nubit-da-sdk/utils"
+	"github.com/btcsuite/btcd/btcec/v2"
 
 	"github.com/RiemaLabs/modular-indexer-light/constant"
 	"github.com/RiemaLabs/modular-indexer-light/utils"
@@ -40,7 +41,8 @@ func (a *Account) generateBip32Address(seed []byte) error {
 	if err != nil {
 		return err
 	}
-	a.privateKey = crypto.FromECDSA(privateKey.ToECDSA())
+
+	a.privateKey = sdk.FromECDSA(privateKey.ToECDSA())
 	a.accountType = constant.AccountTypeSEP0005
 	a.sep0005DerivationPath = path
 	a.generatePubAddr()
@@ -53,8 +55,6 @@ func (a *Account) generatePubAddr() {
 	switch a.ChainType {
 	case constant.BTC:
 		a.publicKey = utils.KeyToBtcAddress(a.Key)
-	case constant.ETH:
-		a.publicKey = utils.KeyTo0xAddress(a.Key)
 	}
 }
 
@@ -77,15 +77,6 @@ func (a *Account) IsOwnAccount() bool {
 	return false
 }
 
-// IsAddressBookAccount checks if current account is an address book account..
-func (a *Account) IsAddressBookAccount() bool {
-	if a.accountType == constant.AccountTypeAddressBook {
-		return true
-	}
-
-	return false
-}
-
 // HasPrivateKey checks true if current account holds a private key.
 func (a *Account) HasPrivateKey() bool {
 	switch a.accountType {
@@ -98,11 +89,6 @@ func (a *Account) HasPrivateKey() bool {
 	return false
 }
 
-// Description returns description of account. Empty string is returned if no description is defined.
-func (a *Account) Description() string {
-	return a.desc
-}
-
 // SetDescription sets description on account. If give description string is not valid a descriptive error is returned.
 func (a *Account) SetDescription(desc string) error {
 	err := CheckDescription(desc)
@@ -113,44 +99,6 @@ func (a *Account) SetDescription(desc string) error {
 	a.desc = desc
 
 	return nil
-}
-
-// MemoText returns the optional memo text of account. Empty string is returned if no memo text is defined.
-func (a *Account) MemoText() string {
-	return a.memoText
-}
-
-// SetMemoText sets memo text on account. If given memo text string is not valid a descriptive error is returned.
-func (a *Account) SetMemoText(memo string) error {
-	err := CheckMemoText(memo)
-	if err != nil {
-		return err
-	}
-
-	a.memoText = memo
-
-	return nil
-}
-
-// MemoId returns memo id of account. If no memo id is defined for current account, the boolean return value is false.
-func (a *Account) MemoId() (bool, uint64) {
-	if a.memoIdSet {
-		return true, a.memoId
-	}
-
-	return false, 0
-}
-
-// SetMemoId sets memo id on account.
-func (a *Account) SetMemoId(memo uint64) {
-	a.memoId = memo
-	a.memoIdSet = true
-}
-
-// ClearMemoId clears memo id from account.
-func (a *Account) ClearMemoId() {
-	a.memoId = 0
-	a.memoIdSet = false
 }
 
 // PublicKey returns public key of account.
@@ -170,11 +118,10 @@ func (a *Account) PrivateKey(walletPassword *string) *ecdsa.PrivateKey {
 	}
 	switch a.accountType {
 	case constant.AccountTypeSEP0005:
-		toECDSA, err := crypto.ToECDSA(a.privateKey)
-		if err != nil {
-			return nil
-		}
-		return toECDSA
+
+		pri, _ := btcec.PrivKeyFromBytes(a.privateKey)
+		prv := pri.ToECDSA()
+		return prv
 	case constant.AccountTypeRandom:
 	}
 	return nil
