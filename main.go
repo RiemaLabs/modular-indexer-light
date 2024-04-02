@@ -56,6 +56,7 @@ func Execution(arguments *RuntimeArguments) {
 			}
 			fmt.Printf("Succeed to create namespace, ID: %s!", nid)
 		}
+		reportCfg.PrivateKey = config.ReadPrivate()
 	}
 
 	// Create Bitcoin getter.
