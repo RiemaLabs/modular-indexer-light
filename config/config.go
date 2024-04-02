@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"syscall"
 
 	"github.com/RiemaLabs/modular-indexer-light/constant"
 	"github.com/RiemaLabs/modular-indexer-light/log"
@@ -115,7 +114,7 @@ func ReadPrivate() string {
 	var pwd = constant.DefaultPassword
 
 	fmt.Print("Enter a wallet password: ")
-	bytePri, _ := term.ReadPassword(syscall.Stdin)
+	bytePri, _ := term.ReadPassword(int(os.Stdin.Fd()))
 	if string(bytePri) != "" {
 		pwd = string(bytePri)
 	}
