@@ -24,9 +24,9 @@ Before stepping into the installation, ensure your machine is equipped with the 
 
 ### 2. Install Dependence
 Light Indexer is built with Golang. You can run your own one by following the procedure below.
-`Go` version `1.22.0` is required for running repository. Please visit [Golang download Page](https://go.dev/doc/install) to get latest Golang installed.
+`Go` version 1.22.0 is required for running the repository. Please visit the [Golang download Page](https://go.dev/doc/install) to get the latest Golang installed.
 
-Golang is easy to install all dependence. Fetch all required package by simply running.
+Golang is easy to install all dependence. Fetch all required packages by simply running.
 ```Bash
 go mod tidy
 ```
@@ -40,10 +40,10 @@ cp config.example.json config.json
 Then, customize it to match your specific requirements as follows.
 
 ### Detailed Configuration Instructions:
-After copying the `config.example.json` and creating your `config.json`, more detailed information is requried. Here's an brief outline of necessary variables to be configured:
+After copying the `config.example.json` and creating your `config.json`, more detailed information is required. Here's a brief outline of the necessary variables to be configured:
 
 #### Setting Up `report`:
-Set up this field to allow your light indexer to upload checkpoints to Nubit DA Layer and participate in the Pre-Alpha Testnet! To get gasCoupon, please follow the guiline of [Nubit website](https://points.nubit.org).
+Set up this field to allow your light indexer to upload checkpoints to the Nubit DA Layer and participate in the Pre-Alpha Testnet! To get gasCoupon, please follow the guideline of [Nubit website](https://points.nubit.org).
 - `name`: A unique name for your light indexer instance.
 - `network`: Specify the network (current: 'Pre-Alpha Testnet').
 - `namespaceID`: Your designated namespace identifier. Leave it to empty to create a namespace following the instruction.
@@ -51,7 +51,7 @@ Set up this field to allow your light indexer to upload checkpoints to Nubit DA 
 - `timeout`: The timeout to upload a checkpoint to the Nubit DA Layer.
 
 #### Setting Up `committeeIndexers`:
-As of now, the Light Indexer does not have the capability to automatically detect active Committee Indexers. Therefore, the default Committee Indexers that are recognized are those operated officially by Nubit and they are provided by `config.example.json`.
+As of now, the Light Indexer cannot automatically detect active Committee Indexers. Therefore, the default Committee Indexers that are recognized are those operated officially by Nubit and they are provided by `config.example.json`.
 
 Still, you could add information provided by committee indexer runners:
 - **da**:
@@ -70,7 +70,7 @@ Set up this field to change the verification process.
 - `minimalCheckpoint`: The minimum number of checkpoints to be obtained from committee indexers (the validity threshold).
 
 ### 4. Running the Program
-Run the commands below, the light indexer will initate API services and upload checkpoints to DA:
+Run the commands below, and the light indexer will initiate API services and upload checkpoints to DA:
 ```Bash
 go build
 ./modular-indexer-light
@@ -79,7 +79,7 @@ go build
 ## Basic Usage
 Light Indexer is optimized for cost-efficiency. This design provides a user-friendly approach for those needing to interact with Bitcoin's meta-protocols (such as brc-20) without expensive data processing.
 
-After successfully launching Light Indexer, you have several functionalities at your disposal. These capabilities can be accessed through the [direct API calls](https://docs.nubit.org/modular-indexer/nubit-light-indexer-apis). The brc-20 balances provided by the light indexer are fully verified and trustworthy.
+After successfully launching Light Indexer, you have several functionalities at your disposal. These capabilities can be accessed through [direct API calls](https://docs.nubit.org/modular-indexer/nubit-light-indexer-apis). The brc-20 balances provided by the light indexer are fully verified and trustworthy.
 
 ## Useful Links
 - :spider_web: <https://www.nubit.org>
@@ -88,7 +88,7 @@ After successfully launching Light Indexer, you have several functionalities at 
 
 ## FAQ
 - **How is the set of committee indexers determined?**
-    - Committee indexers must publish checkpoints to the DA Layer for access by other participants. Users can maintain their list of committee indexers. Since a light indexer (common user) can verify the correctness of checkpoints, attackers can be removed from the committee indexer set upon detection of malicious behavior; the judgment of malicious behavior is not based on a 51% vote but on a challenge-proof mechanism. Even if the vast majority of committee indexers are malicious, if there is one honest committee indexer, the correct checkpoint can be calculated/verified, allowing the service to continue.
+    - Committee indexers must publish checkpoints to the DA Layer for access by other participants. Users can maintain their list of committee indexers. Since a light indexer standardn user) can verify the correctness of checkpoints, attackers can be removed from the committee indexer set upon detection of malicious behavior; the judgment of malicious behavior is not based on a 51% vote but on a challenge-proof mechanism. Even if the vast majority of committee indexers are malicious, if there is one honest committee indexer, the correct checkpoint can be calculated/verified, allowing the service to continue.
 - **Why do users need to verify data through checkpoints instead of looking at the simple majority of the indexer network?**
     - This would lead to Sybil attacks: joining the indexer network is permissionless, without a staking model or proof of work, so the economic cost of setting up an indexer attacker cluster is very low, requiring only the cost of server resources. This allows attackers to achieve a simple majority at a low economic cost; even by introducing historical reputation proof, without a slashing mechanism, attackers can still achieve a 51% attack at a very low cost.
 - **Why are there no attacks like double-spending in the Modular Indexer architecture?**
@@ -102,4 +102,4 @@ After successfully launching Light Indexer, you have several functionalities at 
 - **What are the mainstream meta-protocols on Bitcoin currently?**
     - The mainstream meta-protocols are all based on the Ordinals protocol, which allows users to store raw data on Bitcoin. BRC-20, Bitmap, SatsNames, etc., are mainstream meta-protocols. More meta-protocols and information can be found [here](https://l1f.discourse.group/latest)
 - **How does the interaction between Light Indexer and Committee Indexer work?**
-    - Light Indexer relies on checkpoints published by Committee Indexer to verify the integrity and correctness of data. Light Indexers fetch these checkpoints from Nubit DA Layer or S3 while Nubit DA layer gurantees the data availability of checkpoints. This interaction ensures reliable data without the need for heavy computation or indexing the whole history of Bitcoin blocks.
+    - Light Indexer relies on checkpoints published by Committee Indexer to verify the integrity and correctness of data. Light Indexers fetch these checkpoints from Nubit DA Layer or S3 while Nubit DA layer gurantees the data availability of checkpoints. This interaction ensures reliable data without the need for heavy computation or indexing of the whole history of Bitcoin blocks.
