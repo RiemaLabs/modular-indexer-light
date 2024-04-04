@@ -23,7 +23,7 @@
   "verification": {
     "bitcoinRPC": "https://bitcoin-mainnet-archive.allthatnode.com",
     "metaProtocol": "brc-20",
-    "minimalCheckpoint": 2
+    "minimalCheckpoint": 1
   },
   "report": {
     "name": "YourOwnLightIndexerName",

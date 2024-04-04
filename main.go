@@ -124,15 +124,18 @@ func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState
 	log.Info("Providing API service at: 8080")
 	go apis.StartService(df, arguments.EnableTest)
 
-	sleepInterval := time.Second * 3
+	sleepInterval := time.Second * 10
 	for {
+		time.Sleep(sleepInterval)
 		currentHeight, err := bitcoinGetter.GetLatestBlockHeight()
 		if err != nil {
-			log.Panicf(fmt.Errorf("failed to GetLatestBlockHeight in syncCommitteeIndexers, error: %v", err))
+			log.Error("failed to GetLatestBlockHeight in syncCommitteeIndexers", "error", err)
+			continue
 		}
 		hash, err := bitcoinGetter.GetBlockHash(currentHeight)
 		if err != nil {
-			log.Panicf(fmt.Errorf("failed to GetBlockHash in syncCommitteeIndexers, error: %v", err))
+			log.Error("failed to GetBlockHash in syncCommitteeIndexers", "error", err)
+			continue
 		}
 
 		var unsynced = false
@@ -145,9 +148,11 @@ func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState
 		}
 
 		if unsynced {
+
 			err = df.UpdateCheckpoints(currentHeight, hash)
 			if err != nil {
-				log.Panicf(fmt.Errorf("failed to UpdateCheckpoints in syncCommitteeIndexers, error: %v", err))
+				log.Error("failed to UpdateCheckpoints in syncCommitteeIndexers", "error", err)
+				continue
 			}
 
 			if arguments.EnableDAReport {
@@ -162,6 +167,7 @@ func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState
 					URL:          "",
 					Version:      config.Version,
 				}
+
 				err := checkpoint.UploadCheckpointByDA(&newCheckpoint, reportCfg.PrivateKey, reportCfg.GasCoupon, reportCfg.NamespaceID, reportCfg.Network, time.Duration(reportCfg.Timeout)*time.Millisecond)
 				if err != nil {
 					log.Error(fmt.Sprintf("Unable to upload the checkpoint by DA due to: %v", err))
@@ -172,7 +178,6 @@ func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState
 		}
 
 		log.Info(fmt.Sprintf("Listening for new Bitcoin block, current height: %d", df.CurrentHeight()))
-		time.Sleep(sleepInterval)
 	}
 }
 
