@@ -101,6 +101,8 @@ Run Modular Indexer (Light): Start the application. You can also include additio
 ```Bash
 ./modular-indexer-light
 ```
+_Please note: When initiating the Light Indexer, the system will automatically generate a private key and save it in the 'private' file. Ensure that you securely store this private key._
+
 
 ## Basic Usage
 After successfully launching `Light Indexer`, you have several functionalities at your disposal for interacting with the Bitcoin blockchain. These capabilities can be accessed through the `Indexer Dashboard` or [direct API calls](https://app.gitbook.com/o/CpG1oV8XXLDnYbUdhhqM/s/RvfNFdIQAghhQdWUByGF/developer-guides/introduction):
