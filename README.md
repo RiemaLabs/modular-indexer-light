@@ -75,7 +75,7 @@ Run the commands below, and the light indexer will initiate API services and upl
 go build
 ./modular-indexer-light
 ```
-_Please note: When initiating the Light Indexer, the system will automatically generate a private key and save it in the 'private' file. Ensure that you securely store this private key._
+_Please note: When initiating the Light Indexer, the system will automatically generate a private key and save it in the 'private' file located in the 'modular-indexer-light' directory. Ensure that you securely store this private key._
 
 ## Basic Usage
 Light Indexer is optimized for cost-efficiency. This design provides a user-friendly approach for those needing to interact with Bitcoin's meta-protocols (such as brc-20) without expensive data processing.
