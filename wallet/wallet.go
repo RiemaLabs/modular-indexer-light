@@ -123,7 +123,6 @@ func (w *Wallet) getBip39Mnemonic(key []byte) (words []string) {
 	wordString, err := bip39.NewMnemonic(seed)
 	if err != nil {
 		panic(err)
-		return
 	}
 	words = strings.Split(wordString, " ")
 	return

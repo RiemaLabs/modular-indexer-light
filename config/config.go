@@ -4,6 +4,7 @@ import (
 	"bufio"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -114,7 +115,7 @@ func ReadPrivate() string {
 
 	wall := wallet.NewWallet(&pwd)
 	if !wall.GenerateBip39Seed(&pwd, &pwd) {
-		panic("Failed to generate seeds")
+		log.Panicf(errors.New("failed to generate seeds"))
 	}
 	account := wall.GenerateAccount(&pwd)
 
@@ -122,13 +123,13 @@ func ReadPrivate() string {
 
 	file, err := os.OpenFile(PrivateFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		panic(err)
+		log.Panicf(err)
 	}
 	defer file.Close()
 
 	_, err = file.WriteString(pri)
 	if err != nil {
-		panic("Failed to write private key")
+		log.Panicf(errors.New("failed to write private key"))
 	}
 	log.Info("Store your private file carefully and don't share it!")
 	return pri

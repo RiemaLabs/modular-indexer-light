@@ -54,10 +54,13 @@ func NewRuntimeState(providers []provider.CheckpointProvider, lastCheckpoint *co
 
 func (s *RuntimeState) CurrentHeight() uint {
 	ck := s.CurrentFirstCheckpoint()
+	if ck == nil {
+		return 0
+	}
 
 	h, err := strconv.ParseUint(ck.Checkpoint.Height, 10, 64)
 	if err != nil {
-		panic(err)
+		log.Error("ParseUint(checkpoint.Height) failed", "error:", err)
 	}
 	return uint(h)
 }
