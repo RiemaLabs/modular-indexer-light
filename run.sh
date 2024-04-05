@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-set -x
+# set -x
 
 execFile="light-indexer"
 command="./$execFile"

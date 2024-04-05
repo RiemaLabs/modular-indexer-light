@@ -32,54 +32,64 @@ jobs:
     - name: Build for Windows
       run: |
         GOOS=windows GOARCH=amd64 go build -o light-indexer.exe .
-        zip light-indexer-windows-amd64.zip config.example.json light-indexer.exe
+        zip light-indexer-windows-amd64.zip config.example.json light-indexer.exe run.bat
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      generate_release_notes: true
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-          Changes in this release:
-          - Describe your changes here
-        draft: false
-        prerelease: false
-
-    - name: Upload Release Assets linux
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: |
-          ./light-indexer-linux-amd64.zip
-        asset_name: |
+        files: |
           light-indexer-linux-amd64.zip
-        asset_content_type: application/zip
-      
-    - name: Upload Release Assets darwin
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: |
-          ./light-indexer-darwin-amd64.zip
-        asset_name: |
           light-indexer-darwin-amd64.zip
-        asset_content_type: application/zip
-    
-    - name: Upload Release Assets windows
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: |
-          ./light-indexer-windows-amd64.zip
-        asset_name: |
           light-indexer-windows-amd64.zip
-        asset_content_type: application/zip
+
+    # - name: Create Release
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     tag_name: ${{ github.ref }}
+    #     release_name: Release ${{ github.ref }}
+    #     body: |
+    #       Changes in this release:
+    #       - Describe your changes here
+    #     draft: false
+    #     prerelease: false
+
+    # - name: Upload Release Assets linux
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+    #     asset_path: |
+    #       ./light-indexer-linux-amd64.zip
+    #     asset_name: |
+    #       light-indexer-linux-amd64.zip
+    #     asset_content_type: application/zip
+      
+    # - name: Upload Release Assets darwin
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+    #     asset_path: |
+    #       ./light-indexer-darwin-amd64.zip
+    #     asset_name: |
+    #       light-indexer-darwin-amd64.zip
+    #     asset_content_type: application/zip
+    
+    # - name: Upload Release Assets windows
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+    #     asset_path: |
+    #       ./light-indexer-windows-amd64.zip
+    #     asset_name: |
+    #       light-indexer-windows-amd64.zip
+    #     asset_content_type: application/zip
