@@ -49,7 +49,6 @@ jobs:
         prerelease: false
 
     - name: Upload Release Assets linux
-      id: upload-release-assets-linux
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -62,7 +61,6 @@ jobs:
         asset_content_type: application/zip
       
     - name: Upload Release Assets darwin
-      id: upload-release-assets-linux
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -74,8 +72,7 @@ jobs:
           light-indexer-darwin-amd64.zip
         asset_content_type: application/zip
     
-    - name: Upload Release Assets windos
-      id: upload-release-assets-linux
+    - name: Upload Release Assets windows
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -86,5 +83,3 @@ jobs:
         asset_name: |
           light-indexer-windows-amd64.zip
         asset_content_type: application/zip
-
-
