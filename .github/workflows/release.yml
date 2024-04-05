@@ -42,6 +42,23 @@ jobs:
         draft: false
         prerelease: false
 
+    # - name: Upload Release Assets
+    #   id: upload-release-assets
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+    #     asset_path: |
+    #       ./light-indexer-linux-amd64
+    #       ./light-indexer-macos-amd64
+    #       ./light-indexer-windows-amd64.exe
+    #     asset_name: |
+    #       light-indexer-linux-amd64
+    #       light-indexer-macos-amd64
+    #       light-indexer-windows-amd64.exe
+    #     asset_content_type: application/octet-stream
+
     - name: Upload Release Assets
       id: upload-release-assets
       uses: actions/upload-release-asset@v1
@@ -51,12 +68,8 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: |
           ./light-indexer-linux-amd64
-          ./light-indexer-macos-amd64
-          ./light-indexer-windows-amd64.exe
         asset_name: |
           light-indexer-linux-amd64
-          light-indexer-macos-amd64
-          light-indexer-windows-amd64.exe
         asset_content_type: application/octet-stream
 
 
