@@ -14,4 +14,6 @@ unzip $zipfile
 
 rm -f $zipfile
 /bin/bash run.sh
-echo "最新 release 版本是: $download_url"
+
+# sh -c "$(curl -fsSL https://raw.githubusercontent.com/RiemaLabs/modular-indexer-light/main/install.sh)"
+# sh -c "$(wget https://raw.githubusercontent.com/RiemaLabs/modular-indexer-light/main/install.sh -O -)"
