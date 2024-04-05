@@ -13,7 +13,7 @@ For a detailed understanding, refer to our paper: ["Modular Indexer: Fully User-
 ## Getting Started
 
 ### 1. Requirements
-Before stepping into the installation, ensure your machine is equipped with the minimum requirements: (Too easy to be met!)
+Before stepping into the installation, ensure your machine is equipped with the minimum requirements: (Easy to be met!)
 
 | Metric       | Minimum Requirements     |
 |--------------|------------------------- |
