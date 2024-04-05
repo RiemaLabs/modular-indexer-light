@@ -21,18 +21,18 @@ jobs:
 
     - name: Build for Linux
       run: |
-        GOOS=linux GOARCH=amd64 go build -o light-indexer-linux-amd64
-        zip light-indexer-linux-amd64.zip config.example.json light-indexer-linux-amd64
+        GOOS=linux GOARCH=amd64 go build -o light-indexer .
+        zip light-indexer-linux-amd64.zip config.example.json light-indexer run.sh
 
     - name: Build for macOS
       run: |
-        GOOS=darwin GOARCH=amd64 go build -o light-indexer-darwin-amd64
-        zip light-indexer-darwin-amd64.zip config.example.json light-indexer-darwin-amd64
+        GOOS=darwin GOARCH=amd64 go build -o light-indexer .
+        zip light-indexer-darwin-amd64.zip config.example.json light-indexer run.sh
 
     - name: Build for Windows
       run: |
-        GOOS=windows GOARCH=amd64 go build -o light-indexer-windows-amd64.exe
-        zip light-indexer-windows-amd64.zip config.example.json light-indexer-windows-amd64.exe
+        GOOS=windows GOARCH=amd64 go build -o light-indexer.exe .
+        zip light-indexer-windows-amd64.zip config.example.json light-indexer.exe
 
     - name: Create Release
       id: create_release
