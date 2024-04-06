@@ -57,7 +57,7 @@ func Execution(arguments *RuntimeArguments) {
 			if err != nil {
 				log.Panicf(fmt.Errorf("failed to save namespace ID to local file: %v", err))
 			}
-			log.Info("Namespace created successfully, Namespace ID: %s!", nid)
+			log.Info(fmt.Sprintf("Namespace created successfully, Namespace ID: %s!", nid))
 		}
 	}
 

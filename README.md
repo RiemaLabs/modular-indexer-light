@@ -10,7 +10,9 @@ For a detailed understanding, refer to our paper: ["Modular Indexer: Fully User-
 ## What is `Light Indexer`?
 `Light Indexer` plays a crucial role in this ecosystem. It retrieves the state of Bitcoin's meta-protocol from `Committee Indexer` according to the user's demand. While ensuring obtained states are trustworthy, it is efficient enough to be executed on browsers, mobiles, and other light devices.
 
-## Getting Started
+## Getting Started (Fast)
+
+## Getting Started (For develoeprs)
 
 ### 1. Requirements
 Before stepping into the installation, ensure your machine is equipped with the minimum requirements: (Easy to be met!)
