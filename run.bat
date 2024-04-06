@@ -1,8 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set "execFile=light-indexer.exe"
-set "command=.\light-indexer.exe"
+set "execFile=modular-indexer-light.exe"
+set "command=.\modular-indexer-light.exe"
 set "configExampleFile=config.example.json"
 set "configFile=config.json"
 set "bitcoinRPC=https://bitcoin-mainnet-archive.allthatnode.com"
@@ -51,5 +51,5 @@ if "!name!"=="" (
 )
 powershell -Command "(gc %configFile%) -replace 'YourOwnLightIndexerName', '!name!' | Out-File -encoding ASCII %configFile%"
 
-echo start indexer....
+echo start modular-indexer-light....
 %command%

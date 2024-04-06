@@ -2,7 +2,7 @@
 set -e
 # set -x
 
-execFile="light-indexer"
+execFile="modular-indexer-light"
 command="./$execFile"
 configExampleFile="config.example.json"
 configFile="config.json"
@@ -47,5 +47,5 @@ if [[ $name == "" ]]; then
 fi
 sed -i'' -e "s/YourOwnLightIndexerName/$name/g" "$configFile"
 
-echo "start indexer...."
+echo "start modular-indexer-light...."
 $command

@@ -30,7 +30,7 @@ fi
 # latest_release=$(curl -s "https://api.github.com/repos/RiemaLabs/modular-indexer-light/releases/latest")
 version=$(curl -s "https://api.github.com/repos/RiemaLabs/modular-indexer-light/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
 
-zipfile="light-indexer-$system-$arch.zip"
+zipfile="modular-indexer-light-$system-$arch.zip"
 
 download_url="https://github.com/RiemaLabs/modular-indexer-light/releases/download/$version/$zipfile"
 echo "Start download $zipfile ......."
