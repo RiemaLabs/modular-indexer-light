@@ -2,7 +2,7 @@
 set -e
 # set -x
 
-execFile="light-indexer"
+execFile="modular-indexer-light"
 command="./$execFile"
 configExampleFile="config.example.json"
 configFile="config.json"
@@ -43,9 +43,9 @@ sed -i'' -e "s/YourGasCoupon/$gasCoupon/g" "$configFile"
 read -p "Please enter indexer name: " name
 if [[ $name == "" ]]; then
     echo "Use randomly generated name"
-    $name=$randName
+    name=$randName
 fi
 sed -i'' -e "s/YourOwnLightIndexerName/$name/g" "$configFile"
 
-echo "start indexer...."
+echo "start modular-indexer-light...."
 $command

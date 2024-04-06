@@ -20,23 +20,23 @@ jobs:
 
     - name: Build for Linux
       run: |
-        GOOS=linux GOARCH=amd64 go build -o light-indexer .
-        zip light-indexer-linux-amd64.zip config.example.json light-indexer run.sh
+        GOOS=linux GOARCH=amd64 go build -o modular-indexer-light .
+        zip modular-indexer-light-linux-amd64.zip config.example.json modular-indexer-light run.sh
 
     - name: Build for macOS amd64
       run: |
-        GOOS=darwin GOARCH=amd64 go build -o light-indexer .
-        zip light-indexer-darwin-amd64.zip config.example.json light-indexer run.sh
+        GOOS=darwin GOARCH=amd64 go build -o modular-indexer-light .
+        zip modular-indexer-light-darwin-amd64.zip config.example.json modular-indexer-light run.sh
 
     - name: Build for macOS arm64
       run: |
-        GOOS=darwin GOARCH=arm64 go build -o light-indexer .
-        zip light-indexer-darwin-arm64.zip config.example.json light-indexer run.sh
+        GOOS=darwin GOARCH=arm64 go build -o modular-indexer-light .
+        zip modular-indexer-light-darwin-arm64.zip config.example.json modular-indexer-light run.sh
 
     - name: Build for Windows
       run: |
-        GOOS=windows GOARCH=amd64 go build -o light-indexer.exe .
-        zip light-indexer-windows-amd64.zip config.example.json light-indexer.exe run.bat
+        GOOS=windows GOARCH=amd64 go build -o modular-indexer-light.exe .
+        zip modular-indexer-light-windows-amd64.zip config.example.json modular-indexer-light.exe run.bat
 
     # - name: Release
     #   uses: softprops/action-gh-release@v2
@@ -70,8 +70,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./light-indexer-linux-amd64.zip
-        asset_name: light-indexer-linux-amd64.zip
+        asset_path: ./modular-indexer-light-linux-amd64.zip
+        asset_name: modular-indexer-light-linux-amd64.zip
         asset_content_type: application/zip
       
     - name: Upload Release Assets darwin amd64
@@ -80,8 +80,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./light-indexer-darwin-amd64.zip
-        asset_name: light-indexer-darwin-amd64.zip
+        asset_path: ./modular-indexer-light-darwin-amd64.zip
+        asset_name: modular-indexer-light-darwin-amd64.zip
         asset_content_type: application/zip
 
     - name: Upload Release Assets darwin arm64
@@ -90,8 +90,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./light-indexer-darwin-arm64.zip
-        asset_name: light-indexer-darwin-arm64.zip
+        asset_path: ./modular-indexer-light-darwin-arm64.zip
+        asset_name: modular-indexer-light-darwin-arm64.zip
         asset_content_type: application/zip
     
     - name: Upload Release Assets windows
@@ -100,6 +100,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./light-indexer-windows-amd64.zip
-        asset_name: light-indexer-windows-amd64.zip
+        asset_path: ./modular-indexer-light-windows-amd64.zip
+        asset_name: modular-indexer-light-windows-amd64.zip
         asset_content_type: application/zip
