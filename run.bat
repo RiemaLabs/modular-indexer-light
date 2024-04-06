@@ -2,6 +2,7 @@
 setlocal enabledelayedexpansion
 
 set execFile=light-indexer.exe
+set command=light-indexer.exe
 set configFile=config.json
 set configExampleFile=config.example.json
 set bitcoinRPC=https://bitcoin-mainnet-archive.allthatnode.com

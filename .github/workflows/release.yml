@@ -38,6 +38,8 @@ jobs:
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
+        prerelease: true
+        make_latest: "false"
         generate_release_notes: true
         files: |
           light-indexer-linux-amd64.zip
