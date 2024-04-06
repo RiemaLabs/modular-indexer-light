@@ -32,7 +32,7 @@ gasCoupon=$(echo "$gasCoupon" | xargs)
 if [[ 30 != ${#gasCoupon} ]]; then
     echo "Invalid Gas Coupon"
     exit 1
-if
+fi
 
 if [[ $gasCoupon == "" ]]; then
     echo "Gas Coupon required!"
