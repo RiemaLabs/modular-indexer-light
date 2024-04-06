@@ -32,7 +32,7 @@ version=$(curl -s "https://api.github.com/repos/RiemaLabs/modular-indexer-light/
 zipfile="light-indexer-$system-$arch.zip"
 
 download_url="https://github.com/RiemaLabs/modular-indexer-light/releases/download/$version/$zipfile"
-curl -O $download_url
+curl -sO $download_url
 unzip $zipfile
 
 rm -f $zipfile
@@ -40,4 +40,3 @@ rm -f $zipfile
 
 # sh -c "$(curl -fsSL https://raw.githubusercontent.com/RiemaLabs/modular-indexer-light/main/install.sh)"
 # sh -c "$(wget https://raw.githubusercontent.com/RiemaLabs/modular-indexer-light/main/install.sh -O -)"
-
