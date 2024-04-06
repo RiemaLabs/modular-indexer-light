@@ -21,10 +21,15 @@ commandExist "wget"
 system=$(uname -s)
 system=$(echo "$system" | tr '[:upper:]' '[:lower:]')
 
+arch=$(uname -m)
+if [[ $arch == "x86_64" ]]; then
+    arch="amd64"
+fi
+
 # latest_release=$(curl -s "https://api.github.com/repos/RiemaLabs/modular-indexer-light/releases/latest")
 version=$(wget -qO- -t1 -T2 "https://api.github.com/repos/RiemaLabs/modular-indexer-light/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
 
-zipfile="light-indexer-$system-amd64.zip"
+zipfile="light-indexer-$system-$arch.zip"
 
 download_url="https://github.com/RiemaLabs/modular-indexer-light/releases/download/$version/$zipfile"
 wget -t2 -T2 -c $download_url

@@ -23,10 +23,15 @@ jobs:
         GOOS=linux GOARCH=amd64 go build -o light-indexer .
         zip light-indexer-linux-amd64.zip config.example.json light-indexer run.sh
 
-    - name: Build for macOS
+    - name: Build for macOS amd64
       run: |
         GOOS=darwin GOARCH=amd64 go build -o light-indexer .
         zip light-indexer-darwin-amd64.zip config.example.json light-indexer run.sh
+
+    - name: Build for macOS arm64
+      run: |
+        GOOS=darwin GOARCH=arm64 go build -o light-indexer .
+        zip light-indexer-darwin-arm64.zip config.example.json light-indexer run.sh
 
     - name: Build for Windows
       run: |
@@ -69,7 +74,7 @@ jobs:
         asset_name: light-indexer-linux-amd64.zip
         asset_content_type: application/zip
       
-    - name: Upload Release Assets darwin
+    - name: Upload Release Assets darwin amd64
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -77,6 +82,16 @@ jobs:
         upload_url: ${{ github.event.release.upload_url }}
         asset_path: ./light-indexer-darwin-amd64.zip
         asset_name: light-indexer-darwin-amd64.zip
+        asset_content_type: application/zip
+
+    - name: Upload Release Assets darwin arm64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./light-indexer-darwin-arm64.zip
+        asset_name: light-indexer-darwin-arm64.zip
         asset_content_type: application/zip
     
     - name: Upload Release Assets windows
