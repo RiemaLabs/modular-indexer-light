@@ -23,7 +23,7 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/RiemaLabs/modular-indexer-
 
 ### Windows:
 
-1. **[Download `light-indexer-windows-amd64.zip`](https://github.com/RiemaLabs/modular-indexer-light/releases/download/v0.1.0-rc.3-beta/modular-indexer-light-windows-amd64.zip)**
+1. **Download [light-indexer-windows-amd64.zip](https://github.com/RiemaLabs/modular-indexer-light/releases/download/v0.1.0-rc.3-beta/modular-indexer-light-windows-amd64.zip)**
 - Different release versions can be found and downloaded as needed from: [RiemaLabs/modular-indexer-light releases](https://github.com/RiemaLabs/modular-indexer-light/releases).
 
 2. **Unzip `light-indexer-windows-amd64.zip`.**
