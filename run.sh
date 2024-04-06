@@ -20,14 +20,14 @@ if [[ ! -f "$execFile" ]]; then
     exit 1
 fi
 
-read -p "Please enter a bitcoin rpc: " endpoint
+read -p "Please enter your Bitcoin RPC endpoint: " endpoint
 if [[ ! "$endpoint" =~ ^(http|https)://([^/\s]+)/?([^/\s]*)\.?([^/\s]*)?$ ]]; then
-    echo "Invalid bitcoin rpc, default bitcoin rpc $bitcoinRPC will be used."
+    echo "Invalid Bitcoin RPC endpoint, default endpoint $bitcoinRPC will be used."
 else
     sed -i'' -e  "s|$bitcoinRPC|$endpoint|g" "$configFile"
 fi
 
-read -p "Please enter a Gas Coupon: " gasCoupon
+read -p "Please enter your Gas Coupon: " gasCoupon
 gasCoupon=$(echo "$gasCoupon" | xargs)
 if [[ 30 != ${#gasCoupon} ]]; then
     echo "Invalid Gas Coupon"
@@ -40,12 +40,12 @@ if [[ $gasCoupon == "" ]]; then
 fi
 sed -i'' -e "s/YourGasCoupon/$gasCoupon/g" "$configFile"
 
-read -p "Please enter indexer name: " name
+read -p "Please enter your desired indexer name: " name
 if [[ $name == "" ]]; then
     echo "Use randomly generated name"
     name=$randName
 fi
 sed -i'' -e "s/YourOwnLightIndexerName/$name/g" "$configFile"
 
-echo "start modular-indexer-light...."
+echo "Starting modular-indexer-light ......"
 $command

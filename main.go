@@ -29,15 +29,15 @@ func Execution(arguments *RuntimeArguments) {
 		reportCfg.PrivateKey = config.ReadPrivate()
 
 		if !checkpoint.IsValidNamespaceID(reportCfg.NamespaceID) {
-			log.Info("Got invalid Namespace ID from the config.json. Initializing a new namespace.")
+			log.Info("Invalid Namespace ID found in config.json. Initializing a new namespace.")
 			scanner := bufio.NewScanner(os.Stdin)
 			namespaceName := ""
 			for {
-				fmt.Print("Please enter the namespace name: ")
+				fmt.Print("Please enter your desired namespace name:")
 				if scanner.Scan() {
 					namespaceName = scanner.Text()
 					if strings.TrimSpace(namespaceName) == "" {
-						fmt.Print("Namespace name couldn't be empty!")
+						fmt.Print("Namespace name required!")
 					} else {
 						break
 					}
@@ -46,36 +46,38 @@ func Execution(arguments *RuntimeArguments) {
 
 			nid, err := checkpoint.CreateNamespace(reportCfg.PrivateKey, reportCfg.GasCoupon, namespaceName, reportCfg.Network)
 			if err != nil {
-				log.Panicf(fmt.Errorf("failed to create namespace due to %v", err))
+				log.Panicf(fmt.Errorf("failed to create namespace: %v", err))
 			}
 			reportCfg.NamespaceID = nid
 			bytes, err := json.Marshal(config.GlobalConfig)
 			if err != nil {
-				log.Panicf(fmt.Errorf("failed to save namespace ID to local file due to %v", err))
+				log.Panicf(fmt.Errorf("failed to save namespace ID to local file: %v", err))
 			}
 			err = os.WriteFile("./config.json", bytes, 0644)
 			if err != nil {
-				log.Panicf(fmt.Errorf("failed to save namespace ID to local file due to %v", err))
+				log.Panicf(fmt.Errorf("failed to save namespace ID to local file: %v", err))
 			}
-			fmt.Printf("Succeed to create namespace, ID: %s!", nid)
+			log.Info("Namespace created successfully, Namespace ID: %s!", nid)
 		}
 	}
+
+	log.Info("Syncing the latest state from committee indexers, please wait.")
 
 	// Create Bitcoin getter.
 	bitcoinGetter, err := getter.NewBitcoinOrdGetter(verifyCfg.BitcoinRPC)
 	if err != nil {
-		log.Panicf(fmt.Errorf("failed to initiate Bitcoin Getter, error: %v", err))
+		log.Panicf(fmt.Errorf("failed to initialize Bitcoin Getter. Error: %v", err))
 	}
 
 	currentBlockHeight, err := bitcoinGetter.GetLatestBlockHeight()
 	if err != nil {
-		log.Panicf(fmt.Errorf("failed to GetLatestBlockHeight, error: %v", err))
+		log.Panicf(fmt.Errorf("failed to get latest block height. Error: %v", err))
 	}
 
 	lastBlockHeight := currentBlockHeight - 1
 	lastBlockHash, err := bitcoinGetter.GetBlockHash(lastBlockHeight)
 	if err != nil {
-		log.Panicf(fmt.Errorf("failed to GetBlockHash at height %d, error: %v", lastBlockHeight, err))
+		log.Panicf(fmt.Errorf("failed to get block hash at height %d. Error: %v", lastBlockHeight, err))
 	}
 
 	// Create checkpoint providers
@@ -92,7 +94,7 @@ func Execution(arguments *RuntimeArguments) {
 	}
 
 	if len(providers) < verifyCfg.MinimalCheckpoint {
-		log.Panicf(fmt.Errorf("the number of checkpoint providers is below the minimum required amount: %d", verifyCfg.MinimalCheckpoint))
+		log.Panicf(fmt.Errorf("the number of checkpoint providers is below the required minimum: %d", verifyCfg.MinimalCheckpoint))
 	}
 
 	// Get last checkpoint.
@@ -100,12 +102,12 @@ func Execution(arguments *RuntimeArguments) {
 	checkpoints := provider.GetCheckpoints(providers, lastBlockHeight, lastBlockHash, getCheckpointsTimeout)
 
 	if len(checkpoints) == 0 {
-		log.Panicf(fmt.Errorf("failed to GetCheckpoints at height %d", lastBlockHeight))
+		log.Panicf(fmt.Errorf("failed to get checkpoints at height %d", lastBlockHeight))
 	}
 
 	_, _, inconsistent := provider.CheckpointsInconsist(checkpoints)
 	if inconsistent {
-		log.Panicf(fmt.Errorf("inconsistent checkpoints detected at height %d during initialization. "+
+		log.Panicf(fmt.Errorf("inconsistent checkpoints detected at height %d during initialization."+
 			"a version of the modular indexer with historical verification capabilities will be released soon", lastBlockHeight))
 	}
 
@@ -114,6 +116,8 @@ func Execution(arguments *RuntimeArguments) {
 	// Create runtime state
 	df := runtime.NewRuntimeState(providers, lastCheckpoint, verifyCfg.MinimalCheckpoint, getCheckpointsTimeout)
 
+	log.Info("Succeed to sync the latest state!")
+
 	syncCommitteeIndexers(arguments, df, bitcoinGetter)
 }
 
@@ -121,7 +125,7 @@ func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState
 	cfg := config.GlobalConfig
 	reportCfg := &cfg.Report
 	verifyCfg := &cfg.Verification
-	log.Info("Providing API service at: 8080")
+	log.Info("API service available at: 8080")
 	go apis.StartService(df, arguments.EnableTest)
 
 	sleepInterval := time.Second * 10
@@ -134,7 +138,7 @@ func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState
 		}
 		hash, err := bitcoinGetter.GetBlockHash(currentHeight)
 		if err != nil {
-			log.Error("failed to GetBlockHash in syncCommitteeIndexers", "error", err)
+			log.Error("failed to get block hash in syncCommitteeIndexers", "error", err)
 			continue
 		}
 
@@ -170,9 +174,9 @@ func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState
 
 				err := checkpoint.UploadCheckpointByDA(&newCheckpoint, reportCfg.PrivateKey, reportCfg.GasCoupon, reportCfg.NamespaceID, reportCfg.Network, time.Duration(reportCfg.Timeout)*time.Millisecond)
 				if err != nil {
-					log.Error(fmt.Sprintf("Unable to upload the checkpoint by DA due to: %v", err))
+					log.Error(fmt.Sprintf("Unable to upload the checkpoint via DA: %v", err))
 				} else {
-					log.Info(fmt.Sprintf("Succeed to upload the checkpoint by DA at height: %s", newCheckpoint.Height))
+					log.Info(fmt.Sprintf("Checkpoint successfully uploaded via DA at height: %s", newCheckpoint.Height))
 				}
 			}
 		}
