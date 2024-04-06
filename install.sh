@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -x
 
 # command check
 commandExist() {
@@ -22,7 +23,7 @@ system=$(uname -s)
 system=$(echo "$system" | tr '[:upper:]' '[:lower:]')
 
 arch=$(uname -m)
-if [[ $arch == "x86_64" ]]; then
+if [ $arch = "x86_64" ]; then
     arch="amd64"
 fi
 
@@ -32,8 +33,13 @@ version=$(curl -s "https://api.github.com/repos/RiemaLabs/modular-indexer-light/
 zipfile="light-indexer-$system-$arch.zip"
 
 download_url="https://github.com/RiemaLabs/modular-indexer-light/releases/download/$version/$zipfile"
-curl -sO $download_url
-unzip $zipfile
+curl -SfLO $download_url
+if [ -f "$zipfile" ]; then
+    unzip "$zipfile"
+else
+    echo "Failed to download the $zipfile."
+    exit 1
+fi
 
 rm -f $zipfile
 /bin/bash run.sh

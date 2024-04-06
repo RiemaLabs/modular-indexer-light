@@ -43,7 +43,7 @@ sed -i'' -e "s/YourGasCoupon/$gasCoupon/g" "$configFile"
 read -p "Please enter indexer name: " name
 if [[ $name == "" ]]; then
     echo "Use randomly generated name"
-    $name=$randName
+    name=$randName
 fi
 sed -i'' -e "s/YourOwnLightIndexerName/$name/g" "$configFile"
 
