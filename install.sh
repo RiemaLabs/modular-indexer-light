@@ -33,7 +33,7 @@ version=$(curl -s "https://api.github.com/repos/RiemaLabs/modular-indexer-light/
 zipfile="modular-indexer-light-$system-$arch.zip"
 
 download_url="https://github.com/RiemaLabs/modular-indexer-light/releases/download/$version/$zipfile"
-echo "Start download $zipfile ......."
+echo "Starting download $zipfile ......."
 curl -SfLO $download_url
 if [ -f "$zipfile" ]; then
     unzip "$zipfile"
