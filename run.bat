@@ -20,15 +20,15 @@ if not exist "%execFile%" (
     exit /b 1
 )
 
-set /p endpoint=Please enter a bitcoin rpc: 
+set /p endpoint=Please enter your Bitcoin RPC endpoint: 
 echo %endpoint% | findstr /r /c:"^http[s]*:\/\/.*" > nul
 if %errorlevel% neq 0 (
-    echo Invalid bitcoin rpc, default bitcoin rpc %bitcoinRPC% will be used.
+    echo Invalid Bitcoin RPC endpoint, default endpoint %bitcoinRPC% will be used.
     set "endpoint=%bitcoinRPC%"
 )
 powershell -Command "(gc %configFile%) -replace '%bitcoinRPC%', '%endpoint%' | Out-File -encoding ASCII %configFile%"
 
-set /p gasCoupon=Please enter a Gas Coupon: 
+set /p gasCoupon=Please enter your Gas Coupon: 
 set gasCoupon=!gasCoupon!
 if not "!gasCoupon!"=="" (
     if "!gasCoupon:~30,1!"=="" if not "!gasCoupon:~29,1!"=="" (
@@ -44,7 +44,7 @@ if not "!gasCoupon!"=="" (
     exit /b 1
 )
 
-set /p name=Please enter indexer name: 
+set /p name=Please enter your desired indexer name: 
 if "!name!"=="" (
     echo Use randomly generated name
     set /a name=%RANDOM%%RANDOM%

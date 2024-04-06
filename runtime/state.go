@@ -202,9 +202,9 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 
 	c := s.CurrentFirstCheckpoint().Checkpoint.Commitment
 	if inconsistent {
-		log.Info(fmt.Sprintf("checkpoints fetched from providers have been verified, the commitment: %s, current height %d, hash %s", c, height, hash))
+		log.Info(fmt.Sprintf("Checkpoints fetched from providers have been verified, the commitment: %s, current height %d, hash %s", c, height, hash))
 	} else {
-		log.Info(fmt.Sprintf("checkpoints fetched from providers are consistent, the commitment: %s, current height %d, hash %s", c, height, hash))
+		log.Info(fmt.Sprintf("Checkpoints fetched from providers are consistent, the commitment: %s, current height %d, hash %s", c, height, hash))
 	}
 
 	return nil
