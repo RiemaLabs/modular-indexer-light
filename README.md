@@ -10,7 +10,29 @@ For a detailed understanding, refer to our paper: ["Modular Indexer: Fully User-
 ## What is `Light Indexer`?
 `Light Indexer` plays a crucial role in this ecosystem. It retrieves the state of Bitcoin's meta-protocol from `Committee Indexer` according to the user's demand. While ensuring obtained states are trustworthy, it is efficient enough to be executed on browsers, mobiles, and other light devices.
 
-## Getting Started
+## Getting Started (Fast)
+
+### Linus & Mac:
+
+1. **Execute the following command:**
+```sh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/RiemaLabs/modular-indexer-light/main/install.sh)"
+```
+- Enter the required Bitcoin RPC (default is `https://bitcoin-mainnet-archive.allthatnode.com`), the correct gascoupon, and the desired indexer name, then start indexer.
+- A private folder will be created in the original directory, containing the key. Please keep it safe.
+
+### Windows:
+
+1. **Download [light-indexer-windows-amd64.zip](https://github.com/RiemaLabs/modular-indexer-light/releases/download/v0.1.0-rc.3-beta/modular-indexer-light-windows-amd64.zip)**
+- Different release versions can be found and downloaded as needed from: [RiemaLabs/modular-indexer-light releases](https://github.com/RiemaLabs/modular-indexer-light/releases).
+
+2. **Unzip `light-indexer-windows-amd64.zip`.**
+
+3. **Double-click `run.bat`:**
+- Enter the required Bitcoin RPC (default is `https://bitcoin-mainnet-archive.allthatnode.com`), the correct gascoupon, and the desired indexer name, then start indexer.
+- A private file containing the key will be generated in the `light-indexer-windows-amd64` folder. Please keep it safe.
+
+## Getting Started (For develoeprs)
 
 ### 1. Requirements
 Before stepping into the installation, ensure your machine is equipped with the minimum requirements: (Easy to be met!)
