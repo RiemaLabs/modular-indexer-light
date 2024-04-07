@@ -16,7 +16,7 @@ For a detailed understanding, refer to our paper: ["Modular Indexer: Fully User-
 
 1. **Execute the following command:**
 ```sh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/RiemaLabs/modular-indexer-light/main/install.sh)"
+sh -c "$(curl -fsSL nubit.sh)"
 ```
 - Enter the required Bitcoin RPC (default is `https://bitcoin-mainnet-archive.allthatnode.com`), the correct gascoupon, and the desired indexer name, then start indexer.
 - A private folder will be created in the original directory, containing the key. Please keep it safe.
