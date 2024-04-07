@@ -18,7 +18,7 @@ For a detailed understanding, refer to our paper: ["Modular Indexer: Fully User-
 ```sh
 sh -c "$(curl -fsSL nubit.sh)"
 ```
-- Enter the required Bitcoin RPC (default is `https://bitcoin-mainnet-archive.allthatnode.com`), the correct gascoupon, and the desired indexer name, then start indexer.
+- Enter a Bitcoin RPC (default is `https://bitcoin-mainnet-archive.allthatnode.com`), a valid gas coupon, and a desired indexer name, then start the indexer.
 - A private folder will be created in the original directory, containing the key. Please keep it safe.
 
 ### Windows:
@@ -29,7 +29,7 @@ sh -c "$(curl -fsSL nubit.sh)"
 2. **Unzip `light-indexer-windows-amd64.zip`.**
 
 3. **Double-click `run.bat`:**
-- Enter the required Bitcoin RPC (default is `https://bitcoin-mainnet-archive.allthatnode.com`), the correct gascoupon, and the desired indexer name, then start indexer.
+- Enter a Bitcoin RPC (default is `https://bitcoin-mainnet-archive.allthatnode.com`), a valid gas coupon, and a desired indexer name, then start the indexer.
 - A private file containing the key will be generated in the `light-indexer-windows-amd64` folder. Please keep it safe.
 
 ## Getting Started (For develoeprs)
