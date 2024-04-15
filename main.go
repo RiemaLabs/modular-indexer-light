@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -171,6 +172,10 @@ func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState
 					URL:          "",
 					Version:      config.Version,
 				}
+
+				timeGap := time.Duration(rand.Intn(40)+1) * time.Second
+
+				time.Sleep(timeGap)
 
 				err := checkpoint.UploadCheckpointByDA(&newCheckpoint, reportCfg.PrivateKey, reportCfg.GasCoupon, reportCfg.NamespaceID, reportCfg.Network, time.Duration(reportCfg.Timeout)*time.Millisecond)
 				if err != nil {

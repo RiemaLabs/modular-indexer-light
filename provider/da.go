@@ -68,7 +68,8 @@ OuterLoop:
 		default:
 			ck, offset, err = DownloadCheckpointByDA(nid, net, name, mp, strconv.Itoa(int(height)), hash, p.LastCheckpointOffset, maxTimeout)
 			if err != nil {
-				log.Warn(err.Error())
+				time.Sleep(20 * time.Second)
+				log.Error(err.Error())
 				continue
 			}
 			break OuterLoop
