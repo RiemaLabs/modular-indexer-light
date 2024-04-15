@@ -32,7 +32,7 @@ sh -c "$(curl -fsSL nubit.sh)"
 - Enter a Bitcoin RPC (default is `https://bitcoin-mainnet-archive.allthatnode.com`), a valid gas coupon, and a desired indexer name, then start the indexer.
 - A private file containing the key will be generated in the `light-indexer-windows-amd64` folder. Please keep it safe.
 
-## Getting Started (For develoeprs)
+## Getting Started (For developers)
 
 ### 1. Requirements
 Before stepping into the installation, ensure your machine is equipped with the minimum requirements: (Easy to be met!)
@@ -44,11 +44,11 @@ Before stepping into the installation, ensure your machine is equipped with the 
 | **Disk**     | 30 GB                    |
 | **Bandwidth**| Upload/Download 100 KB/s |
 
-### 2. Install Dependence
+### 2. Install Dependencies
 Light Indexer is built with Golang. You can run your own one by following the procedure below.
 `Go` version 1.22.0 is required for running the repository. Please visit the [Golang download Page](https://go.dev/doc/install) to get the latest Golang installed.
 
-Golang is easy to install all dependence. Fetch all required packages by simply running.
+Golang makes it easy to install all dependencies. Fetch all required packages by simply running.
 ```Bash
 go mod tidy
 ```
@@ -65,7 +65,7 @@ Then, customize it to match your specific requirements as follows.
 After copying the `config.example.json` and creating your `config.json`, more detailed information is required. Here's a brief outline of the necessary variables to be configured:
 
 #### Setting Up `report`:
-Set up this field to allow your light indexer to upload checkpoints to the Nubit DA Layer and participate in the Pre-Alpha Testnet! To get gasCoupon, please follow the guideline of [Nubit website](https://points.nubit.org).
+Set up this field to allow your light indexer to upload checkpoints to the Nubit DA Layer and participate in the Pre-Alpha Testnet! To get gasCoupon, please follow the guideline on the [Nubit website](https://points.nubit.org).
 - `name`: A unique name for your light indexer instance.
 - `network`: Specify the network (current: 'Pre-Alpha Testnet').
 - `namespaceID`: Your designated namespace identifier. Leave it to empty to create a namespace following the instruction.
