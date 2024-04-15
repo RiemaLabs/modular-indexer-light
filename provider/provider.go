@@ -118,7 +118,7 @@ func DownloadCheckpointByDA(namespaceID, network string, name, metaProtocol, hei
 	dataIDs := resDataIDs.DataIDs
 
 	if len(dataIDs) == 0 {
-		return nil, 0, fmt.Errorf("the count of data with offset %d, in namespace %s, error: %v", runtimeOffset, namespaceID, err)
+		return nil, 0, fmt.Errorf("the count of data with offset %d is zero, in namespace %s", runtimeOffset, namespaceID)
 	}
 
 	var c checkpoint.Checkpoint
