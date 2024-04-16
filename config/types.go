@@ -13,6 +13,8 @@ type (
 		Verification Verification `json:"verification"`
 
 		Report Report `json:"report"`
+
+		Server Server `json:"server"`
 	}
 
 	CommitteeIndexers struct {
@@ -66,5 +68,10 @@ type (
 		Evidence *Evidence `json:"evidence"`
 		SourceS3 *SourceS3 `json:"sourceS3"`
 		SourceDA *SourceDA `json:"sourceDa"`
+	}
+
+	Server struct {
+		Host string `json:"host"`
+		Port int    `json:"port"`
 	}
 )

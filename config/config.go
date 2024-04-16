@@ -34,6 +34,10 @@ func InitConfig() {
 		log.Panicf(fmt.Errorf("failed to parse config file: %v", err))
 	}
 
+	if GlobalConfig.Server.Port == 0 {
+		GlobalConfig.Server.Port = 8080
+	}
+
 	blacks := LoadBlacklist()
 
 	for _, b := range blacks {

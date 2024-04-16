@@ -126,8 +126,12 @@ func syncCommitteeIndexers(arguments *RuntimeArguments, df *runtime.RuntimeState
 	cfg := config.GlobalConfig
 	reportCfg := &cfg.Report
 	verifyCfg := &cfg.Verification
-	log.Info("API service available at: 8080")
-	go apis.StartService(df, arguments.EnableTest)
+	serverCfg := &cfg.Server
+
+	port := serverCfg.Port
+	log.Info(fmt.Sprintf("API service available at: %d!", port))
+
+	go apis.StartService(df, arguments.EnableTest, port)
 
 	sleepInterval := time.Second * 10
 	for {

@@ -31,5 +31,8 @@
     "namespaceID": "YourOwnNamespace. Left to empty and follow the instruction to create automatically.",
     "gasCoupon": "YourGasCoupon",
     "timeout": 15000
+  },
+  "server": {
+    "port": 8080
   }
 }
