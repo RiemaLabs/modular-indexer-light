@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func StartService(df *runtime.RuntimeState, enableDebug bool) {
+func StartService(df *runtime.RuntimeState, enableDebug bool, port int) {
 
 	if !enableDebug {
 		gin.SetMode(gin.ReleaseMode)
@@ -68,6 +68,5 @@ func StartService(df *runtime.RuntimeState, enableDebug bool) {
 		})
 	}
 
-	// TODO: Medium. Allow user to setup port.
-	r.Run(":8080")
+	r.Run(fmt.Sprintf(":%d", port))
 }
