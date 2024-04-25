@@ -12,19 +12,20 @@ import (
 	"sync"
 	"time"
 
+	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
+
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
-	"github.com/RiemaLabs/modular-indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
+	sdk "github.com/RiemaLabs/nubit-da-sdk"
 	"github.com/RiemaLabs/nubit-da-sdk/constant"
 	"github.com/RiemaLabs/nubit-da-sdk/types"
-
-	sdk "github.com/RiemaLabs/nubit-da-sdk"
 )
 
-func GetCheckpoints(providers []CheckpointProvider, height uint, hash string, timeout time.Duration) []*config.CheckpointExport {
+func GetCheckpoints(providers []CheckpointProvider, height uint, hash string, timeout time.Duration) []*configs.CheckpointExport {
 	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 	defer cancel()
 
-	result := make([]*config.CheckpointExport, 0, len(providers))
+	result := make([]*configs.CheckpointExport, 0, len(providers))
 	var wg sync.WaitGroup
 	for _, p := range providers {
 		p := p
@@ -51,10 +52,10 @@ func GetCheckpoints(providers []CheckpointProvider, height uint, hash string, ti
 	return result
 }
 
-func RecordBlacklist(correct, fraud *config.CheckpointExport) {
+func DenyCheckpoint(path string, correct, fraud *configs.CheckpointExport) {
 	h, _ := strconv.ParseUint(correct.Checkpoint.Height, 10, 64)
-	b := config.Blacklist{
-		Evidence: &config.Evidence{
+	b := configs.DenyList{
+		Evidence: &configs.Evidence{
 			Height:            uint(h),
 			Hash:              correct.Checkpoint.Hash,
 			CorrectCommitment: correct.Checkpoint.Commitment,
@@ -69,11 +70,13 @@ func RecordBlacklist(correct, fraud *config.CheckpointExport) {
 		b.SourceS3 = fraud.SourceS3
 	}
 
-	config.AppendBlacklist(&b)
+	if err := configs.AppendDenyList(path, &b); err != nil {
+		logs.Error.Println("Append to deny list error:", err)
+	}
 }
 
 // Find the first inconsistent checkpoint pair among multiple ones.
-func CheckpointsInconsist(checkpoints []*config.CheckpointExport) (int, int, bool) {
+func CheckpointsInconsist(checkpoints []*configs.CheckpointExport) (int, int, bool) {
 	for i := 0; i < len(checkpoints)-1; i++ {
 		if !CheckPointEqual(checkpoints[i].Checkpoint, checkpoints[i+1].Checkpoint) {
 			return i, i + 1, true

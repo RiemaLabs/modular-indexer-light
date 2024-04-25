@@ -36,5 +36,5 @@ __debug*
 *.prof
 
 # Binary
-modular-indexer-light
+/modular-indexer-light
 private

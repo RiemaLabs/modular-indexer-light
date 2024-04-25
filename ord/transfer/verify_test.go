@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/RiemaLabs/modular-indexer-committee/ord/getter"
-	"github.com/RiemaLabs/modular-indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
 )
 
 func TestVerify(t *testing.T) {
-	config.InitConfig()
+	configs.InitConfig()
 	type args struct {
 		transfers   TransferByInscription
 		blockHeight uint

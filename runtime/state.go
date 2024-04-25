@@ -10,28 +10,31 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ethereum/go-verkle"
+
 	"github.com/RiemaLabs/modular-indexer-committee/apis"
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
 	"github.com/RiemaLabs/modular-indexer-committee/ord/getter"
 	"github.com/RiemaLabs/modular-indexer-light/clients/committee"
-	"github.com/RiemaLabs/modular-indexer-light/config"
 	"github.com/RiemaLabs/modular-indexer-light/constant"
-	"github.com/RiemaLabs/modular-indexer-light/log"
+	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
+	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 	"github.com/RiemaLabs/modular-indexer-light/ord/transfer"
 	"github.com/RiemaLabs/modular-indexer-light/provider"
-	"github.com/ethereum/go-verkle"
 )
 
 // TODO: Medium. Uniform the error report.
 
-type RuntimeState struct {
+type State struct {
+	denyListPath string
+
 	providers []provider.CheckpointProvider
 
 	// The consistent check point at the current height - 1.
-	lastCheckpoint *config.CheckpointExport
+	lastCheckpoint *configs.CheckpointExport
 
 	// The checkpoints got from providers at the current height.
-	currentCheckpoints []*config.CheckpointExport
+	currentCheckpoints []*configs.CheckpointExport
 
 	// The number of effective providers should exceed the minimum required.
 	minimalCheckpoint int
@@ -42,17 +45,24 @@ type RuntimeState struct {
 	sync.RWMutex
 }
 
-func NewRuntimeState(providers []provider.CheckpointProvider, lastCheckpoint *config.CheckpointExport, minimalCheckpoint int, fetchTimeout time.Duration) *RuntimeState {
-	return &RuntimeState{
+func NewRuntimeState(
+	denyListPath string,
+	providers []provider.CheckpointProvider,
+	lastCheckpoint *configs.CheckpointExport,
+	minimalCheckpoint int,
+	fetchTimeout time.Duration,
+) *State {
+	return &State{
+		denyListPath:       denyListPath,
 		providers:          providers,
 		lastCheckpoint:     lastCheckpoint,
-		currentCheckpoints: make([]*config.CheckpointExport, len(providers)),
+		currentCheckpoints: make([]*configs.CheckpointExport, len(providers)),
 		minimalCheckpoint:  minimalCheckpoint,
 		timeout:            fetchTimeout,
 	}
 }
 
-func (s *RuntimeState) CurrentHeight() uint {
+func (s *State) CurrentHeight() uint {
 	ck := s.CurrentFirstCheckpoint()
 	if ck == nil {
 		return 0
@@ -60,12 +70,12 @@ func (s *RuntimeState) CurrentHeight() uint {
 
 	h, err := strconv.ParseUint(ck.Checkpoint.Height, 10, 64)
 	if err != nil {
-		log.Error("ParseUint(checkpoint.Height) failed", "error:", err)
+		logs.Error.Printf("ParseUint(checkpoint.Height) failed", "error:", err)
 	}
 	return uint(h)
 }
 
-func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
+func (s *State) UpdateCheckpoints(height uint, hash string) error {
 	s.Lock()
 	defer s.Unlock()
 	constant.ApiState = constant.StatusSync
@@ -80,10 +90,10 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 	if inconsistent {
 		constant.ApiState = constant.StatusVerify
 
-		log.Warn("Checkpoints retrieved from providers are inconsistent for height %d, hash %s. Beginning verification and regeneration process...", height, hash)
+		logs.Warn.Printf("Checkpoints retrieved from providers are inconsistent for height %q, hash %q, start the verification and regeneration process...", height, hash)
 
 		// Aggregate checkpoints by commitment
-		aggs := make(map[string]*config.CheckpointExport)
+		aggs := make(map[string]*configs.CheckpointExport)
 		for _, ck := range checkpoints {
 			if _, exist := aggs[ck.Checkpoint.Commitment]; exist {
 				continue
@@ -103,10 +113,9 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 			go func(commit string, ck *checkpoint.Checkpoint) {
 				defer wg.Done()
 
-				// Get stateProof
 				stateProof, err := committee.NewCommitteeIndexerClient(context.TODO(), ck.Name, ck.URL).LatestStateProof()
 				if err != nil || stateProof.Error != nil {
-					log.Warn("failed to getLatestStateProof from the committee indexer. Its name: %s, url: %s, error: %v", ck.Name, ck.URL, err)
+					logs.Warn.Printf("Failed to get latest state proof from the committee indexer: name=%s, url=%s, err:=%v", ck.Name, ck.URL, err)
 					return
 				}
 
@@ -186,13 +195,13 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 		}
 		trustCommitment := succVerify[champion].commitment
 
-		s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), []*config.CheckpointExport{aggs[trustCommitment]}
+		s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), []*configs.CheckpointExport{aggs[trustCommitment]}
 		constant.ApiState = constant.StateActive
 
-		// black untrust provider
+		// Deny untrusted providers.
 		for _, ck := range checkpoints {
 			if !slices.Contains(seemRight, ck.Checkpoint.Commitment) {
-				provider.RecordBlacklist(aggs[trustCommitment], ck)
+				provider.DenyCheckpoint(s.denyListPath, aggs[trustCommitment], ck)
 			}
 		}
 	} else {
@@ -202,22 +211,22 @@ func (s *RuntimeState) UpdateCheckpoints(height uint, hash string) error {
 
 	c := s.CurrentFirstCheckpoint().Checkpoint.Commitment
 	if inconsistent {
-		log.Info(fmt.Sprintf("Checkpoints fetched from providers have been verified, the commitment: %s, current height %d, hash %s", c, height, hash))
+		logs.Info.Printf(fmt.Sprintf("Checkpoints fetched from providers have been verified, the commitment: %s, current height %d, hash %s", c, height, hash))
 	} else {
-		log.Info(fmt.Sprintf("Checkpoints fetched from providers are consistent, the commitment: %s, current height %d, hash %s", c, height, hash))
+		logs.Info.Printf(fmt.Sprintf("Checkpoints fetched from providers are consistent, the commitment: %s, current height %d, hash %s", c, height, hash))
 	}
 
 	return nil
 }
 
-func (s *RuntimeState) LastCheckpoint() *config.CheckpointExport {
+func (s *State) LastCheckpoint() *configs.CheckpointExport {
 	return s.lastCheckpoint
 }
 
-func (s *RuntimeState) CurrentCheckpoints() []*config.CheckpointExport {
+func (s *State) CurrentCheckpoints() []*configs.CheckpointExport {
 	return s.currentCheckpoints
 }
 
-func (s *RuntimeState) CurrentFirstCheckpoint() *config.CheckpointExport {
+func (s *State) CurrentFirstCheckpoint() *configs.CheckpointExport {
 	return s.currentCheckpoints[0]
 }
