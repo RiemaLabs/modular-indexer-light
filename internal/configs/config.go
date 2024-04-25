@@ -10,10 +10,11 @@ import (
 	"strings"
 
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
-	"github.com/RiemaLabs/modular-indexer-light/constant"
+
+	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
-	"github.com/RiemaLabs/modular-indexer-light/utils"
-	"github.com/RiemaLabs/modular-indexer-light/wallet"
+	"github.com/RiemaLabs/modular-indexer-light/internal/utils"
+	"github.com/RiemaLabs/modular-indexer-light/internal/wallet"
 )
 
 type (
