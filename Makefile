@@ -5,9 +5,13 @@ GOOS :=
 ENV := GOOS=${GOOS}
 
 LDFLAGS := \
-	-X ./cmd/modular-indexer-light/main.version=${VERSION} \
-	-X ./cmd/modular-indexer-light/main.gitHash=${GIT_HASH}
+	-X main.version=${VERSION} \
+	-X main.gitHash=${GIT_HASH}
 FLAGS := -ldflags='${LDFLAGS}'
 
 modular-indexer-light:
 	env ${ENV} go build ${FLAGS} ./cmd/$@
+
+.PHONY: clean
+clean:
+	rm -rf ./modular-indexer-light

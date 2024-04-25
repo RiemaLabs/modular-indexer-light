@@ -13,23 +13,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
-	"github.com/RiemaLabs/modular-indexer-light/apis"
 	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
-	"github.com/RiemaLabs/modular-indexer-light/ord/getter"
-	"github.com/RiemaLabs/modular-indexer-light/provider"
-	"github.com/RiemaLabs/modular-indexer-light/runtime"
+	"github.com/RiemaLabs/modular-indexer-light/internal/ord/getter"
+	"github.com/RiemaLabs/modular-indexer-light/internal/provider"
+	"github.com/RiemaLabs/modular-indexer-light/internal/runtime"
+	"github.com/RiemaLabs/modular-indexer-light/internal/services"
 )
 
 var (
 	version = "latest"
 	gitHash = "unknown"
-)
-
-const (
-	DefaultConfigFile   = "config.json"
-	DefaultDenyListFile = "blacklist.jsonlines"
-	DefaultPrivateFile  = "private"
 )
 
 type App struct {
@@ -57,11 +51,11 @@ This command offers multiple flags to tailor the indexer's functionality accordi
 
 			a.Run()
 		},
-		Version: fmt.Sprintf("modular-indexer-light %v (%v)", version, gitHash),
+		Version: fmt.Sprintf("%v (%v)", version, gitHash),
 	}
-	cmd.Flags().StringVarP(&a.ConfigPath, "config", "c", DefaultConfigFile, "path to config file")
-	cmd.Flags().StringVar(&a.DenyListPath, "deny", DefaultDenyListFile, "path to deny list file")
-	cmd.Flags().StringVar(&a.PrivatePath, "private", DefaultPrivateFile, "path to private file")
+	cmd.Flags().StringVarP(&a.ConfigPath, "config", "c", "config.json", "path to config file")
+	cmd.Flags().StringVar(&a.DenyListPath, "deny", "blacklist.jsonlines", "path to deny list file")
+	cmd.Flags().StringVar(&a.PrivatePath, "private", "private", "path to private file")
 	cmd.Flags().BoolVarP(&a.EnableTest, "test", "t", false, "Enable this flag to hijack the block height to test the service")
 	cmd.Flags().BoolVarP(&a.EnableDAReport, "report", "", true, "Enable this flag to upload verified checkpoint to DA")
 	return cmd
@@ -185,7 +179,7 @@ func syncCommitteeIndexers(app *App, df *runtime.State, bitcoinGetter *getter.Bi
 	reportCfg := &cfg.Report
 	verifyCfg := &cfg.Verification
 
-	go apis.StartService(df, app.EnableTest, cfg.ListenAddr)
+	go services.StartService(df, app.EnableTest, cfg.ListenAddr)
 
 	sleepInterval := time.Second * 10
 	for {
@@ -250,6 +244,6 @@ func syncCommitteeIndexers(app *App, df *runtime.State, bitcoinGetter *getter.Bi
 // TODO: Medium. Uniform the expression of Bitcoin block height and hash.
 func main() {
 	if err := new(App).Command().Execute(); err != nil {
-		logs.Error.Panicf("failed to execute: %v", err)
+		logs.Error.Fatalf("failed to execute: %v", err)
 	}
 }
