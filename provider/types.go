@@ -3,9 +3,9 @@ package provider
 import (
 	"context"
 
-	"github.com/RiemaLabs/modular-indexer-light/config"
+	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
 )
 
 type CheckpointProvider interface {
-	GetCheckpoint(ctx context.Context, height uint, hash string) (*config.CheckpointExport, error)
+	GetCheckpoint(ctx context.Context, height uint, hash string) (*configs.CheckpointExport, error)
 }

@@ -7,23 +7,22 @@ import (
 	"time"
 
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
-	"github.com/RiemaLabs/modular-indexer-light/config"
-	"github.com/RiemaLabs/modular-indexer-light/log"
-
+	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
+	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 	sdk "github.com/RiemaLabs/nubit-da-sdk"
 	"github.com/RiemaLabs/nubit-da-sdk/constant"
 	"github.com/RiemaLabs/nubit-da-sdk/types"
 )
 
-type ProviderDA struct {
-	Config               *config.SourceDA
+type DA struct {
+	Config               *configs.SourceDA
 	MetaProtocol         string
 	Retry                int
 	LastCheckpointOffset int
 }
 
-func NewProviderDA(sourceDA *config.SourceDA, metaProtocol string, retry int) *ProviderDA {
-	return &ProviderDA{
+func NewProviderDA(sourceDA *configs.SourceDA, metaProtocol string, retry int) *DA {
+	return &DA{
 		Config:       sourceDA,
 		MetaProtocol: metaProtocol,
 		Retry:        retry,
@@ -32,7 +31,7 @@ func NewProviderDA(sourceDA *config.SourceDA, metaProtocol string, retry int) *P
 	}
 }
 
-func (p *ProviderDA) GetCheckpoint(ctx context.Context, height uint, hash string) (*config.CheckpointExport, error) {
+func (p *DA) GetCheckpoint(ctx context.Context, height uint, hash string) (*configs.CheckpointExport, error) {
 
 	// We don't use the timeout to limit the single call of DownloadCheckpointByDA.
 	maxTimeout := 1000 * time.Second
@@ -69,7 +68,7 @@ OuterLoop:
 			ck, offset, err = DownloadCheckpointByDA(nid, net, name, mp, strconv.Itoa(int(height)), hash, p.LastCheckpointOffset, maxTimeout)
 			if err != nil {
 				time.Sleep(20 * time.Second)
-				log.Error(err.Error())
+				logs.Error.Printf(err.Error())
 				continue
 			}
 			break OuterLoop
@@ -79,7 +78,7 @@ OuterLoop:
 	if err != nil {
 		return nil, err
 	}
-	return &config.CheckpointExport{
+	return &configs.CheckpointExport{
 		Checkpoint: ck,
 		SourceDA:   p.Config,
 	}, nil

@@ -6,12 +6,12 @@ import (
 	"errors"
 	"strings"
 
-	bip39 "github.com/tyler-smith/go-bip39"
+	sdk "github.com/RiemaLabs/nubit-da-sdk/utils"
+	"github.com/tyler-smith/go-bip39"
 
 	"github.com/RiemaLabs/modular-indexer-light/constant"
-	"github.com/RiemaLabs/modular-indexer-light/log"
+	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 	"github.com/RiemaLabs/modular-indexer-light/utils"
-	sdk "github.com/RiemaLabs/nubit-da-sdk/utils"
 )
 
 // NewWallet creates a new empty wallet, encrypted with given password.
@@ -87,7 +87,7 @@ func (w *Wallet) GenerateAccount(walletPassword *string) *Account {
 	a := w.newAccount()
 	err := a.GenerateAddress(w.GetSeed(walletPassword))
 	if err != nil {
-		log.Error("Wallet", "func", "GenerateAccount", "GenerateAddress.err", err)
+		logs.Error.Printf("Wallet", "func", "GenerateAccount", "GenerateAddress.err", err)
 		return nil
 	}
 	return a

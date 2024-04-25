@@ -1,18 +1,22 @@
 package apis
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/RiemaLabs/modular-indexer-light/constant"
-	"github.com/RiemaLabs/modular-indexer-light/runtime"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	"github.com/RiemaLabs/modular-indexer-light/constant"
+	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
+	"github.com/RiemaLabs/modular-indexer-light/runtime"
 )
 
-func StartService(df *runtime.RuntimeState, enableDebug bool, port int) {
+const DefaultAddr = ":8080"
 
+func StartService(df *runtime.State, enableDebug bool, addr string) {
 	if !enableDebug {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -68,5 +72,10 @@ func StartService(df *runtime.RuntimeState, enableDebug bool, port int) {
 		})
 	}
 
-	r.Run(fmt.Sprintf(":%d", port))
+	if addr == "" {
+		addr = DefaultAddr
+	}
+	if err := r.Run(addr); !errors.Is(err, http.ErrServerClosed) {
+		logs.Error.Fatal("Server exit with error: ", err)
+	}
 }

@@ -10,16 +10,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/RiemaLabs/modular-indexer-committee/ord/getter"
-
-	"github.com/RiemaLabs/modular-indexer-light/config"
-	client "github.com/RiemaLabs/modular-indexer-light/ord/getter"
 	"github.com/balletcrypto/bitcoin-inscription-parser/parser"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/sirupsen/logrus"
+
+	"github.com/RiemaLabs/modular-indexer-committee/ord/getter"
+	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
+	client "github.com/RiemaLabs/modular-indexer-light/ord/getter"
 )
 
 // TODO: High.
@@ -57,7 +57,7 @@ func VerifyOrdTransfer(transfers TransferByInscription, blockHeight uint) (bool,
 	}
 
 	sort.Sort(transfers)
-	chainClient, _ := client.NewBitcoinOrdGetter(config.GlobalConfig.Verification.BitcoinRPC)
+	chainClient, _ := client.NewBitcoinOrdGetter(configs.C.Verification.BitcoinRPC)
 
 	batch := make(map[string]TransferByInscription)
 	// find a batch of inscriptions in same txid

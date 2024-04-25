@@ -6,47 +6,42 @@ import (
 	"time"
 
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
-	"github.com/RiemaLabs/modular-indexer-light/config"
-	"github.com/RiemaLabs/modular-indexer-light/log"
+	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
+	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 )
 
-type ProviderS3 struct {
-	Config       *config.SourceS3 `json:"config"`
+type S3 struct {
+	Config       *configs.SourceS3
 	MetaProtocol string
 	Retry        int
 }
 
-func NewProviderS3(sourceS3 *config.SourceS3, metaProtocol string, retry int) *ProviderS3 {
-	return &ProviderS3{
+func NewProviderS3(sourceS3 *configs.SourceS3, metaProtocol string, retry int) *S3 {
+	return &S3{
 		Config:       sourceS3,
 		MetaProtocol: metaProtocol,
 		Retry:        retry,
 	}
 }
 
-func (p *ProviderS3) GetCheckpoint(ctx context.Context, height uint, hash string) (*config.CheckpointExport, error) {
+func (p *S3) GetCheckpoint(ctx context.Context, height uint, hash string) (*configs.CheckpointExport, error) {
 	var ck *checkpoint.Checkpoint
 	var err error
-OuterLoop:
-	for i := 0; i < int(p.Retry); i++ {
+	for i := 0; i < p.Retry; i++ {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
 			ck, err = DownloadCheckpointByS3(p.Config.Region, p.Config.Bucket, p.Config.Name, p.MetaProtocol, strconv.Itoa(int(height)), hash, 100*time.Second)
 			if err != nil {
-				log.Warn(err.Error())
+				logs.Error.Println("Download S3 checkpoint error:", err)
 				continue
 			}
-			break OuterLoop
 		}
+		break
 	}
 	if err != nil {
 		return nil, err
 	}
-
-	return &config.CheckpointExport{
-		Checkpoint: ck,
-		SourceS3:   p.Config,
-	}, nil
+	return &configs.CheckpointExport{Checkpoint: ck, SourceS3: p.Config}, nil
 }
