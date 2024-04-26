@@ -12,6 +12,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 
 	"github.com/RiemaLabs/modular-indexer-light/internal/clients/jsonrpc"
+	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 )
 
 const OK = 0
@@ -36,12 +37,22 @@ func (r *Response[T]) Err() error {
 
 type Client struct{ cl jsonrpc.Client }
 
+var Ord *Client
+
 func New(bitcoinRPC string) (*Client, error) {
 	cl, err := jsonrpc.New(bitcoinRPC)
 	if err != nil {
 		return nil, err
 	}
 	return &Client{cl: cl}, nil
+}
+
+func Init(bitcoinRPC string) {
+	cl, err := New(bitcoinRPC)
+	if err != nil {
+		logs.Error.Fatalln("Failed to initialize ord client:", err)
+	}
+	Ord = cl
 }
 
 func (r *Client) GetLatestBlockHeight(ctx context.Context) (uint, error) {

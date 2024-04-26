@@ -16,19 +16,12 @@ import (
 
 const DefaultAddr = ":8080"
 
-func StartService(df *runtime.State, enableDebug bool, addr string) {
+func StartService(enableDebug bool, addr string) {
 	if !enableDebug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	r := gin.Default()
-
-	// TODO: Medium. Add the TRUSTED_PROXIES to our config
-	// trustedProxies := os.Getenv("TRUSTED_PROXIES")
-	// if trustedProxies != "" {
-	//     r.SetTrustedProxies([]string{trustedProxies})
-	// }
-
 	r.Use(gin.Recovery(), gin.Logger(), cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"POST", "GET"},
@@ -37,36 +30,38 @@ func StartService(df *runtime.State, enableDebug bool, addr string) {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.GET(constant.LightState, func(c *gin.Context) {
-		c.JSON(http.StatusOK, Brc20VerifiableLightStateResponse{
+	r.GET("/v1/brc20_verifiable/light/state", func(c *gin.Context) {
+		c.JSON(http.StatusOK, struct {
+			State string `json:"state"`
+		}{
 			State: constant.ApiState.String(),
 		})
 	})
 	serv := r.Group("v1")
 	{
 		serv.Use(CheckState())
-		serv.GET(constant.LightBlockHeight, func(c *gin.Context) {
+		serv.GET("/brc20_verifiable/light/block_height", func(c *gin.Context) {
 			c.Data(http.StatusOK, "text/plain", []byte(fmt.Sprintf("%d", df.CurrentHeight())))
 		})
 
-		serv.GET(constant.LightCurrentBalanceOfWallet, func(c *gin.Context) {
-			ck := df.CurrentFirstCheckpoint().Checkpoint
+		serv.GET("/brc20_verifiable/light/current_balance_of_wallet", func(c *gin.Context) {
+			ck := runtime.S.CurrentFirstCheckpoint().Checkpoint
 
 			GetCurrentBalanceOfWallet(c, ck)
 		})
 
-		serv.GET(constant.LightCurrentBalanceOfPkscript, func(c *gin.Context) {
+		serv.GET("/brc20_verifiable/light/current_balance_of_pkscript", func(c *gin.Context) {
 			ck := df.CurrentFirstCheckpoint().Checkpoint
 
 			GetCurrentBalanceOfPkscript(c, ck)
 		})
 
-		serv.GET(constant.LightCurrentCheckpoints, func(c *gin.Context) {
+		serv.GET("/brc20_verifiable/light/checkpoints", func(c *gin.Context) {
 			cur := df.CurrentCheckpoints()
 			c.JSON(http.StatusOK, cur)
 		})
 
-		serv.GET(constant.LightLastCheckpoint, func(c *gin.Context) {
+		serv.GET("/brc20_verifiable/light/last_checkpoint", func(c *gin.Context) {
 			lt := df.LastCheckpoint()
 			c.JSON(http.StatusOK, lt)
 		})

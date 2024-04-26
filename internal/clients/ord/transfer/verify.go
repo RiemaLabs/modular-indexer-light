@@ -20,7 +20,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	client "github.com/RiemaLabs/modular-indexer-light/internal/clients/ord/getter"
-	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
 )
 
 // TODO: High.
@@ -54,17 +53,13 @@ func OffsetSat(o getter.OrdTransfer) uint64 {
 
 func VerifyOrdTransfer(transfers ByNewSatpoint, blockHeight uint) (bool, error) {
 	if len(transfers) == 0 {
-		return false, errors.New("enpty tranfer data")
+		return false, errors.New("empty transfer data")
 	}
 
 	sort.Sort(transfers)
-	chainClient, err := client.New(configs.C.Verification.BitcoinRPC)
-	if err != nil {
-		return false, err
-	}
 
 	batch := make(map[string]ByNewSatpoint)
-	// find a batch of inscriptions in same txid
+	// find a batch of inscriptions in same txID
 	f, n := 0, 1
 	for n < len(transfers) {
 		first := strings.Split(transfers[f].NewSatpoint, ":")[0]
@@ -79,18 +74,18 @@ func VerifyOrdTransfer(transfers ByNewSatpoint, blockHeight uint) (bool, error) 
 	}
 	batch[strings.Split(transfers[f].NewSatpoint, ":")[0]] = transfers[f:n]
 
-	hash, err := chainClient.GetBlockHash(context.Background(), blockHeight)
+	hash, err := client.Ord.GetBlockHash(context.Background(), blockHeight)
 	if err != nil {
 		return false, err
 	}
-	blockBody, err := chainClient.GetBlockDetail(context.Background(), hash)
+	blockBody, err := client.Ord.GetBlockDetail(context.Background(), hash)
 	if err != nil {
 		return false, err
 	}
 
 	for _, tx := range blockBody.Tx {
 		if trans, exist := batch[tx.Txid]; exist {
-			is, err := VerifyEnvelop(chainClient, trans, tx)
+			is, err := VerifyEnvelop(trans, tx)
 			if err != nil {
 				logrus.Warnf("envelopVerify failed txid: %s, err %v", tx.Txid, err)
 			}
@@ -103,7 +98,7 @@ func VerifyOrdTransfer(transfers ByNewSatpoint, blockHeight uint) (bool, error) 
 	return true, nil
 }
 
-func VerifyEnvelop(chainClient *client.Client, transfers []getter.OrdTransfer, tx btcjson.TxRawResult) (bool, error) {
+func VerifyEnvelop(transfers []getter.OrdTransfer, tx btcjson.TxRawResult) (bool, error) {
 	sort.Sort(ByNewSatpoint(transfers))
 
 	buf, err := hex.DecodeString(tx.Hex)
@@ -116,18 +111,18 @@ func VerifyEnvelop(chainClient *client.Client, transfers []getter.OrdTransfer, t
 	}
 
 	inscriptions := parser.ParseInscriptionsFromTransaction(msgTx)
-	id_counter := 0
+	idCnt := 0
 	allIns := make([]Flotsam, 0, len(inscriptions))
-	total_input_value := uint64(0)
-	for index, tx_in := range msgTx.TxIn {
-		// find oldSatpoin for privious output
+	totalInputValue := uint64(0)
+	for index, txIn := range msgTx.TxIn {
+		// find oldSatPoint for previous output
 		for _, obj := range transfers {
-			if obj.OldSatpoint != "" && strings.Join(strings.Split(obj.OldSatpoint, ":")[:2], ":") == tx_in.PreviousOutPoint.String() {
+			if obj.OldSatpoint != "" && strings.Join(strings.Split(obj.OldSatpoint, ":")[:2], ":") == txIn.PreviousOutPoint.String() {
 				arr := strings.Split(obj.OldSatpoint, ":")
 				satOff, _ := strconv.ParseInt(arr[2], 10, 64)
-				offset := total_input_value + uint64(satOff)
+				offset := totalInputValue + uint64(satOff)
 				// find old inscription content && content type
-				beforeIns, err := chainClient.GetAllInscriptions(context.Background(), arr[0])
+				beforeIns, err := client.Ord.GetAllInscriptions(context.Background(), arr[0])
 				if err != nil {
 					return false, err
 				}
@@ -143,19 +138,19 @@ func VerifyEnvelop(chainClient *client.Client, transfers []getter.OrdTransfer, t
 			}
 		}
 
-		// parse new Inscripitons
-		offset := total_input_value
-		pOut, err := chainClient.GetOutput(context.Background(), tx_in.PreviousOutPoint.Hash.String(), int(tx_in.PreviousOutPoint.Index))
+		// parse new Inscriptions
+		offset := totalInputValue
+		pOut, err := client.Ord.GetOutput(context.Background(), txIn.PreviousOutPoint.Hash.String(), int(txIn.PreviousOutPoint.Index))
 		if err != nil {
 			return false, err
 		}
-		total_input_value += uint64(pOut.Value * math.Pow10(8))
+		totalInputValue += uint64(pOut.Value * math.Pow10(8))
 		for _, ii := range inscriptions {
 			if index == int(ii.TxInIndex) {
 				allIns = append(allIns, Flotsam{
 					InsID: InscriptionID{
 						tx.Txid,
-						id_counter,
+						idCnt,
 					},
 					// TODO: Low.
 					// The parser library is missing the functionality to parse the pointer.
@@ -163,49 +158,49 @@ func VerifyEnvelop(chainClient *client.Client, transfers []getter.OrdTransfer, t
 					Offset: offset,
 					Body:   ii,
 				})
-				id_counter++
+				idCnt++
 			}
 		}
 	}
 	sort.Sort(ByOffset(allIns))
 
-	new_location := make([]NewLocation, 0)
-	output_value := uint64(0)
-	for vout, out := range msgTx.TxOut {
-		end := output_value + uint64(out.Value)
+	newLocation := make([]NewLocation, 0)
+	outputValue := uint64(0)
+	for txOut, out := range msgTx.TxOut {
+		end := outputValue + uint64(out.Value)
 		for _, flot := range allIns {
-			if flot.Offset >= uint64(end) {
+			if flot.Offset >= end {
 				break
 			}
-			new_location = append(new_location, NewLocation{
+			newLocation = append(newLocation, NewLocation{
 				SentToCoinbase: false,
 				TxOut:          *out,
 				Flotsam:        flot,
-				NewSatPoint:    fmt.Sprintf("%s:%d:%d", flot.InsID.TxID, vout, flot.Offset),
+				NewSatPoint:    fmt.Sprintf("%s:%d:%d", flot.InsID.TxID, txOut, flot.Offset),
 			})
 			allIns = allIns[1:]
 		}
-		output_value = end
+		outputValue = end
 	}
 
 	p1, p2 := 0, 0
-	for p1 < len(transfers) && p2 < len(new_location) {
+	for p1 < len(transfers) && p2 < len(newLocation) {
 		offset := OffsetSat(transfers[p1])
 
 		tmpTr := transfers[p1]
-		tmpNewl := new_location[p2]
+		tmpNewLoc := newLocation[p2]
 
-		if OffsetSat(tmpTr) == new_location[p2].Flotsam.Offset {
+		if OffsetSat(tmpTr) == newLocation[p2].Flotsam.Offset {
 			// Verify pkscript
-			pkOBj, err := txscript.ParsePkScript(tmpNewl.TxOut.PkScript)
+			pkOBj, err := txscript.ParsePkScript(tmpNewLoc.TxOut.PkScript)
 			if err != nil {
 				return false, err
 			}
 			addr, _ := pkOBj.Address(&chaincfg.MainNetParams)
 
 			//TODO: Low. Verify content.
-			if string(tmpTr.NewPkscript) != hex.EncodeToString(tmpNewl.TxOut.PkScript) || string(tmpTr.NewWallet) != addr.String() ||
-				tmpTr.ContentType != hex.EncodeToString(tmpNewl.Body.Inscription.ContentType) {
+			if string(tmpTr.NewPkscript) != hex.EncodeToString(tmpNewLoc.TxOut.PkScript) || string(tmpTr.NewWallet) != addr.String() ||
+				tmpTr.ContentType != hex.EncodeToString(tmpNewLoc.Body.Inscription.ContentType) {
 				return false, nil
 			}
 			// TODO: Low. Verify newSatPoint.

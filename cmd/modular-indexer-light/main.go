@@ -68,30 +68,26 @@ func (a *App) Run() {
 	}
 
 	a.initDaReport()
+	getter.Init(configs.C.Verification.BitcoinRPC)
+
 	logs.Info.Println("Syncing the latest state from committee indexers, please wait...")
 
-	bitcoinGetter, err := getter.New(configs.C.Verification.BitcoinRPC)
-	if err != nil {
-		logs.Error.Fatalf("Failed to initialize Bitcoin Getter: %v", err)
-	}
-	currentBlockHeight, err := bitcoinGetter.GetLatestBlockHeight(context.Background())
+	currentBlockHeight, err := getter.Ord.GetLatestBlockHeight(context.Background())
 	if err != nil {
 		logs.Error.Fatalf("Failed to get latest block height: %v", err)
 	}
 	lastBlockHeight := currentBlockHeight - 1
-	lastBlockHash, err := bitcoinGetter.GetBlockHash(context.Background(), lastBlockHeight)
+	lastBlockHash, err := getter.Ord.GetBlockHash(context.Background(), lastBlockHeight)
 	if err != nil {
-		logs.Error.Fatalf("Failed to get block hash: height=%d, err=%v", lastBlockHeight, err)
+		logs.Error.Fatalf("Failed to get last block hash: height=%d, err=%v", lastBlockHeight, err)
 	}
 
 	var providers []provider.CheckpointProvider
 	for _, sourceS3 := range configs.C.CommitteeIndexers.S3 {
-		prov := provider.NewProviderS3(&sourceS3, configs.C.Verification.MetaProtocol, 3)
-		providers = append(providers, prov)
+		providers = append(providers, provider.NewProviderS3(&sourceS3, configs.C.Verification.MetaProtocol))
 	}
 	for _, sourceDA := range configs.C.CommitteeIndexers.DA {
-		prov := provider.NewProviderDA(&sourceDA, configs.C.Verification.MetaProtocol, 3)
-		providers = append(providers, prov)
+		providers = append(providers, provider.NewProviderDA(&sourceDA, configs.C.Verification.MetaProtocol))
 	}
 	actual := len(providers)
 	expected := configs.C.Verification.MinimalCheckpoint
@@ -107,12 +103,12 @@ func (a *App) Run() {
 	}
 
 	// TODO: Historical verification.
-	if _, _, inconsistent := provider.CheckpointsInconsist(checkpoints); inconsistent {
+	if inconsistent := provider.CheckpointsInconsistent(checkpoints); inconsistent {
 		logs.Error.Fatalf("inconsistent checkpoints detected at height %q, historical verification is not supported but will be released soon :'(", lastBlockHeight)
 	}
 	logs.Info.Println("Latest state successfully synced!")
 
-	df := runtime.NewRuntimeState(
+	runtime.Init(
 		a.DenyListPath,
 		providers,
 		checkpoints[0],
@@ -120,8 +116,8 @@ func (a *App) Run() {
 		2*time.Minute,
 	)
 
-	go services.StartService(df, a.EnableTest, configs.C.ListenAddr)
-	runSyncForever(a, df, bitcoinGetter)
+	go services.StartService(a.EnableTest, configs.C.ListenAddr)
+	a.runSyncForever()
 }
 
 func (a *App) initDaReport() {
@@ -170,23 +166,23 @@ func (a *App) initDaReport() {
 	}
 }
 
-func runSyncForever(app *App, df *runtime.State, bitcoinGetter *getter.Client) {
+func (a *App) runSyncForever() {
 	for {
 		time.Sleep(10 * time.Second)
 
-		currentHeight, err := bitcoinGetter.GetLatestBlockHeight(context.Background())
+		currentHeight, err := getter.Ord.GetLatestBlockHeight(context.Background())
 		if err != nil {
 			logs.Error.Printf("failed to GetLatestBlockHeight in syncCommitteeIndexers: %v", err)
 			continue
 		}
-		hash, err := bitcoinGetter.GetBlockHash(context.Background(), currentHeight)
+		hash, err := getter.Ord.GetBlockHash(context.Background(), currentHeight)
 		if err != nil {
 			logs.Error.Printf("failed to get block hash in syncCommitteeIndexers: %v", err)
 			continue
 		}
 
 		notSynced := false
-		firstCheckpoint := df.CurrentFirstCheckpoint()
+		firstCheckpoint := runtime.S.CurrentFirstCheckpoint()
 		if firstCheckpoint == nil {
 			notSynced = true
 		} else if strconv.Itoa(int(currentHeight)) != firstCheckpoint.Checkpoint.Height || hash != firstCheckpoint.Checkpoint.Hash {
@@ -194,14 +190,13 @@ func runSyncForever(app *App, df *runtime.State, bitcoinGetter *getter.Client) {
 		}
 
 		if notSynced {
-			err = df.UpdateCheckpoints(currentHeight, hash)
-			if err != nil {
+			if err := runtime.S.UpdateCheckpoints(currentHeight, hash); err != nil {
 				logs.Error.Printf("failed to UpdateCheckpoints in syncCommitteeIndexers: %v", err)
 				continue
 			}
 
-			if app.EnableDAReport {
-				curCheckpoint := df.CurrentFirstCheckpoint().Checkpoint
+			if a.EnableDAReport {
+				curCheckpoint := runtime.S.CurrentFirstCheckpoint().Checkpoint
 				newCheckpoint := checkpoint.Checkpoint{
 					Commitment:   curCheckpoint.Commitment,
 					Hash:         curCheckpoint.Hash,
@@ -228,7 +223,7 @@ func runSyncForever(app *App, df *runtime.State, bitcoinGetter *getter.Client) {
 			}
 		}
 
-		logs.Info.Printf("Listening for new Bitcoin block, current height: %d", df.CurrentHeight())
+		logs.Info.Printf("Listening for new Bitcoin block, current height: %d", runtime.S.CurrentHeight())
 	}
 }
 

@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
 )
 
 // TODO: Medium. Uniform the default service port.
@@ -15,7 +13,7 @@ var localHost = "http://127.0.0.1:8080"
 
 func TestBlockHeight(t *testing.T) {
 	client := &http.Client{}
-	url, _ := url.JoinPath(localHost, constant.LightBlockHeight)
+	url, _ := url.JoinPath(localHost, "/brc20_verifiable/light/block_height")
 	req, _ := http.NewRequest("GET", url, nil)
 	resp, err := client.Do(req)
 	assert.Equal(t, nil, err)
@@ -24,7 +22,7 @@ func TestBlockHeight(t *testing.T) {
 
 func TestLightCurrentBalanceOfWallet(t *testing.T) {
 	client := &http.Client{}
-	urlString, _ := url.JoinPath(localHost, constant.LightCurrentBalanceOfWallet)
+	urlString, _ := url.JoinPath(localHost, "/brc20_verifiable/light/current_balance_of_wallet")
 
 	p := url.Values{}
 	p.Add("tick", "btcs")
@@ -38,7 +36,7 @@ func TestLightCurrentBalanceOfWallet(t *testing.T) {
 
 func TestLightCurrentBalanceOfPkscript(t *testing.T) {
 	client := &http.Client{}
-	urlString, _ := url.JoinPath(localHost, constant.LightCurrentBalanceOfPkscript)
+	urlString, _ := url.JoinPath(localHost, "/brc20_verifiable/light/current_balance_of_pkscript")
 
 	p := url.Values{}
 	p.Add("tick", "btcs")
@@ -52,7 +50,7 @@ func TestLightCurrentBalanceOfPkscript(t *testing.T) {
 
 func TestLightLastCheckpoint(t *testing.T) {
 	client := &http.Client{}
-	urlString, _ := url.JoinPath(localHost, constant.LightLastCheckpoint)
+	urlString, _ := url.JoinPath(localHost, "/brc20_verifiable/light/last_checkpoint")
 
 	req, _ := http.NewRequest("GET", urlString, nil)
 	resp, err := client.Do(req)
@@ -62,7 +60,7 @@ func TestLightLastCheckpoint(t *testing.T) {
 
 func TestLightCurrentCheckpoints(t *testing.T) {
 	client := &http.Client{}
-	urlString, _ := url.JoinPath(localHost, constant.LightCurrentCheckpoints)
+	urlString, _ := url.JoinPath(localHost, "/brc20_verifiable/light/checkpoints")
 
 	req, _ := http.NewRequest("GET", urlString, nil)
 	resp, err := client.Do(req)
