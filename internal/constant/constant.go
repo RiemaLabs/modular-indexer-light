@@ -1,7 +1,5 @@
 package constant
 
-var ApiState = StatusSync
-
 type ApiStatus int
 
 const (

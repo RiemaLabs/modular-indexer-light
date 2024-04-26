@@ -451,7 +451,7 @@ func (w *Wallet) readFromBuffer(buf []byte) error {
 			stop = true
 
 		default:
-			return errors.New(fmt.Sprintf("invalid tag found: %x", tag))
+			return fmt.Errorf("invalid tag found: %x", tag)
 		}
 
 	}

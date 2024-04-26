@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"slices"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/RiemaLabs/modular-indexer-committee/apis"
@@ -26,6 +26,8 @@ import (
 // TODO: Medium. Uniform the error report.
 
 type State struct {
+	State atomic.Int64
+
 	denyListPath string
 
 	providers []provider.CheckpointProvider
@@ -45,7 +47,9 @@ type State struct {
 	sync.RWMutex
 }
 
-func NewRuntimeState(
+var S *State
+
+func New(
 	denyListPath string,
 	providers []provider.CheckpointProvider,
 	lastCheckpoint *configs.CheckpointExport,
@@ -62,12 +66,21 @@ func NewRuntimeState(
 	}
 }
 
+func Init(
+	denyListPath string,
+	providers []provider.CheckpointProvider,
+	lastCheckpoint *configs.CheckpointExport,
+	minimalCheckpoint int,
+	fetchTimeout time.Duration,
+) {
+	S = New(denyListPath, providers, lastCheckpoint, minimalCheckpoint, fetchTimeout)
+}
+
 func (s *State) CurrentHeight() uint {
 	ck := s.CurrentFirstCheckpoint()
 	if ck == nil {
 		return 0
 	}
-
 	h, err := strconv.ParseUint(ck.Checkpoint.Height, 10, 64)
 	if err != nil {
 		logs.Error.Printf("parse checkpoint height failed: %v", err)
@@ -78,7 +91,8 @@ func (s *State) CurrentHeight() uint {
 func (s *State) UpdateCheckpoints(height uint, hash string) error {
 	s.Lock()
 	defer s.Unlock()
-	constant.ApiState = constant.StatusSync
+
+	s.State.Store(int64(constant.StatusSync))
 
 	// Get checkpoints from the providers.
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
@@ -91,10 +105,8 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 		return errors.New("not enough checkpoints fetched")
 	}
 
-	_, _, inconsistent := provider.CheckpointsInconsist(checkpoints)
+	inconsistent := provider.CheckpointsInconsistent(checkpoints)
 	if inconsistent {
-		constant.ApiState = constant.StatusVerify
-
 		logs.Warn.Printf("Checkpoints retrieved from providers are inconsistent for height %q, hash %q, start the verification and regeneration process...", height, hash)
 
 		// Aggregate checkpoints by commitment.
@@ -201,7 +213,7 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 		trustCommitment := succVerify[champion].commitment
 
 		s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), []*configs.CheckpointExport{aggregates[trustCommitment]}
-		constant.ApiState = constant.StateActive
+		s.State.Store(int64(constant.StateActive))
 
 		// Deny untrusted providers.
 		for _, ck := range checkpoints {
@@ -211,27 +223,33 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 		}
 	} else {
 		s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), checkpoints
-		constant.ApiState = constant.StateActive
+		s.State.Store(int64(constant.StateActive))
 	}
 
 	c := s.CurrentFirstCheckpoint().Checkpoint.Commitment
 	if inconsistent {
-		logs.Info.Printf(fmt.Sprintf("Checkpoints fetched from providers have been verified, the commitment: %s, current height %d, hash %s", c, height, hash))
+		logs.Info.Printf("Checkpoints fetched from providers have been verified, the commitment: %s, current height %d, hash %s", c, height, hash)
 	} else {
-		logs.Info.Printf(fmt.Sprintf("Checkpoints fetched from providers are consistent, the commitment: %s, current height %d, hash %s", c, height, hash))
+		logs.Info.Printf("Checkpoints fetched from providers are consistent, the commitment: %s, current height %d, hash %s", c, height, hash)
 	}
 
 	return nil
 }
 
 func (s *State) LastCheckpoint() *configs.CheckpointExport {
+	s.RLock()
+	defer s.RUnlock()
 	return s.lastCheckpoint
 }
 
 func (s *State) CurrentCheckpoints() []*configs.CheckpointExport {
+	s.RLock()
+	defer s.RUnlock()
 	return s.currentCheckpoints
 }
 
 func (s *State) CurrentFirstCheckpoint() *configs.CheckpointExport {
+	s.RLock()
+	defer s.RUnlock()
 	return s.currentCheckpoints[0]
 }

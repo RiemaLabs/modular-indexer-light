@@ -2,8 +2,11 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
@@ -16,71 +19,121 @@ import (
 )
 
 type DA struct {
-	Config               *configs.SourceDA
-	MetaProtocol         string
-	Retry                int
-	LastCheckpointOffset int
+	Config       *configs.SourceDA
+	MetaProtocol string
 }
 
-func NewProviderDA(sourceDA *configs.SourceDA, metaProtocol string, retry int) *DA {
-	return &DA{
-		Config:       sourceDA,
-		MetaProtocol: metaProtocol,
-		Retry:        retry,
-		// At the beginning, we don't know the offset
-		LastCheckpointOffset: 0,
-	}
+func NewProviderDA(sourceDA *configs.SourceDA, metaProtocol string) *DA {
+	return &DA{Config: sourceDA, MetaProtocol: metaProtocol}
 }
 
 func (p *DA) Get(ctx context.Context, height uint, hash string) (*configs.CheckpointExport, error) {
-
-	// We don't use the timeout to limit the single call of DownloadCheckpointByDA.
-	maxTimeout := 1000 * time.Second
 	nid, net, name, mp := p.Config.NamespaceID, p.Config.Network, p.Config.Name, p.MetaProtocol
 
-	if net == "Pre-Alpha Testnet" {
+	if net == constant.PreAlphaTestNet {
 		sdk.SetNet(constant.PreAlphaTestNet)
-	} else if net == "Testnet" {
+	} else if net == constant.TestNet {
 		sdk.SetNet(constant.TestNet)
 	} else {
 		return nil, fmt.Errorf("unknown network: %s", net)
 	}
 
 	clientDA := sdk.NewNubit(sdk.WithCtx(ctx)).Client
-	resCount, err := clientDA.GetTotalDataIDsInNamesapce(ctx, &types.GetTotalDataIDsInNamesapceReq{NID: nid})
+	resp, err := clientDA.GetTotalDataIDsInNamesapce(ctx, &types.GetTotalDataIDsInNamesapceReq{NID: nid})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get the count of data in namespace %s, error: %v", nid, err)
+		return nil, fmt.Errorf("failed to get data IDs in namespace: namespaceID=%s, err=%v", nid, err)
 	}
-	count := int(resCount.Count)
+	count := int(resp.Count)
 	if count == 0 {
-		return nil, fmt.Errorf("the count of data in namespace %s is zero", nid)
+		return nil, fmt.Errorf("empty data in namespace %q", nid)
 	}
 
-	p.LastCheckpointOffset = count - 1
-	var ck *checkpoint.Checkpoint
-	var offset int = count
-
-OuterLoop:
-	for i := 0; i < p.Retry; i++ {
+	for i := 0; i < DefaultRetries; i++ {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			ck, offset, err = DownloadCheckpointByDA(nid, net, name, mp, strconv.Itoa(int(height)), hash, p.LastCheckpointOffset, maxTimeout)
+			ck, err := p.doDownload(nid, name, mp, strconv.Itoa(int(height)), hash, count-1)
 			if err != nil {
 				time.Sleep(20 * time.Second)
-				logs.Error.Printf(err.Error())
+				logs.Error.Println("Download checkpoint from DA err:", err)
 				continue
 			}
-			break OuterLoop
+			return &configs.CheckpointExport{Checkpoint: ck, SourceDA: p.Config}, nil
 		}
 	}
-	p.LastCheckpointOffset = offset - 1
+	return nil, fmt.Errorf("get DA checkpoint max retires exceeded: height=%d, hash=%s", height, hash)
+}
+
+func (p *DA) doDownload(namespaceID, name, metaProtocol, height, hash string, offset int) (*checkpoint.Checkpoint, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1000*time.Second)
+	defer cancel()
+
+	clientDA := sdk.NewNubit(sdk.WithCtx(ctx)).Client
+	resp, err := clientDA.GetDataInNamespace(
+		ctx,
+		&types.GetDataInNamespaceReq{NID: namespaceID, Limit: 100, Offset: offset},
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(
+			"get namespace data error: offset=%d, namespaceID=%s, err=%v",
+			offset,
+			namespaceID,
+			err,
+		)
 	}
-	return &configs.CheckpointExport{
-		Checkpoint: ck,
-		SourceDA:   p.Config,
-	}, nil
+
+	dataIDs := resp.DataIDs
+	if len(dataIDs) == 0 {
+		return nil, fmt.Errorf(
+			"empty data IDs: offset=%d, namespaceID=%s",
+			offset,
+			namespaceID,
+		)
+	}
+
+	for _, dataID := range dataIDs {
+		data, err := clientDA.GetData(ctx, &types.GetDataReq{DAID: dataID})
+		if err != nil {
+			return nil, fmt.Errorf(
+				"get DA data error: offset=%d, namespaceID=%s, err=%v",
+				offset,
+				namespaceID,
+				err,
+			)
+		}
+
+		rawBytes, err := base64.StdEncoding.DecodeString(data.RawData)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"decode checkpoint error: offset=%d, namespaceID=%s, err=%v",
+				offset,
+				namespaceID,
+				err,
+			)
+		}
+
+		var c checkpoint.Checkpoint
+		if err := json.Unmarshal(rawBytes, &c); err != nil {
+			return nil, fmt.Errorf(
+				"unmarshal checkpoint error: offset=%d, namespaceID=%s, err=%v",
+				offset,
+				namespaceID,
+				err,
+			)
+		}
+		if strings.EqualFold(c.Name, name) &&
+			strings.EqualFold(c.MetaProtocol, metaProtocol) &&
+			strings.EqualFold(c.Height, height) &&
+			strings.EqualFold(c.Hash, hash) {
+			return &c, nil
+		}
+	}
+
+	return nil, fmt.Errorf(
+		"checkpoint not found on DA: offset=%d, dataIDs=%v, namespaceID=%s",
+		offset,
+		dataIDs,
+		namespaceID,
+	)
 }
