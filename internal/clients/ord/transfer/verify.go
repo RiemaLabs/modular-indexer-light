@@ -2,6 +2,7 @@ package transfer
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -57,7 +58,10 @@ func VerifyOrdTransfer(transfers ByNewSatpoint, blockHeight uint) (bool, error) 
 	}
 
 	sort.Sort(transfers)
-	chainClient, _ := client.New(configs.C.Verification.BitcoinRPC)
+	chainClient, err := client.New(configs.C.Verification.BitcoinRPC)
+	if err != nil {
+		return false, err
+	}
 
 	batch := make(map[string]ByNewSatpoint)
 	// find a batch of inscriptions in same txid
@@ -75,11 +79,11 @@ func VerifyOrdTransfer(transfers ByNewSatpoint, blockHeight uint) (bool, error) 
 	}
 	batch[strings.Split(transfers[f].NewSatpoint, ":")[0]] = transfers[f:n]
 
-	hash, err := chainClient.GetBlockHash(blockHeight)
+	hash, err := chainClient.GetBlockHash(context.Background(), blockHeight)
 	if err != nil {
 		return false, err
 	}
-	blockBody, err := chainClient.GetBlockDetail(hash)
+	blockBody, err := chainClient.GetBlockDetail(context.Background(), hash)
 	if err != nil {
 		return false, err
 	}
@@ -123,7 +127,7 @@ func VerifyEnvelop(chainClient *client.Client, transfers []getter.OrdTransfer, t
 				satOff, _ := strconv.ParseInt(arr[2], 10, 64)
 				offset := total_input_value + uint64(satOff)
 				// find old inscription content && content type
-				beforeIns, err := chainClient.GetAllInscriptions(arr[0])
+				beforeIns, err := chainClient.GetAllInscriptions(context.Background(), arr[0])
 				if err != nil {
 					return false, err
 				}
@@ -141,7 +145,7 @@ func VerifyEnvelop(chainClient *client.Client, transfers []getter.OrdTransfer, t
 
 		// parse new Inscripitons
 		offset := total_input_value
-		pOut, err := chainClient.GetOutput(tx_in.PreviousOutPoint.Hash.String(), int(tx_in.PreviousOutPoint.Index))
+		pOut, err := chainClient.GetOutput(context.Background(), tx_in.PreviousOutPoint.Hash.String(), int(tx_in.PreviousOutPoint.Index))
 		if err != nil {
 			return false, err
 		}

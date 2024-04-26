@@ -8,6 +8,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
 
@@ -37,11 +38,11 @@ type (
 	}
 
 	Report struct {
-		Name        string `json:"name"`
-		Network     string `json:"network"`
-		NamespaceID string `json:"namespaceID"`
-		GasCoupon   string `json:"gasCoupon"`
-		Timeout     int    `json:"timeout"`
+		Name        string        `json:"name"`
+		Network     string        `json:"network"`
+		NamespaceID string        `json:"namespaceID"`
+		GasCoupon   string        `json:"gasCoupon"`
+		Timeout     time.Duration `json:"timeout"`
 
 		// PrivateKey loaded from files.
 		PrivateKey string `json:"-"`

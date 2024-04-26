@@ -70,7 +70,7 @@ func (s *State) CurrentHeight() uint {
 
 	h, err := strconv.ParseUint(ck.Checkpoint.Height, 10, 64)
 	if err != nil {
-		logs.Error.Printf("ParseUint(checkpoint.Height) failed", "error:", err)
+		logs.Error.Printf("parse checkpoint height failed: %v", err)
 	}
 	return uint(h)
 }
@@ -81,8 +81,13 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 	constant.ApiState = constant.StatusSync
 
 	// Get checkpoints from the providers.
-	checkpoints := provider.GetCheckpoints(s.providers, height, hash, s.timeout)
-	if len(checkpoints) < int(s.minimalCheckpoint) {
+	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
+	defer cancel()
+	checkpoints, err := provider.GetCheckpoints(ctx, s.providers, height, hash)
+	if err != nil {
+		return err
+	}
+	if len(checkpoints) < s.minimalCheckpoint {
 		return errors.New("not enough checkpoints fetched")
 	}
 
@@ -92,13 +97,13 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 
 		logs.Warn.Printf("Checkpoints retrieved from providers are inconsistent for height %q, hash %q, start the verification and regeneration process...", height, hash)
 
-		// Aggregate checkpoints by commitment
-		aggs := make(map[string]*configs.CheckpointExport)
+		// Aggregate checkpoints by commitment.
+		aggregates := make(map[string]*configs.CheckpointExport)
 		for _, ck := range checkpoints {
-			if _, exist := aggs[ck.Checkpoint.Commitment]; exist {
+			if _, exist := aggregates[ck.Checkpoint.Commitment]; exist {
 				continue
 			}
-			aggs[ck.Checkpoint.Commitment] = ck
+			aggregates[ck.Checkpoint.Commitment] = ck
 		}
 
 		type succCommit struct {
@@ -106,9 +111,9 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 			transferLen int
 		}
 
-		succVerify := make([]succCommit, 0, len(aggs))
+		succVerify := make([]succCommit, 0, len(aggregates))
 		var wg sync.WaitGroup
-		for commit, ck := range aggs {
+		for commit, ck := range aggregates {
 			wg.Add(1)
 			go func(commit string, ck *checkpoint.Checkpoint) {
 				defer wg.Done()
@@ -185,7 +190,7 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 
 		maxTransfer := succVerify[0].transferLen
 		champion := 0
-		seemRight := []string{}
+		var seemRight []string
 		for i := 1; i < len(succVerify); i++ {
 			seemRight = append(seemRight, succVerify[i].commitment)
 			if succVerify[i].transferLen > maxTransfer {
@@ -195,13 +200,13 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 		}
 		trustCommitment := succVerify[champion].commitment
 
-		s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), []*configs.CheckpointExport{aggs[trustCommitment]}
+		s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), []*configs.CheckpointExport{aggregates[trustCommitment]}
 		constant.ApiState = constant.StateActive
 
 		// Deny untrusted providers.
 		for _, ck := range checkpoints {
 			if !slices.Contains(seemRight, ck.Checkpoint.Commitment) {
-				provider.DenyCheckpoint(s.denyListPath, aggs[trustCommitment], ck)
+				provider.DenyCheckpoint(s.denyListPath, aggregates[trustCommitment], ck)
 			}
 		}
 	} else {
