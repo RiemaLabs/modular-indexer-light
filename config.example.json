@@ -31,6 +31,6 @@
     "network": "Pre-Alpha Testnet",
     "namespaceID": "YourOwnNamespace. Left to empty and follow the instruction to create automatically.",
     "gasCoupon": "YourGasCoupon",
-    "timeout": 15000
+    "timeout": "15s"
   }
 }
