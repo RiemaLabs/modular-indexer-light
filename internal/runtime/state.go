@@ -16,10 +16,10 @@ import (
 	"github.com/ethereum/go-verkle"
 
 	"github.com/RiemaLabs/modular-indexer-light/internal/clients/committee"
+	"github.com/RiemaLabs/modular-indexer-light/internal/clients/ord/transfer"
 	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
-	"github.com/RiemaLabs/modular-indexer-light/internal/ord/transfer"
 	"github.com/RiemaLabs/modular-indexer-light/internal/provider"
 )
 

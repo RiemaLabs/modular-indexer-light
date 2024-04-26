@@ -18,8 +18,8 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/sirupsen/logrus"
 
+	client "github.com/RiemaLabs/modular-indexer-light/internal/clients/ord/getter"
 	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
-	client "github.com/RiemaLabs/modular-indexer-light/internal/ord/getter"
 )
 
 // TODO: High.
@@ -57,7 +57,7 @@ func VerifyOrdTransfer(transfers ByNewSatpoint, blockHeight uint) (bool, error) 
 	}
 
 	sort.Sort(transfers)
-	chainClient, _ := client.NewBitcoinOrdGetter(configs.C.Verification.BitcoinRPC)
+	chainClient, _ := client.New(configs.C.Verification.BitcoinRPC)
 
 	batch := make(map[string]ByNewSatpoint)
 	// find a batch of inscriptions in same txid
@@ -99,7 +99,7 @@ func VerifyOrdTransfer(transfers ByNewSatpoint, blockHeight uint) (bool, error) 
 	return true, nil
 }
 
-func VerifyEnvelop(chainClient *client.BitcoinOrdGetter, transfers []getter.OrdTransfer, tx btcjson.TxRawResult) (bool, error) {
+func VerifyEnvelop(chainClient *client.Client, transfers []getter.OrdTransfer, tx btcjson.TxRawResult) (bool, error) {
 	sort.Sort(ByNewSatpoint(transfers))
 
 	buf, err := hex.DecodeString(tx.Hex)

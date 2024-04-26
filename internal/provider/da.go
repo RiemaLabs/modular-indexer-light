@@ -32,7 +32,7 @@ func NewProviderDA(sourceDA *configs.SourceDA, metaProtocol string, retry int) *
 	}
 }
 
-func (p *DA) GetCheckpoint(ctx context.Context, height uint, hash string) (*configs.CheckpointExport, error) {
+func (p *DA) Get(ctx context.Context, height uint, hash string) (*configs.CheckpointExport, error) {
 
 	// We don't use the timeout to limit the single call of DownloadCheckpointByDA.
 	maxTimeout := 1000 * time.Second

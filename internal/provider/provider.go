@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,35 +22,52 @@ import (
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 )
 
-func GetCheckpoints(providers []CheckpointProvider, height uint, hash string, timeout time.Duration) []*configs.CheckpointExport {
-	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-	defer cancel()
+type CheckpointProvider interface {
+	Get(ctx context.Context, height uint, hash string) (*configs.CheckpointExport, error)
+}
 
-	result := make([]*configs.CheckpointExport, 0, len(providers))
-	var wg sync.WaitGroup
+func GetCheckpoints(ctx context.Context, providers []CheckpointProvider, height uint, hash string) ([]*configs.CheckpointExport, error) {
+	var (
+		wg          sync.WaitGroup
+		errs        = make(chan error, len(providers))
+		checkpoints = make(chan *configs.CheckpointExport, len(providers))
+	)
 	for _, p := range providers {
-		p := p
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-
 			for {
 				select {
 				case <-ctx.Done():
+					errs <- ctx.Err()
 					return
 				default:
-					ck, err := p.GetCheckpoint(ctx, height, hash)
-					if err != nil || ck == nil {
+					ck, err := p.Get(ctx, height, hash)
+					if err != nil {
+						logs.Error.Printf("Get checkpoint error: height=%d, hash=%s, err=%v", height, hash, err)
 						continue
 					}
-					result = append(result, ck)
+					checkpoints <- ck
 					return
 				}
 			}
 		}()
 	}
 	wg.Wait()
-	return result
+
+	close(errs)
+	var retErrs []error
+	for err := range errs {
+		retErrs = append(retErrs, err)
+	}
+
+	close(checkpoints)
+	var ret []*configs.CheckpointExport
+	for ck := range checkpoints {
+		ret = append(ret, ck)
+	}
+
+	return ret, errors.Join(retErrs...)
 }
 
 func DenyCheckpoint(path string, correct, fraud *configs.CheckpointExport) {
