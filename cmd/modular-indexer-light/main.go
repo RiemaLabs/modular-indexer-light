@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -13,9 +14,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
+	"github.com/RiemaLabs/modular-indexer-light/internal/clients/ord/getter"
 	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
-	"github.com/RiemaLabs/modular-indexer-light/internal/ord/getter"
 	"github.com/RiemaLabs/modular-indexer-light/internal/provider"
 	"github.com/RiemaLabs/modular-indexer-light/internal/runtime"
 	"github.com/RiemaLabs/modular-indexer-light/internal/services"
@@ -54,7 +55,7 @@ This command offers multiple flags to tailor the indexer's functionality accordi
 		Version: fmt.Sprintf("%v (%v)", version, gitHash),
 	}
 	cmd.Flags().StringVarP(&a.ConfigPath, "config", "c", "config.json", "path to config file")
-	cmd.Flags().StringVar(&a.DenyListPath, "deny", "blacklist.jsonlines", "path to deny list file")
+	cmd.Flags().StringVar(&a.DenyListPath, "deny", "deny.jsonlines", "path to deny list file")
 	cmd.Flags().StringVar(&a.PrivatePath, "private", "private", "path to private file")
 	cmd.Flags().BoolVarP(&a.EnableTest, "test", "t", false, "Enable this flag to hijack the block height to test the service")
 	cmd.Flags().BoolVarP(&a.EnableDAReport, "report", "", true, "Enable this flag to upload verified checkpoint to DA")
@@ -66,124 +67,113 @@ func (a *App) Run() {
 		logs.Error.Fatalln("Config failed to initialize:", err)
 	}
 
-	if a.EnableTest {
-		logs.SetDebug()
-	}
+	a.initDaReport()
+	logs.Info.Println("Syncing the latest state from committee indexers, please wait...")
 
-	getCheckpointsTimeout := time.Minute * 2
-	retry := 3
-	cfg := configs.C
-	reportCfg := &cfg.Report
-	verifyCfg := &cfg.Verification
-
-	if a.EnableDAReport {
-		if err := configs.C.Report.LoadPrivate(a.PrivatePath); err != nil {
-			logs.Error.Fatalln("Failed to read private key:", err)
-		}
-
-		if !checkpoint.IsValidNamespaceID(reportCfg.NamespaceID) {
-			logs.Info.Println("Invalid Namespace ID found in configurations. Initializing a new namespace.")
-			scanner := bufio.NewScanner(os.Stdin)
-			namespaceName := ""
-			for {
-				fmt.Print("Please enter your desired namespace name:")
-				if scanner.Scan() {
-					namespaceName = scanner.Text()
-					if strings.TrimSpace(namespaceName) == "" {
-						fmt.Print("Namespace name required!")
-					} else {
-						break
-					}
-				}
-			}
-
-			nid, err := checkpoint.CreateNamespace(reportCfg.PrivateKey, reportCfg.GasCoupon, namespaceName, reportCfg.Network)
-			if err != nil {
-				logs.Error.Panicf("failed to create namespace: %v", err)
-			}
-			reportCfg.NamespaceID = nid
-			bytes, err := json.MarshalIndent(configs.C, "", "  ")
-			if err != nil {
-				logs.Error.Panicf("failed to save namespace ID to local file: %v", err)
-			}
-			err = os.WriteFile("./config.json", bytes, 0644)
-			if err != nil {
-				logs.Error.Panicf("failed to save namespace ID to local file: %v", err)
-			}
-			logs.Info.Println("Namespace created successfully, Namespace ID: %s!", nid)
-		}
-	}
-
-	logs.Info.Printf("Syncing the latest state from committee indexers, please wait.")
-
-	// Create Bitcoin getter.
-	bitcoinGetter, err := getter.NewBitcoinOrdGetter(verifyCfg.BitcoinRPC)
+	bitcoinGetter, err := getter.New(configs.C.Verification.BitcoinRPC)
 	if err != nil {
-		logs.Error.Panicf("failed to initialize Bitcoin Getter. Error: %v", err)
+		logs.Error.Fatalf("Failed to initialize Bitcoin Getter: %v", err)
 	}
-
 	currentBlockHeight, err := bitcoinGetter.GetLatestBlockHeight()
 	if err != nil {
-		logs.Error.Panicf("failed to get latest block height. Error: %v", err)
+		logs.Error.Fatalf("Failed to get latest block height: %v", err)
 	}
-
 	lastBlockHeight := currentBlockHeight - 1
 	lastBlockHash, err := bitcoinGetter.GetBlockHash(lastBlockHeight)
 	if err != nil {
-		logs.Error.Panicf("failed to get block hash at height %d. Error: %v", lastBlockHeight, err)
+		logs.Error.Fatalf("Failed to get block hash: height=%d, err=%v", lastBlockHeight, err)
 	}
 
-	// Create checkpoint providers
-	providers := make([]provider.CheckpointProvider, 0)
-
-	for _, sourceS3 := range cfg.CommitteeIndexers.S3 {
-		prov := provider.NewProviderS3(&sourceS3, verifyCfg.MetaProtocol, retry)
+	var providers []provider.CheckpointProvider
+	for _, sourceS3 := range configs.C.CommitteeIndexers.S3 {
+		prov := provider.NewProviderS3(&sourceS3, configs.C.Verification.MetaProtocol, 3)
 		providers = append(providers, prov)
 	}
-
-	for _, sourceDA := range cfg.CommitteeIndexers.DA {
-		prov := provider.NewProviderDA(&sourceDA, verifyCfg.MetaProtocol, retry)
+	for _, sourceDA := range configs.C.CommitteeIndexers.DA {
+		prov := provider.NewProviderDA(&sourceDA, configs.C.Verification.MetaProtocol, 3)
 		providers = append(providers, prov)
 	}
-
-	if len(providers) < verifyCfg.MinimalCheckpoint {
-		logs.Error.Panicf("the number of checkpoint providers is below the required minimum: %d", verifyCfg.MinimalCheckpoint)
+	actual := len(providers)
+	expected := configs.C.Verification.MinimalCheckpoint
+	if actual < expected {
+		logs.Error.Fatalf("Insufficient checkpoint providers: actual=%d, expected=%d", actual, expected)
 	}
 
-	// Get last checkpoint.
-	// TODO: High. Historical verification.
-	checkpoints := provider.GetCheckpoints(providers, lastBlockHeight, lastBlockHash, getCheckpointsTimeout)
-
-	if len(checkpoints) == 0 {
-		logs.Error.Panicf("failed to get checkpoints at height %d", lastBlockHeight)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	checkpoints, err := provider.GetCheckpoints(ctx, providers, lastBlockHeight, lastBlockHash)
+	if err != nil {
+		logs.Error.Fatalf("Failed to get checkpoints: height=%d, hash=%s, err=%v", lastBlockHeight, lastBlockHash, err)
 	}
 
-	_, _, inconsistent := provider.CheckpointsInconsist(checkpoints)
-	if inconsistent {
-		logs.Error.Panicf("inconsistent checkpoints detected at height %d during initialization."+
-			"a version of the modular indexer with historical verification capabilities will be released soon", lastBlockHeight)
+	// TODO(MeihaoZuyu): Historical verification.
+	if _, _, inconsistent := provider.CheckpointsInconsist(checkpoints); inconsistent {
+		logs.Error.Fatalf("inconsistent checkpoints detected at height %q, historical verification is not supported but will be released soon :'(", lastBlockHeight)
 	}
+	logs.Info.Println("Latest state successfully synced!")
 
-	lastCheckpoint := checkpoints[0]
+	df := runtime.NewRuntimeState(
+		a.DenyListPath,
+		providers,
+		checkpoints[0],
+		configs.C.Verification.MinimalCheckpoint,
+		2*time.Minute,
+	)
 
-	// Create runtime state
-	df := runtime.NewRuntimeState(a.DenyListPath, providers, lastCheckpoint, verifyCfg.MinimalCheckpoint, getCheckpointsTimeout)
-
-	logs.Info.Printf("Succeed to sync the latest state!")
-
-	syncCommitteeIndexers(a, df, bitcoinGetter)
+	go services.StartService(df, a.EnableTest, configs.C.ListenAddr)
+	runSyncForever(a, df, bitcoinGetter)
 }
 
-func syncCommitteeIndexers(app *App, df *runtime.State, bitcoinGetter *getter.BitcoinOrdGetter) {
-	cfg := configs.C
-	reportCfg := &cfg.Report
-	verifyCfg := &cfg.Verification
+func (a *App) initDaReport() {
+	if !a.EnableDAReport {
+		return
+	}
 
-	go services.StartService(df, app.EnableTest, cfg.ListenAddr)
+	if err := configs.C.Report.LoadPrivate(a.PrivatePath); err != nil {
+		logs.Error.Fatalln("Failed to read private key:", err)
+	}
 
-	sleepInterval := time.Second * 10
+	if !checkpoint.IsValidNamespaceID(configs.C.Report.NamespaceID) {
+		logs.Info.Println("Invalid Namespace ID found in configurations. Initializing a new namespace.")
+		scanner := bufio.NewScanner(os.Stdin)
+		namespaceName := ""
+		for {
+			fmt.Print("Please enter your desired namespace name:")
+			if scanner.Scan() {
+				namespaceName = scanner.Text()
+				if strings.TrimSpace(namespaceName) == "" {
+					fmt.Print("Namespace name required!")
+				} else {
+					break
+				}
+			}
+		}
+		nid, err := checkpoint.CreateNamespace(
+			configs.C.Report.PrivateKey,
+			configs.C.Report.GasCoupon,
+			namespaceName,
+			configs.C.Report.Network,
+		)
+		if err != nil {
+			logs.Error.Fatalf("failed to create namespace: %v", err)
+		}
+		configs.C.Report.NamespaceID = nid
+		data, err := json.MarshalIndent(configs.C, "", "  ")
+		if err != nil {
+			logs.Error.Fatalln("marshal configurations error:", err)
+		}
+		err = os.WriteFile(a.ConfigPath, data, 0644)
+		if err != nil {
+			logs.Error.Fatalf("Failed to save namespace ID to configuration file: %v", err)
+		}
+		logs.Info.Printf("Namespace created successfully: %s", nid)
+	}
+}
+
+func runSyncForever(app *App, df *runtime.State, bitcoinGetter *getter.Client) {
 	for {
-		time.Sleep(sleepInterval)
+		time.Sleep(10 * time.Second)
+
 		currentHeight, err := bitcoinGetter.GetLatestBlockHeight()
 		if err != nil {
 			logs.Error.Printf("failed to GetLatestBlockHeight in syncCommitteeIndexers: %v", err)
@@ -196,7 +186,6 @@ func syncCommitteeIndexers(app *App, df *runtime.State, bitcoinGetter *getter.Bi
 		}
 
 		notSynced := false
-
 		firstCheckpoint := df.CurrentFirstCheckpoint()
 		if firstCheckpoint == nil {
 			notSynced = true
@@ -205,7 +194,6 @@ func syncCommitteeIndexers(app *App, df *runtime.State, bitcoinGetter *getter.Bi
 		}
 
 		if notSynced {
-
 			err = df.UpdateCheckpoints(currentHeight, hash)
 			if err != nil {
 				logs.Error.Printf("failed to UpdateCheckpoints in syncCommitteeIndexers: %v", err)
@@ -213,7 +201,6 @@ func syncCommitteeIndexers(app *App, df *runtime.State, bitcoinGetter *getter.Bi
 			}
 
 			if app.EnableDAReport {
-				// upload verified checkpoint to DA
 				curCheckpoint := df.CurrentFirstCheckpoint().Checkpoint
 				newCheckpoint := checkpoint.Checkpoint{
 					Commitment:   curCheckpoint.Commitment,
@@ -224,9 +211,7 @@ func syncCommitteeIndexers(app *App, df *runtime.State, bitcoinGetter *getter.Bi
 					Version:      version,
 				}
 
-				timeGap := time.Duration(rand.Intn(40)+1) * time.Second
-
-				time.Sleep(timeGap)
+				time.Sleep(time.Duration(rand.Intn(40)+1) * time.Second)
 
 				err := checkpoint.UploadCheckpointByDA(&newCheckpoint, reportCfg.PrivateKey, reportCfg.GasCoupon, reportCfg.NamespaceID, reportCfg.Network, time.Duration(reportCfg.Timeout)*time.Millisecond)
 				if err != nil {

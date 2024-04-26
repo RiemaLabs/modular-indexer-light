@@ -19,13 +19,10 @@ import (
 
 type (
 	Config struct {
-		ListenAddr string `json:"listenAddr"`
-
+		ListenAddr        string            `json:"listenAddr"`
 		CommitteeIndexers CommitteeIndexers `json:"committeeIndexers"`
-
-		Verification Verification `json:"verification"`
-
-		Report Report `json:"report"`
+		Verification      Verification      `json:"verification"`
+		Report            Report            `json:"report"`
 	}
 
 	CommitteeIndexers struct {

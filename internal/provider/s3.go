@@ -25,7 +25,7 @@ func NewProviderS3(sourceS3 *configs.SourceS3, metaProtocol string, retry int) *
 	}
 }
 
-func (p *S3) GetCheckpoint(ctx context.Context, height uint, hash string) (*configs.CheckpointExport, error) {
+func (p *S3) Get(ctx context.Context, height uint, hash string) (*configs.CheckpointExport, error) {
 	var ck *checkpoint.Checkpoint
 	var err error
 	for i := 0; i < p.Retry; i++ {

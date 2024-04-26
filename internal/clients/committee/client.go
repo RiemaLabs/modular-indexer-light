@@ -21,7 +21,7 @@ type Client struct {
 }
 
 func New(ctx context.Context, name, endpoint string) *Client {
-	return &Client{ctx, endpoint, name, http.NewClient()}
+	return &Client{ctx, endpoint, name, http.New()}
 }
 
 func (c *Client) JoinPath(subURL string) (string, error) {
