@@ -18,8 +18,8 @@ import (
 	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/provider"
-	"github.com/RiemaLabs/modular-indexer-light/internal/runtime"
 	"github.com/RiemaLabs/modular-indexer-light/internal/services"
+	"github.com/RiemaLabs/modular-indexer-light/internal/states"
 )
 
 var (
@@ -34,7 +34,7 @@ type App struct {
 
 func (a *App) Command() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "Nubit Light Indexer",
+		Use:   "modular-indexer-light",
 		Short: "Activates the Nubit Light Indexer with optional services.",
 		Long: `Light Indexer is an essential component of the Nubit Modular Indexer architecture.
 It enables typical users to verify Bitcoin meta-protocols without requiring substantial computing resources.
@@ -83,11 +83,17 @@ func (a *App) Run() {
 	}
 
 	var providers []provider.CheckpointProvider
-	for _, sourceS3 := range configs.C.CommitteeIndexers.S3 {
-		providers = append(providers, provider.NewProviderS3(&sourceS3, configs.C.Verification.MetaProtocol))
-	}
-	for _, sourceDA := range configs.C.CommitteeIndexers.DA {
-		providers = append(providers, provider.NewProviderDA(&sourceDA, configs.C.Verification.MetaProtocol))
+	if raw := configs.C.CommitteeIndexers.Raw; a.EnableTest && len(raw) > 0 {
+		for _, sourceRaw := range raw {
+			providers = append(providers, sourceRaw)
+		}
+	} else {
+		for _, sourceS3 := range configs.C.CommitteeIndexers.S3 {
+			providers = append(providers, provider.NewProviderS3(&sourceS3, configs.C.Verification.MetaProtocol))
+		}
+		for _, sourceDA := range configs.C.CommitteeIndexers.DA {
+			providers = append(providers, provider.NewProviderDA(&sourceDA, configs.C.Verification.MetaProtocol))
+		}
 	}
 	actual := len(providers)
 	expected := configs.C.Verification.MinimalCheckpoint
@@ -108,7 +114,7 @@ func (a *App) Run() {
 	}
 	logs.Info.Println("Latest state successfully synced!")
 
-	runtime.Init(
+	states.Init(
 		a.DenyListPath,
 		providers,
 		checkpoints[0],
@@ -169,6 +175,7 @@ func (a *App) initDaReport() {
 func (a *App) runSyncForever() {
 	for {
 		time.Sleep(10 * time.Second)
+		logs.Info.Println("Syncing latest state...")
 
 		currentHeight, err := getter.Ord.GetLatestBlockHeight(context.Background())
 		if err != nil {
@@ -182,7 +189,7 @@ func (a *App) runSyncForever() {
 		}
 
 		notSynced := false
-		firstCheckpoint := runtime.S.CurrentFirstCheckpoint()
+		firstCheckpoint := states.S.CurrentFirstCheckpoint()
 		if firstCheckpoint == nil {
 			notSynced = true
 		} else if strconv.Itoa(int(currentHeight)) != firstCheckpoint.Checkpoint.Height || hash != firstCheckpoint.Checkpoint.Hash {
@@ -190,13 +197,13 @@ func (a *App) runSyncForever() {
 		}
 
 		if notSynced {
-			if err := runtime.S.UpdateCheckpoints(currentHeight, hash); err != nil {
+			if err := states.S.UpdateCheckpoints(currentHeight, hash); err != nil {
 				logs.Error.Printf("failed to UpdateCheckpoints in syncCommitteeIndexers: %v", err)
 				continue
 			}
 
 			if a.EnableDAReport {
-				curCheckpoint := runtime.S.CurrentFirstCheckpoint().Checkpoint
+				curCheckpoint := states.S.CurrentFirstCheckpoint().Checkpoint
 				newCheckpoint := checkpoint.Checkpoint{
 					Commitment:   curCheckpoint.Commitment,
 					Hash:         curCheckpoint.Hash,
@@ -214,7 +221,7 @@ func (a *App) runSyncForever() {
 					configs.C.Report.GasCoupon,
 					configs.C.Report.NamespaceID,
 					configs.C.Report.Network,
-					configs.C.Report.Timeout,
+					configs.C.Report.Timeout.Duration,
 				); err != nil {
 					logs.Error.Printf("Unable to upload the checkpoint via DA: %v", err)
 				} else {
@@ -223,7 +230,7 @@ func (a *App) runSyncForever() {
 			}
 		}
 
-		logs.Info.Printf("Listening for new Bitcoin block, current height: %d", runtime.S.CurrentHeight())
+		logs.Info.Printf("Listening for new Bitcoin block, current height: %d", states.S.CurrentHeight())
 	}
 }
 

@@ -1,4 +1,4 @@
-package runtime
+package states
 
 import (
 	"context"
@@ -41,7 +41,7 @@ type State struct {
 	// The number of effective providers should exceed the minimum required.
 	minimalCheckpoint int
 
-	// timeout for request checkpoint, uint second
+	// timeout for request checkpoint.
 	timeout time.Duration
 
 	sync.RWMutex
@@ -123,25 +123,49 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 			transferLen int
 		}
 
-		succVerify := make([]succCommit, 0, len(aggregates))
+		succCommits := make(chan succCommit, len(aggregates))
 		var wg sync.WaitGroup
 		for commit, ck := range aggregates {
 			wg.Add(1)
 			go func(commit string, ck *checkpoint.Checkpoint) {
 				defer wg.Done()
 
-				stateProof, err := committee.New(context.TODO(), ck.Name, ck.URL).LatestStateProof()
-				if err != nil || stateProof.Error != nil {
-					logs.Warn.Printf("Failed to get latest state proof from the committee indexer: name=%s, url=%s, err:=%v", ck.Name, ck.URL, err)
+				stateProof, err := committee.New(context.Background(), ck.Name, ck.URL).LatestStateProof()
+				if err != nil {
+					logs.Error.Printf(
+						"Failed to get latest state proof from the committee indexer: commit=%s, name=%s, url=%s, err=%v",
+						commit,
+						ck.Name,
+						ck.URL,
+						err,
+					)
+					return
+				}
+				if errMsg := stateProof.Error; errMsg != nil {
+					logs.Error.Printf(
+						"Latest state proof error from the committee indexer: commit=%s, name=%s, url=%s, err=%s",
+						commit,
+						ck.Name,
+						ck.URL,
+						*errMsg,
+					)
 					return
 				}
 
-				// Verify ordTransfers via Bitcoin
-				curHeight, _ := strconv.ParseInt(ck.Height, 10, 64)
-
+				// Verify Ordinals transfers via Bitcoin.
 				var ordTransfers []getter.OrdTransfer
 				for _, tran := range stateProof.Result.OrdTransfers {
-					contentBytes, _ := base64.StdEncoding.DecodeString(tran.Content)
+					contentBytes, err := base64.StdEncoding.DecodeString(tran.Content)
+					if err != nil {
+						logs.Error.Printf(
+							"Invalid Ordinals transfer content: commit=%s, name=%s, url=%s, err=%v",
+							commit,
+							ck.Name,
+							ck.URL,
+							err,
+						)
+						return
+					}
 					ordTransfers = append(ordTransfers, getter.OrdTransfer{
 						ID:            tran.ID,
 						InscriptionID: tran.InscriptionID,
@@ -155,8 +179,10 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 					})
 				}
 
+				curHeight, _ := strconv.ParseInt(ck.Height, 10, 64)
 				ok, err := transfer.VerifyOrdTransfer(ordTransfers, uint(curHeight))
 				if err != nil || !ok {
+					logs.Error.Printf("Ordinals transfers verification error: err=%v, ok=%v", err, ok)
 					return
 				}
 
@@ -181,21 +207,26 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 				}
 
 				postBytes := node.Commit().Bytes()
-				curentCommit := base64.StdEncoding.EncodeToString(postBytes[:])
+				currentCommit := base64.StdEncoding.EncodeToString(postBytes[:])
 
-				if curentCommit != commit {
+				if currentCommit != commit {
 					return
 				}
 
-				succVerify = append(succVerify, succCommit{
+				succCommits <- succCommit{
 					commitment:  commit,
 					transferLen: len(ordTransfers),
-				})
+				}
 
 			}(commit, ck.Checkpoint)
 		}
 		wg.Wait()
 
+		close(succCommits)
+		var succVerify []succCommit
+		for c := range succCommits {
+			succVerify = append(succVerify, c)
+		}
 		if len(succVerify) == 0 {
 			return errors.New("all checkpoints verify failed")
 		}

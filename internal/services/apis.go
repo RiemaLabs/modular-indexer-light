@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
-	"github.com/RiemaLabs/modular-indexer-light/internal/runtime"
+	"github.com/RiemaLabs/modular-indexer-light/internal/states"
 )
 
 const DefaultAddr = ":8080"
@@ -32,38 +33,32 @@ func StartService(enableDebug bool, addr string) {
 
 	r.GET("/v1/brc20_verifiable/light/state", func(c *gin.Context) {
 		c.JSON(http.StatusOK, struct {
-			State string `json:"state"`
+			State fmt.Stringer `json:"state"`
 		}{
-			State: constant.ApiState.String(),
+			State: constant.ApiStatus(states.S.State.Load()),
 		})
 	})
 	serv := r.Group("v1")
 	{
 		serv.Use(CheckState())
 		serv.GET("/brc20_verifiable/light/block_height", func(c *gin.Context) {
-			c.Data(http.StatusOK, "text/plain", []byte(fmt.Sprintf("%d", df.CurrentHeight())))
+			c.String(http.StatusOK, strconv.Itoa(int(states.S.CurrentHeight())))
 		})
 
 		serv.GET("/brc20_verifiable/light/current_balance_of_wallet", func(c *gin.Context) {
-			ck := runtime.S.CurrentFirstCheckpoint().Checkpoint
-
-			GetCurrentBalanceOfWallet(c, ck)
+			GetCurrentBalanceOfWallet(c, states.S.CurrentFirstCheckpoint().Checkpoint)
 		})
 
 		serv.GET("/brc20_verifiable/light/current_balance_of_pkscript", func(c *gin.Context) {
-			ck := df.CurrentFirstCheckpoint().Checkpoint
-
-			GetCurrentBalanceOfPkscript(c, ck)
+			GetCurrentBalanceOfPkscript(c, states.S.CurrentFirstCheckpoint().Checkpoint)
 		})
 
 		serv.GET("/brc20_verifiable/light/checkpoints", func(c *gin.Context) {
-			cur := df.CurrentCheckpoints()
-			c.JSON(http.StatusOK, cur)
+			c.JSON(http.StatusOK, states.S.CurrentCheckpoints())
 		})
 
 		serv.GET("/brc20_verifiable/light/last_checkpoint", func(c *gin.Context) {
-			lt := df.LastCheckpoint()
-			c.JSON(http.StatusOK, lt)
+			c.JSON(http.StatusOK, states.S.LastCheckpoint())
 		})
 	}
 
@@ -71,6 +66,6 @@ func StartService(enableDebug bool, addr string) {
 		addr = DefaultAddr
 	}
 	if err := r.Run(addr); !errors.Is(err, http.ErrServerClosed) {
-		logs.Error.Fatal("Server exit with error: ", err)
+		logs.Error.Fatalln("Server exit with error:", err)
 	}
 }
