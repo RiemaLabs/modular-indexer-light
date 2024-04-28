@@ -2,13 +2,13 @@ package configs
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
 
@@ -27,8 +27,9 @@ type (
 	}
 
 	CommitteeIndexers struct {
-		S3 []SourceS3 `json:"s3"`
-		DA []SourceDA `json:"da"`
+		S3  []SourceS3   `json:"s3"`
+		DA  []SourceDA   `json:"da"`
+		Raw []*SourceRaw `json:"raw"`
 	}
 
 	Verification struct {
@@ -38,11 +39,11 @@ type (
 	}
 
 	Report struct {
-		Name        string        `json:"name"`
-		Network     string        `json:"network"`
-		NamespaceID string        `json:"namespaceID"`
-		GasCoupon   string        `json:"gasCoupon"`
-		Timeout     time.Duration `json:"timeout"`
+		Name        string     `json:"name"`
+		Network     string     `json:"network"`
+		NamespaceID string     `json:"namespaceID"`
+		GasCoupon   string     `json:"gasCoupon"`
+		Timeout     utils.DurH `json:"timeout"`
 
 		// PrivateKey loaded from files.
 		PrivateKey string `json:"-"`
@@ -84,6 +85,13 @@ func (s *SourceS3) Equal(rhs *SourceS3) bool {
 
 func (s *SourceDA) Equal(rhs *SourceDA) bool {
 	return s.Network == rhs.Network && s.NamespaceID == rhs.NamespaceID && s.Name == rhs.Name
+}
+
+// SourceRaw for testing purpose.
+type SourceRaw checkpoint.Checkpoint
+
+func (s *SourceRaw) Get(context.Context, uint, string) (*CheckpointExport, error) {
+	return &CheckpointExport{Checkpoint: (*checkpoint.Checkpoint)(s)}, nil
 }
 
 type CheckpointExport struct {

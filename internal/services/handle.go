@@ -12,15 +12,16 @@ import (
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
 	"github.com/RiemaLabs/modular-indexer-light/internal/clients/committee"
 	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
+	"github.com/RiemaLabs/modular-indexer-light/internal/states"
 )
 
 func CheckState() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		switch constant.ApiState {
+		switch s := constant.ApiStatus(states.S.State.Load()); s {
 		case constant.StateActive:
 			c.Next()
 		default:
-			c.AbortWithStatusJSON(http.StatusForbidden, constant.ApiState.String())
+			c.AbortWithStatusJSON(http.StatusForbidden, s.String())
 		}
 	}
 }

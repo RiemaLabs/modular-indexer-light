@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -57,26 +58,34 @@ func (p *S3) doDownload(height uint, hash string) (*checkpoint.Checkpoint, error
 		Host:   fmt.Sprintf("%s.s3.%s.amazonaws.com", p.Config.Bucket, p.Config.Region),
 		Path:   fmt.Sprintf("checkpoint-%s-%s-%d-%s.json", p.Config.Name, p.MetaProtocol, height, hash),
 	}
+	obj := u.String()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, obj, nil)
 	if err != nil {
-		return nil, fmt.Errorf("invalid S3 request: %v", err)
+		return nil, fmt.Errorf("invalid S3 request: obj=%s, err=%v", obj, err)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("transport S3 error: %v", err)
+		return nil, fmt.Errorf("transport S3 error: obj=%s, err=%v", obj, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("read S3 response error: %v", err)
+		return nil, fmt.Errorf("read S3 response error: obj=%s, err=%v", obj, err)
 	}
 
 	var c checkpoint.Checkpoint
 	if err := json.Unmarshal(bytes, &c); err != nil {
-		return nil, fmt.Errorf("unmarshal checkpoint error: %v", err)
+		type s3Resp struct {
+			Code, Message string
+		}
+		var s3resp s3Resp
+		if err := xml.Unmarshal(bytes, &s3resp); err == nil {
+			return nil, fmt.Errorf("download from S3 error: obj=%s, code=%s, msg=%s", obj, s3resp.Code, s3resp.Message)
+		}
+		return nil, fmt.Errorf("unmarshal checkpoint error: obj=%s, body=%q, err=%v", obj, string(bytes), err)
 	}
 
 	return &c, nil
