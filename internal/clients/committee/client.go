@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
+	"os"
 
 	"github.com/RiemaLabs/modular-indexer-committee/apis"
 
@@ -13,18 +14,49 @@ import (
 
 // TODO: Medium. Distinguish indexer and committee indexer.
 
-type Client struct {
+type Client interface {
+	LatestStateProof() (*apis.Brc20VerifiableLatestStateProofResponse, error)
+	BlockHeight() (uint, error)
+	CurrentBalanceOfWallet(tick, wallet string) (*apis.Brc20VerifiableCurrentBalanceOfWalletResponse, error)
+	CurrentBalanceOfPkscript(tick, pkscript string) (*apis.Brc20VerifiableCurrentBalanceOfPkscriptResponse, error)
+}
+
+type fromFile string
+
+func (f fromFile) LatestStateProof() (*apis.Brc20VerifiableLatestStateProofResponse, error) {
+	var ret apis.Brc20VerifiableLatestStateProofResponse
+	data, err := os.ReadFile(string(f))
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(data, &ret); err != nil {
+		return nil, err
+	}
+	return &ret, nil
+}
+func (fromFile) BlockHeight() (uint, error) { panic("not supported") }
+func (fromFile) CurrentBalanceOfWallet(string, string) (*apis.Brc20VerifiableCurrentBalanceOfWalletResponse, error) {
+	panic("not supported")
+}
+func (fromFile) CurrentBalanceOfPkscript(string, string) (*apis.Brc20VerifiableCurrentBalanceOfPkscriptResponse, error) {
+	panic("not supported")
+}
+
+type remoteClient struct {
 	ctx      context.Context
 	endpoint string
 	name     string
 	*http.Client
 }
 
-func New(ctx context.Context, name, endpoint string) *Client {
-	return &Client{ctx, endpoint, name, http.New()}
+func New(ctx context.Context, name, endpoint string) Client {
+	if u, err := url.Parse(endpoint); err == nil && u.Scheme == "file" {
+		return fromFile(u.Path)
+	}
+	return &remoteClient{ctx, endpoint, name, http.New()}
 }
 
-func (c *Client) JoinPath(subURL string) (string, error) {
+func (c *remoteClient) joinPath(subURL string) (string, error) {
 	path, err := url.JoinPath(c.endpoint, subURL)
 	if err != nil {
 		return "", err
@@ -32,10 +64,10 @@ func (c *Client) JoinPath(subURL string) (string, error) {
 	return path, nil
 }
 
-func (c *Client) LatestStateProof() (*apis.Brc20VerifiableLatestStateProofResponse, error) {
+func (c *remoteClient) LatestStateProof() (*apis.Brc20VerifiableLatestStateProofResponse, error) {
 	var data *apis.Brc20VerifiableLatestStateProofResponse
 
-	path, err := c.JoinPath(constant.LatestStateProof)
+	path, err := c.joinPath(constant.LatestStateProof)
 	if err != nil {
 		return nil, err
 	}
@@ -51,9 +83,9 @@ func (c *Client) LatestStateProof() (*apis.Brc20VerifiableLatestStateProofRespon
 	return data, nil
 }
 
-func (c *Client) BlockHeight() (uint, error) {
+func (c *remoteClient) BlockHeight() (uint, error) {
 	var data uint
-	path, err := c.JoinPath(constant.LatestStateProof)
+	path, err := c.joinPath(constant.LatestStateProof)
 	if err != nil {
 		return 0, err
 	}
@@ -68,9 +100,9 @@ func (c *Client) BlockHeight() (uint, error) {
 	return data, nil
 }
 
-func (c *Client) CurrentBalanceOfWallet(tick, wallet string) (*apis.Brc20VerifiableCurrentBalanceOfWalletResponse, error) {
+func (c *remoteClient) CurrentBalanceOfWallet(tick, wallet string) (*apis.Brc20VerifiableCurrentBalanceOfWalletResponse, error) {
 	var data *apis.Brc20VerifiableCurrentBalanceOfWalletResponse
-	path, err := c.JoinPath(constant.CurrentBalanceOfWallet)
+	path, err := c.joinPath(constant.CurrentBalanceOfWallet)
 	if err != nil {
 		return nil, err
 	}
@@ -95,9 +127,9 @@ func (c *Client) CurrentBalanceOfWallet(tick, wallet string) (*apis.Brc20Verifia
 	return data, nil
 }
 
-func (c *Client) CurrentBalanceOfPkscript(tick, pkscript string) (*apis.Brc20VerifiableCurrentBalanceOfPkscriptResponse, error) {
+func (c *remoteClient) CurrentBalanceOfPkscript(tick, pkscript string) (*apis.Brc20VerifiableCurrentBalanceOfPkscriptResponse, error) {
 	var data *apis.Brc20VerifiableCurrentBalanceOfPkscriptResponse
-	path, err := c.JoinPath(constant.CurrentBalanceOfPkscript)
+	path, err := c.joinPath(constant.CurrentBalanceOfPkscript)
 	if err != nil {
 		return nil, err
 	}

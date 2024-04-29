@@ -107,7 +107,7 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 
 	inconsistent := provider.CheckpointsInconsistent(checkpoints)
 	if inconsistent {
-		logs.Warn.Printf("Checkpoints retrieved from providers are inconsistent for height %q, hash %q, start the verification and regeneration process...", height, hash)
+		logs.Warn.Printf("Inconsistent checkpoints: height=%d, hash=%s, starting verification and reconstruction...", height, hash)
 
 		// Aggregate checkpoints by commitment.
 		aggregates := make(map[string]*configs.CheckpointExport)
@@ -187,12 +187,12 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 				}
 
 				// Generate current checkpoint
-				preCheckpoint := s.LastCheckpoint()
+				preCheckpoint := s.lastCheckpoint
 				prePointByte, err := base64.StdEncoding.DecodeString(preCheckpoint.Checkpoint.Commitment)
 				if err != nil {
 					return
 				}
-				prePoint := &verkle.Point{}
+				prePoint := new(verkle.Point)
 				err = prePoint.SetBytes(prePointByte)
 				if err != nil {
 					return
@@ -243,21 +243,21 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 		}
 		trustCommitment := succVerify[champion].commitment
 
-		s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), []*configs.CheckpointExport{aggregates[trustCommitment]}
+		s.lastCheckpoint, s.currentCheckpoints = s.currentCheckpoints[0], []*configs.CheckpointExport{aggregates[trustCommitment]}
 		s.State.Store(int64(constant.StateActive))
 
 		// Deny untrusted providers.
 		for _, ck := range checkpoints {
-			if !slices.Contains(seemRight, ck.Checkpoint.Commitment) {
+			if !slices.Contains(seemRight, ck.Checkpoint.Commitment) && s.denyListPath != "" {
 				provider.DenyCheckpoint(s.denyListPath, aggregates[trustCommitment], ck)
 			}
 		}
 	} else {
-		s.lastCheckpoint, s.currentCheckpoints = s.CurrentFirstCheckpoint(), checkpoints
+		s.lastCheckpoint, s.currentCheckpoints = s.currentCheckpoints[0], checkpoints
 		s.State.Store(int64(constant.StateActive))
 	}
 
-	c := s.CurrentFirstCheckpoint().Checkpoint.Commitment
+	c := s.currentCheckpoints[0].Checkpoint.Commitment
 	if inconsistent {
 		logs.Info.Printf("Checkpoints fetched from providers have been verified, the commitment: %s, current height %d, hash %s", c, height, hash)
 	} else {
