@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"encoding/base64"
 	"net/http"
 	"strings"
@@ -29,7 +30,12 @@ func GetCurrentBalanceOfWallet(c *gin.Context, ck *checkpoint.Checkpoint) {
 	tick := c.DefaultQuery("tick", "")
 	wallet := c.DefaultQuery("wallet", "")
 
-	balance, err := committee.New(c, ck.Name, ck.URL).CurrentBalanceOfWallet(tick, wallet)
+	cl, err := committee.New(ck.URL)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+	balance, err := cl.CurrentBalanceOfWallet(context.Background(), tick, wallet)
 	if err != nil {
 		msg := err.Error()
 		c.JSON(http.StatusOK, apis.Brc20VerifiableCurrentBalanceOfWalletResponse{
@@ -38,9 +44,9 @@ func GetCurrentBalanceOfWallet(c *gin.Context, ck *checkpoint.Checkpoint) {
 		return
 	}
 
-	pbytes, _ := base64.StdEncoding.DecodeString(ck.Commitment)
+	commitmentBytes, _ := base64.StdEncoding.DecodeString(ck.Commitment)
 	var point verkle.Point
-	point.SetBytes(pbytes)
+	_ = point.SetBytes(commitmentBytes)
 
 	ok, err := apis.VerifyCurrentBalanceOfWallet(&point, tick, wallet, balance)
 	if err != nil {
@@ -68,7 +74,12 @@ func GetCurrentBalanceOfPkscript(c *gin.Context, ck *checkpoint.Checkpoint) {
 	tick := c.DefaultQuery("tick", "")
 	pkscript := c.DefaultQuery("pkscript", "")
 
-	balance, err := committee.New(c, ck.Name, ck.URL).CurrentBalanceOfPkscript(tick, pkscript)
+	cl, err := committee.New(ck.URL)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+	balance, err := cl.CurrentBalanceOfPkscript(context.Background(), tick, pkscript)
 	if err != nil {
 		msg := err.Error()
 		c.JSON(http.StatusOK, apis.Brc20VerifiableCurrentBalanceOfWalletResponse{
@@ -77,9 +88,9 @@ func GetCurrentBalanceOfPkscript(c *gin.Context, ck *checkpoint.Checkpoint) {
 		return
 	}
 
-	pbytes, _ := base64.StdEncoding.DecodeString(ck.Commitment)
+	commitmentBytes, _ := base64.StdEncoding.DecodeString(ck.Commitment)
 	point := verkle.Point{}
-	point.SetBytes(pbytes)
+	_ = point.SetBytes(commitmentBytes)
 
 	ok, err := apis.VerifyCurrentBalanceOfPkscript(&point, tick, pkscript, balance)
 	if err != nil {

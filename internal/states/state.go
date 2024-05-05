@@ -117,21 +117,21 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 	// Get checkpoints from the providers.
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 	defer cancel()
-	checkpoints, err := checkpoints.GetCheckpoints(ctx, s.providers, height, hash)
+	cps, err := checkpoints.GetCheckpoints(ctx, s.providers, height, hash)
 	if err != nil {
 		return err
 	}
-	if len(checkpoints) < s.minimalCheckpoint {
-		return errors.New("not enough checkpoints fetched")
+	if len(cps) < s.minimalCheckpoint {
+		return errors.New("not enough cps fetched")
 	}
 
-	inconsistent := checkpoints.CheckpointsInconsistent(checkpoints)
+	inconsistent := checkpoints.Inconsistent(cps)
 	if inconsistent {
-		logs.Warn.Printf("Inconsistent checkpoints: height=%d, hash=%s, starting verification and reconstruction...", height, hash)
+		logs.Warn.Printf("Inconsistent cps: height=%d, hash=%s, starting verification and reconstruction...", height, hash)
 
 		// Aggregate checkpoints by commitment.
 		aggregates := make(map[string]*configs.CheckpointExport)
-		for _, ck := range checkpoints {
+		for _, ck := range cps {
 			if _, exist := aggregates[ck.Checkpoint.Commitment]; exist {
 				continue
 			}
@@ -150,7 +150,18 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 			go func(checkpointCommit string, ck *checkpoint.Checkpoint) {
 				defer wg.Done()
 
-				stateProof, err := committee.New(context.Background(), ck.Name, ck.URL).LatestStateProof()
+				committeeCl, err := committee.New(ck.URL)
+				if err != nil {
+					logs.Error.Printf(
+						"Ffailed to create committee indexer client: commit=%s, name=%s, url=%s, err=%v",
+						checkpointCommit,
+						ck.Name,
+						ck.URL,
+						err,
+					)
+					return
+				}
+				stateProof, err := committeeCl.LatestStateProof(context.Background())
 				if err != nil {
 					logs.Error.Printf(
 						"Failed to get latest state proof from the committee indexer: commit=%s, name=%s, url=%s, err=%v",
@@ -250,7 +261,7 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 			succVerify = append(succVerify, c)
 		}
 		if len(succVerify) == 0 {
-			return errors.New("all checkpoints verify failed")
+			return errors.New("all cps verify failed")
 		}
 
 		maxTransfer := succVerify[0].transferLen
@@ -269,13 +280,13 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 		s.State.Store(int64(StatusActive))
 
 		// Deny untrusted providers.
-		for _, ck := range checkpoints {
+		for _, ck := range cps {
 			if !slices.Contains(seemRight, ck.Checkpoint.Commitment) && s.denyListPath != "" {
-				checkpoints.DenyCheckpoint(s.denyListPath, aggregates[trustCommitment], ck)
+				checkpoints.Deny(s.denyListPath, aggregates[trustCommitment], ck)
 			}
 		}
 	} else {
-		s.lastCheckpoint, s.currentCheckpoints = s.currentCheckpoints[0], checkpoints
+		s.lastCheckpoint, s.currentCheckpoints = s.currentCheckpoints[0], cps
 		s.State.Store(int64(StatusActive))
 	}
 
