@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"slices"
 	"strconv"
 	"sync"
@@ -114,27 +115,21 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 
 	s.State.Store(int64(StatusSync))
 
-	// Get checkpoints from the providers.
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 	defer cancel()
 	cps, err := checkpoints.GetCheckpoints(ctx, s.providers, height, hash)
 	if err != nil {
 		return err
 	}
-	if len(cps) < s.minimalCheckpoint {
-		return errors.New("not enough cps fetched")
+	if l := len(cps); l < s.minimalCheckpoint {
+		return fmt.Errorf("not enough checkpoints fetched: expected=%d, actual=%d", s.minimalCheckpoint, l)
 	}
 
-	inconsistent := checkpoints.Inconsistent(cps)
-	if inconsistent {
-		logs.Warn.Printf("Inconsistent cps: height=%d, hash=%s, starting verification and reconstruction...", height, hash)
+	if checkpoints.Inconsistent(cps) {
+		logs.Warn.Printf("Inconsistent checkpoints at: height=%d, hash=%s", height, hash)
 
-		// Aggregate checkpoints by commitment.
 		aggregates := make(map[string]*configs.CheckpointExport)
 		for _, ck := range cps {
-			if _, exist := aggregates[ck.Checkpoint.Commitment]; exist {
-				continue
-			}
 			aggregates[ck.Checkpoint.Commitment] = ck
 		}
 
@@ -153,7 +148,7 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 				committeeCl, err := committee.New(ck.URL)
 				if err != nil {
 					logs.Error.Printf(
-						"Ffailed to create committee indexer client: commit=%s, name=%s, url=%s, err=%v",
+						"Failed to create committee indexer client: commit=%s, name=%s, url=%s, err=%v",
 						checkpointCommit,
 						ck.Name,
 						ck.URL,
@@ -174,7 +169,7 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 				}
 				if errMsg := stateProof.Error; errMsg != nil {
 					logs.Error.Printf(
-						"Latest state proof error from the committee indexer: commit=%s, name=%s, url=%s, err=%s",
+						"Non-nil error message from the latest state proof: commit=%s, name=%s, url=%s, errMsg=%s",
 						checkpointCommit,
 						ck.Name,
 						ck.URL,
@@ -183,10 +178,9 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 					return
 				}
 
-				// Verify Ordinals transfers via Bitcoin.
 				var ordTransfers []getter.OrdTransfer
-				for _, tran := range stateProof.Result.OrdTransfers {
-					contentBytes, err := base64.StdEncoding.DecodeString(tran.Content)
+				for _, t := range stateProof.Result.OrdTransfers {
+					contentBytes, err := base64.StdEncoding.DecodeString(t.Content)
 					if err != nil {
 						logs.Error.Printf(
 							"Invalid Ordinals transfer content: commit=%s, name=%s, url=%s, err=%v",
@@ -198,22 +192,21 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 						return
 					}
 					ordTransfers = append(ordTransfers, getter.OrdTransfer{
-						ID:            tran.ID,
-						InscriptionID: tran.InscriptionID,
-						OldSatpoint:   tran.OldSatpoint,
-						NewSatpoint:   tran.NewSatpoint,
-						NewPkscript:   tran.NewPkscript,
-						NewWallet:     tran.NewWallet,
-						SentAsFee:     tran.SentAsFee,
+						ID:            t.ID,
+						InscriptionID: t.InscriptionID,
+						OldSatpoint:   t.OldSatpoint,
+						NewSatpoint:   t.NewSatpoint,
+						NewPkscript:   t.NewPkscript,
+						NewWallet:     t.NewWallet,
+						SentAsFee:     t.SentAsFee,
 						Content:       contentBytes,
-						ContentType:   tran.ContentType,
+						ContentType:   t.ContentType,
 					})
 				}
 
 				curHeight, _ := strconv.ParseInt(ck.Height, 10, 64)
-				ok, err := ordi.VerifyOrdTransfer(ordTransfers, uint(curHeight))
-				if err != nil || !ok {
-					logs.Error.Printf("Ordinals transfers verification error: err=%v, ok=%v", err, ok)
+				if err := ordi.VerifyOrdTransfer(ordTransfers, uint(curHeight)); err != nil {
+					logs.Error.Printf("Ordinals transfers verification error: err=%v", err)
 					return
 				}
 
@@ -279,23 +272,21 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 		s.lastCheckpoint, s.currentCheckpoints = s.currentCheckpoints[0], []*configs.CheckpointExport{aggregates[trustCommitment]}
 		s.State.Store(int64(StatusActive))
 
-		// Deny untrusted providers.
 		for _, ck := range cps {
 			if !slices.Contains(seemRight, ck.Checkpoint.Commitment) && s.denyListPath != "" {
 				checkpoints.Deny(s.denyListPath, aggregates[trustCommitment], ck)
 			}
 		}
-	} else {
-		s.lastCheckpoint, s.currentCheckpoints = s.currentCheckpoints[0], cps
-		s.State.Store(int64(StatusActive))
+
+		c := s.currentCheckpoints[0].Checkpoint.Commitment
+		logs.Info.Printf("Checkpoints fetched from providers have been verified, the commitment: %s, current height %d, hash %s", c, height, hash)
+		return nil
 	}
 
+	s.lastCheckpoint, s.currentCheckpoints = s.currentCheckpoints[0], cps
+	s.State.Store(int64(StatusActive))
 	c := s.currentCheckpoints[0].Checkpoint.Commitment
-	if inconsistent {
-		logs.Info.Printf("Checkpoints fetched from providers have been verified, the commitment: %s, current height %d, hash %s", c, height, hash)
-	} else {
-		logs.Info.Printf("Checkpoints fetched from providers are consistent, the commitment: %s, current height %d, hash %s", c, height, hash)
-	}
+	logs.Info.Printf("Checkpoints fetched from providers are all consistent: commitment=%s, height=%d, hash=%s", c, height, hash)
 
 	return nil
 }

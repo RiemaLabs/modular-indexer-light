@@ -65,27 +65,21 @@ func (a *Account) Type() uint16 {
 // IsOwnAccount checks if current account is an own account, i.e. of type generated, random or watching.
 func (a *Account) IsOwnAccount() bool {
 	switch a.accountType {
-	case AccountTypeSEP0005:
+	case AccountTypeSEP0005, AccountTypeRandom, AccountTypeWatching:
 		return true
-	case AccountTypeRandom:
-		return true
-	case AccountTypeWatching:
-		return true
+	default:
+		return false
 	}
-
-	return false
 }
 
 // HasPrivateKey checks true if current account holds a private key.
 func (a *Account) HasPrivateKey() bool {
 	switch a.accountType {
-	case AccountTypeSEP0005:
+	case AccountTypeSEP0005, AccountTypeRandom:
 		return true
-	case AccountTypeRandom:
-		return true
+	default:
+		return false
 	}
-
-	return false
 }
 
 // SetDescription sets description on account. If give description string is not valid a descriptive error is returned.

@@ -17,7 +17,7 @@ func (a ByNewSatpoint) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 type NewLocation struct {
 	SentToCoinbase bool
-	TxOut          wire.TxOut
+	TxOut          *wire.TxOut
 	NewSatPoint    string
 	Flotsam
 }
@@ -39,11 +39,23 @@ type InscriptionID struct {
 	Index int
 }
 
-func InsFromStr(in string) InscriptionID {
-	arr := strings.Split(in, "i")
-	index, _ := strconv.ParseInt(arr[1], 10, 32)
+func NewInscriptionID(raw string) InscriptionID {
+	txID, indexRaw, _ := strings.Cut(raw, "i")
+	index, _ := strconv.ParseInt(indexRaw, 10, 32)
 	return InscriptionID{
-		TxID:  arr[0],
+		TxID:  txID,
 		Index: int(index),
 	}
+}
+
+func FromRawSatpoint(rawSatpoint string) (txID string, index, offset uint64) {
+	raws := strings.SplitN(rawSatpoint, ":", 3)
+	txID = raws[0]
+	if len(raws) >= 2 {
+		index, _ = strconv.ParseUint(raws[1], 10, 64)
+	}
+	if len(raws) >= 3 {
+		offset, _ = strconv.ParseUint(raws[2], 10, 64)
+	}
+	return
 }

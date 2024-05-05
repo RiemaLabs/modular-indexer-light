@@ -179,35 +179,31 @@ func (a *App) runSyncForever() {
 
 		currentHeight, err := btcutl.BTC.GetLatestBlockHeight(context.Background())
 		if err != nil {
-			logs.Error.Printf("failed to GetLatestBlockHeight in syncCommitteeIndexers: %v", err)
+			logs.Error.Printf("Failed to get latest block height: %v", err)
 			continue
 		}
-		hash, err := btcutl.BTC.GetBlockHash(context.Background(), currentHeight)
+		currentHash, err := btcutl.BTC.GetBlockHash(context.Background(), currentHeight)
 		if err != nil {
-			logs.Error.Printf("failed to get block hash in syncCommitteeIndexers: %v", err)
+			logs.Error.Printf("Failed to get block hash: %v", err)
 			continue
 		}
 
-		notSynced := false
-		firstCheckpoint := states.S.CurrentFirstCheckpoint()
-		if firstCheckpoint == nil {
-			notSynced = true
-		} else if strconv.Itoa(int(currentHeight)) != firstCheckpoint.Checkpoint.Height || hash != firstCheckpoint.Checkpoint.Hash {
-			notSynced = true
-		}
+		if first := states.S.CurrentFirstCheckpoint(); first == nil ||
+			first.Checkpoint.Height != strconv.Itoa(int(currentHeight)) ||
+			first.Checkpoint.Hash != currentHash {
+			// Checkpoints are not the latest, start syncing.
 
-		if notSynced {
-			if err := states.S.UpdateCheckpoints(currentHeight, hash); err != nil {
-				logs.Error.Printf("failed to UpdateCheckpoints in syncCommitteeIndexers: %v", err)
+			if err := states.S.UpdateCheckpoints(currentHeight, currentHash); err != nil {
+				logs.Error.Printf("Failed to update checkpoints: %v", err)
 				continue
 			}
 
 			if a.EnableDAReport {
-				curCheckpoint := states.S.CurrentFirstCheckpoint().Checkpoint
-				newCheckpoint := checkpoint.Checkpoint{
-					Commitment:   curCheckpoint.Commitment,
-					Hash:         curCheckpoint.Hash,
-					Height:       curCheckpoint.Height,
+				cp := states.S.CurrentFirstCheckpoint().Checkpoint
+				newCp := checkpoint.Checkpoint{
+					Commitment:   cp.Commitment,
+					Hash:         cp.Hash,
+					Height:       cp.Height,
 					MetaProtocol: configs.C.Verification.MetaProtocol,
 					Name:         configs.C.Report.Name,
 					Version:      version,
@@ -216,7 +212,7 @@ func (a *App) runSyncForever() {
 				time.Sleep(time.Duration(rand.Intn(40)+1) * time.Second)
 
 				if err := checkpoint.UploadCheckpointByDA(
-					&newCheckpoint,
+					&newCp,
 					configs.C.Report.PrivateKey,
 					configs.C.Report.GasCoupon,
 					configs.C.Report.NamespaceID,
@@ -225,12 +221,12 @@ func (a *App) runSyncForever() {
 				); err != nil {
 					logs.Error.Printf("Unable to upload the checkpoint via DA: %v", err)
 				} else {
-					logs.Info.Printf("Checkpoint successfully uploaded via DA at height: %s", newCheckpoint.Height)
+					logs.Info.Printf("Checkpoint successfully uploaded via DA at height: %s", newCp.Height)
 				}
 			}
 		}
 
-		logs.Info.Printf("Listening for new Bitcoin block, current height: %d", states.S.CurrentHeight())
+		logs.Info.Printf("Listening for new Bitcoin block: height=%d", states.S.CurrentHeight())
 	}
 }
 
