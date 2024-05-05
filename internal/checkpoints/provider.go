@@ -61,7 +61,7 @@ func GetCheckpoints(ctx context.Context, providers []CheckpointProvider, height 
 	return ret, errors.Join(retErrs...)
 }
 
-func DenyCheckpoint(path string, correct, fraud *configs.CheckpointExport) {
+func Deny(path string, correct, fraud *configs.CheckpointExport) {
 	h, _ := strconv.ParseUint(correct.Checkpoint.Height, 10, 64)
 	b := configs.DenyList{
 		Evidence: &configs.Evidence{
@@ -84,20 +84,15 @@ func DenyCheckpoint(path string, correct, fraud *configs.CheckpointExport) {
 	}
 }
 
-func CheckpointsInconsistent(checkpoints []*configs.CheckpointExport) bool {
+func Inconsistent(checkpoints []*configs.CheckpointExport) bool {
 	for i := 0; i < len(checkpoints)-1; i++ {
-		if !CheckPointEqual(checkpoints[i].Checkpoint, checkpoints[i+1].Checkpoint) {
+		if !Equal(checkpoints[i].Checkpoint, checkpoints[i+1].Checkpoint) {
 			return true
 		}
 	}
 	return false
 }
 
-func CheckPointEqual(a, b *checkpoint.Checkpoint) bool {
-	if a.Commitment != b.Commitment ||
-		a.Hash != b.Hash ||
-		a.Height != b.Height {
-		return false
-	}
-	return true
+func Equal(a, b *checkpoint.Checkpoint) bool {
+	return a.Commitment == b.Commitment && a.Hash == b.Hash && a.Height == b.Height
 }

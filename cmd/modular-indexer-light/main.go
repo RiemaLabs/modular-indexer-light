@@ -103,13 +103,13 @@ func (a *App) Run() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	checkpoints, err := checkpoints.GetCheckpoints(ctx, providers, lastBlockHeight, lastBlockHash)
+	cps, err := checkpoints.GetCheckpoints(ctx, providers, lastBlockHeight, lastBlockHash)
 	if err != nil {
 		logs.Error.Fatalf("Failed to get checkpoints: height=%d, hash=%s, err=%v", lastBlockHeight, lastBlockHash, err)
 	}
 
 	// TODO: Historical verification.
-	if inconsistent := checkpoints.CheckpointsInconsistent(checkpoints); inconsistent {
+	if inconsistent := checkpoints.Inconsistent(cps); inconsistent {
 		logs.Error.Fatalf("inconsistent checkpoints detected at height %q, historical verification is not supported but will be released soon :'(", lastBlockHeight)
 	}
 	logs.Info.Println("Latest state successfully synced!")
@@ -117,7 +117,7 @@ func (a *App) Run() {
 	states.Init(
 		a.DenyListPath,
 		providers,
-		checkpoints[0],
+		cps[0],
 		configs.C.Verification.MinimalCheckpoint,
 		2*time.Minute,
 	)
