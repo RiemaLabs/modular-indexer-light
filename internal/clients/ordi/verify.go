@@ -1,4 +1,4 @@
-package transfer
+package ordi
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/sirupsen/logrus"
 
-	client "github.com/RiemaLabs/modular-indexer-light/internal/clients/ord/getter"
+	"github.com/RiemaLabs/modular-indexer-light/internal/clients/btcutl"
 )
 
 // TODO: High.
@@ -79,7 +79,7 @@ func VerifyOrdTransfer(transfers ByNewSatpoint, blockHeight uint) (bool, error) 
 	{
 		var err error
 		for i := 0; i < 50; i++ {
-			if hash, err = client.Ord.GetBlockHash(context.Background(), blockHeight); err == nil {
+			if hash, err = btcutl.BTC.GetBlockHash(context.Background(), blockHeight); err == nil {
 				break
 			}
 			time.Sleep(10 * time.Millisecond)
@@ -92,7 +92,7 @@ func VerifyOrdTransfer(transfers ByNewSatpoint, blockHeight uint) (bool, error) 
 	{
 		var err error
 		for i := 0; i < 50; i++ {
-			if blockBody, err = client.Ord.GetBlockDetail(context.Background(), hash); err == nil {
+			if blockBody, err = btcutl.BTC.GetBlockDetail(context.Background(), hash); err == nil {
 				break
 			}
 			time.Sleep(10 * time.Millisecond)
@@ -141,7 +141,7 @@ func VerifyEnvelop(transfers []getter.OrdTransfer, tx btcjson.TxRawResult) (bool
 				satOff, _ := strconv.ParseInt(arr[2], 10, 64)
 				offset := totalInputValue + uint64(satOff)
 				// find old inscription content && content type
-				beforeIns, err := client.Ord.GetAllInscriptions(context.Background(), arr[0])
+				beforeIns, err := btcutl.BTC.GetAllInscriptions(context.Background(), arr[0])
 				if err != nil {
 					return false, err
 				}
@@ -159,7 +159,7 @@ func VerifyEnvelop(transfers []getter.OrdTransfer, tx btcjson.TxRawResult) (bool
 
 		// parse new Inscriptions
 		offset := totalInputValue
-		pOut, err := client.Ord.GetOutput(context.Background(), txIn.PreviousOutPoint.Hash.String(), int(txIn.PreviousOutPoint.Index))
+		pOut, err := btcutl.BTC.GetOutput(context.Background(), txIn.PreviousOutPoint.Hash.String(), int(txIn.PreviousOutPoint.Index))
 		if err != nil {
 			return false, err
 		}

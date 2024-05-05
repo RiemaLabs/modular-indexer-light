@@ -1,4 +1,4 @@
-package getter
+package btcutl
 
 import (
 	"bytes"
@@ -37,7 +37,7 @@ func (r *Response[T]) Err() error {
 
 type Client struct{ cl jsonrpc.Client }
 
-var Ord *Client
+var BTC *Client
 
 func New(bitcoinRPC string) (*Client, error) {
 	cl, err := jsonrpc.New(bitcoinRPC)
@@ -52,43 +52,43 @@ func Init(bitcoinRPC string) {
 	if err != nil {
 		logs.Error.Fatalln("Failed to initialize ord client:", err)
 	}
-	Ord = cl
+	BTC = cl
 }
 
-func (r *Client) GetLatestBlockHeight(ctx context.Context) (uint, error) {
+func (c *Client) GetLatestBlockHeight(ctx context.Context) (uint, error) {
 	var rsp Response[uint]
-	if err := r.cl.Call(ctx, "getblockcount", nil, &rsp); err != nil {
+	if err := c.cl.Call(ctx, "getblockcount", nil, &rsp); err != nil {
 		return 0, fmt.Errorf("get latest block height error: err=%v", err)
 	}
 	return rsp.Result, nil
 }
 
-func (r *Client) GetBlockHash(ctx context.Context, height uint) (string, error) {
+func (c *Client) GetBlockHash(ctx context.Context, height uint) (string, error) {
 	var rsp Response[string]
-	if err := r.cl.Call(ctx, "getblockhash", []uint{height}, &rsp); err != nil {
+	if err := c.cl.Call(ctx, "getblockhash", []uint{height}, &rsp); err != nil {
 		return "", fmt.Errorf("get block hash error: height=%d, err=%v", height, err)
 	}
 	return rsp.Result, nil
 }
 
-func (r *Client) GetOrdTransfers(ctx context.Context, blockHeight uint) error {
+func (c *Client) GetOrdTransfers(ctx context.Context, blockHeight uint) error {
 	// TODO: High. Use satpoint mapping to get the transfer from past transactions.
 	_ = ctx
 	_ = blockHeight
 	return errors.New("not implemented")
 }
 
-func (r *Client) GetRawTransaction(ctx context.Context, txID string) (*btcjson.TxRawResult, error) {
+func (c *Client) GetRawTransaction(ctx context.Context, txID string) (*btcjson.TxRawResult, error) {
 	var rsp Response[*btcjson.TxRawResult]
-	if err := r.cl.Call(ctx, "getrawtransaction", []interface{}{txID, true}, &rsp); err != nil {
+	if err := c.cl.Call(ctx, "getrawtransaction", []interface{}{txID, true}, &rsp); err != nil {
 		return nil, fmt.Errorf("get raw transaction error: txID=%s, err=%v", txID, err)
 	}
 	return rsp.Result, nil
 }
 
-func (r *Client) GetOutput(ctx context.Context, txID string, index int) (*btcjson.Vout, error) {
+func (c *Client) GetOutput(ctx context.Context, txID string, index int) (*btcjson.Vout, error) {
 	var rsp Response[*btcjson.TxRawResult]
-	if err := r.cl.Call(ctx, "getrawtransaction", []interface{}{txID, true}, &rsp); err != nil {
+	if err := c.cl.Call(ctx, "getrawtransaction", []interface{}{txID, true}, &rsp); err != nil {
 		return nil, fmt.Errorf("get raw transaction error: txID=%s, index=%d, err=%v", txID, index, err)
 	}
 	if l := len(rsp.Result.Vout); l < index+1 {
@@ -97,24 +97,24 @@ func (r *Client) GetOutput(ctx context.Context, txID string, index int) (*btcjso
 	return &rsp.Result.Vout[index], nil
 }
 
-func (r *Client) GetBlock(ctx context.Context, hash string) (*btcjson.GetBlockVerboseResult, error) {
+func (c *Client) GetBlock(ctx context.Context, hash string) (*btcjson.GetBlockVerboseResult, error) {
 	var rsp Response[*btcjson.GetBlockVerboseResult]
-	if err := r.cl.Call(ctx, "getblock", []interface{}{hash, 1}, &rsp); err != nil {
+	if err := c.cl.Call(ctx, "getblock", []interface{}{hash, 1}, &rsp); err != nil {
 		return nil, fmt.Errorf("get block error: hash=%s, err=%v", hash, err)
 	}
 	return rsp.Result, nil
 }
 
-func (r *Client) GetBlockDetail(ctx context.Context, hash string) (*btcjson.GetBlockVerboseTxResult, error) {
+func (c *Client) GetBlockDetail(ctx context.Context, hash string) (*btcjson.GetBlockVerboseTxResult, error) {
 	var rsp Response[*btcjson.GetBlockVerboseTxResult]
-	if err := r.cl.Call(ctx, "getblock", []interface{}{hash, 2}, &rsp); err != nil {
+	if err := c.cl.Call(ctx, "getblock", []interface{}{hash, 2}, &rsp); err != nil {
 		return nil, fmt.Errorf("get block detail error: hash=%s, err=%v", hash, err)
 	}
 	return rsp.Result, nil
 }
 
-func (r *Client) GetAllInscriptions(ctx context.Context, txID string) (map[string]*parser.TransactionInscription, error) {
-	rawTx, err := r.GetRawTransaction(ctx, txID)
+func (c *Client) GetAllInscriptions(ctx context.Context, txID string) (map[string]*parser.TransactionInscription, error) {
+	rawTx, err := c.GetRawTransaction(ctx, txID)
 	if err != nil {
 		return nil, err
 	}
