@@ -14,10 +14,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
+	"github.com/RiemaLabs/modular-indexer-light/internal/checkpoints"
 	"github.com/RiemaLabs/modular-indexer-light/internal/clients/btcutl"
 	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
-	"github.com/RiemaLabs/modular-indexer-light/internal/provider"
 	"github.com/RiemaLabs/modular-indexer-light/internal/services"
 	"github.com/RiemaLabs/modular-indexer-light/internal/states"
 )
@@ -82,17 +82,17 @@ func (a *App) Run() {
 		logs.Error.Fatalf("Failed to get last block hash: height=%d, err=%v", lastBlockHeight, err)
 	}
 
-	var providers []provider.CheckpointProvider
+	var providers []checkpoints.CheckpointProvider
 	if raw := configs.C.CommitteeIndexers.Raw; a.EnableTest && len(raw) > 0 {
 		for _, sourceRaw := range raw {
 			providers = append(providers, sourceRaw)
 		}
 	} else {
 		for _, sourceS3 := range configs.C.CommitteeIndexers.S3 {
-			providers = append(providers, provider.NewProviderS3(&sourceS3, configs.C.Verification.MetaProtocol))
+			providers = append(providers, checkpoints.NewProviderS3(&sourceS3, configs.C.Verification.MetaProtocol))
 		}
 		for _, sourceDA := range configs.C.CommitteeIndexers.DA {
-			providers = append(providers, provider.NewProviderDA(&sourceDA, configs.C.Verification.MetaProtocol))
+			providers = append(providers, checkpoints.NewProviderDA(&sourceDA, configs.C.Verification.MetaProtocol))
 		}
 	}
 	actual := len(providers)
@@ -103,13 +103,13 @@ func (a *App) Run() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	checkpoints, err := provider.GetCheckpoints(ctx, providers, lastBlockHeight, lastBlockHash)
+	checkpoints, err := checkpoints.GetCheckpoints(ctx, providers, lastBlockHeight, lastBlockHash)
 	if err != nil {
 		logs.Error.Fatalf("Failed to get checkpoints: height=%d, hash=%s, err=%v", lastBlockHeight, lastBlockHash, err)
 	}
 
 	// TODO: Historical verification.
-	if inconsistent := provider.CheckpointsInconsistent(checkpoints); inconsistent {
+	if inconsistent := checkpoints.CheckpointsInconsistent(checkpoints); inconsistent {
 		logs.Error.Fatalf("inconsistent checkpoints detected at height %q, historical verification is not supported but will be released soon :'(", lastBlockHeight)
 	}
 	logs.Info.Println("Latest state successfully synced!")

@@ -9,8 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-
-	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
 )
 
 const maxLen = 65535
@@ -261,7 +259,7 @@ func (w *Wallet) writeToBuffer() []byte {
 	data := make([]byte, buf.Len())
 	copy(data, buf.Bytes())
 
-	mac := hmac.New(sha1.New, []byte(constant.SHA1Checksum))
+	mac := hmac.New(sha1.New, []byte(SHA1Checksum))
 	_, err := mac.Write(data)
 	if err != nil {
 		panic(err)
@@ -276,7 +274,7 @@ func (w *Wallet) writeToBuffer() []byte {
 func (w *Wallet) readFromBuffer(buf []byte) error {
 
 	// verify checksum
-	mac := hmac.New(sha1.New, []byte(constant.SHA1Checksum))
+	mac := hmac.New(sha1.New, []byte(SHA1Checksum))
 
 	if len(buf) < mac.Size() {
 		return errors.New("reader: checksum failed")

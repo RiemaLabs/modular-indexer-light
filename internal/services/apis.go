@@ -10,7 +10,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
-	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/states"
 )
@@ -35,7 +34,7 @@ func StartService(enableDebug bool, addr string) {
 		c.JSON(http.StatusOK, struct {
 			State fmt.Stringer `json:"state"`
 		}{
-			State: constant.ApiStatus(states.S.State.Load()),
+			State: states.Status(states.S.State.Load()),
 		})
 	})
 	serv := r.Group("v1")

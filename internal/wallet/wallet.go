@@ -9,7 +9,6 @@ import (
 	sdk "github.com/RiemaLabs/nubit-da-sdk/utils"
 	"github.com/tyler-smith/go-bip39"
 
-	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/utils"
 )
@@ -145,10 +144,10 @@ func (w *Wallet) generateBip39Seed(key []byte, words []string, mnemonicPassword 
 			panic("calculation error")
 		}
 	}
-	if len(seed) != constant.Bip39SeedLen {
+	if len(seed) != Bip39SeedLen {
 		panic("Unexpected length of seed")
 	}
-	w.bip39SeedLen = constant.Bip39SeedLen
+	w.bip39SeedLen = Bip39SeedLen
 	w.encryptBip39Seed(seed, key)
 	return true
 }
@@ -172,7 +171,7 @@ func (w *Wallet) encryptBip39Seed(seed, key []byte) {
 }
 
 func (w *Wallet) decryptBip39Seed(key []byte) []byte {
-	return decryptWithCheckSum(w.bip39Seed, constant.Bip39SeedLen, key)
+	return decryptWithCheckSum(w.bip39Seed, Bip39SeedLen, key)
 }
 
 func (w *Wallet) encryptMasterSeed(seed, key []byte) {
@@ -180,7 +179,7 @@ func (w *Wallet) encryptMasterSeed(seed, key []byte) {
 }
 
 func (w *Wallet) decryptMasterSeed(key []byte) []byte {
-	return decryptWithCheckSum(w.masterSeed, constant.MasterSeedLen, key)
+	return decryptWithCheckSum(w.masterSeed, MasterSeedLen, key)
 }
 
 // Checks if given wallet password is valid.
@@ -253,10 +252,10 @@ func (w *Wallet) AddPirKeyAccount(PrivateKey string, walletPassword *string) *Ac
 	}
 	a := w.newAccount()
 	a.privateKey = sdk.PrivateStrToByte(PrivateKey)
-	a.accountType = constant.AccountTypePrivateKey
+	a.accountType = AccountTypePrivateKey
 	a.publicKey = utils.PrivateStrToBtcAddress(PrivateKey)
 	a.active = true
-	a.ChainType = constant.BTC
+	a.ChainType = BTC
 	return a
 }
 
@@ -287,7 +286,7 @@ func (w *Wallet) AddWatchingAccount(pubkey string) *Account {
 		return nil
 	}
 	a = w.newAccount()
-	a.accountType = constant.AccountTypeWatching
+	a.accountType = AccountTypeWatching
 	a.publicKey = pubkey
 	a.active = true
 	return a
@@ -306,7 +305,7 @@ func (w *Wallet) AddAddressBookAccount(pubkey string) *Account {
 
 	a = w.newAccount()
 
-	a.accountType = constant.AccountTypeAddressBook
+	a.accountType = AccountTypeAddressBook
 	a.publicKey = pubkey
 
 	a.active = true
