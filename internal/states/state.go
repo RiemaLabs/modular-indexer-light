@@ -16,7 +16,7 @@ import (
 	"github.com/ethereum/go-verkle"
 
 	"github.com/RiemaLabs/modular-indexer-light/internal/clients/committee"
-	"github.com/RiemaLabs/modular-indexer-light/internal/clients/ord/transfer"
+	"github.com/RiemaLabs/modular-indexer-light/internal/clients/ordi"
 	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
@@ -180,7 +180,7 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 				}
 
 				curHeight, _ := strconv.ParseInt(ck.Height, 10, 64)
-				ok, err := transfer.VerifyOrdTransfer(ordTransfers, uint(curHeight))
+				ok, err := ordi.VerifyOrdTransfer(ordTransfers, uint(curHeight))
 				if err != nil || !ok {
 					logs.Error.Printf("Ordinals transfers verification error: err=%v, ok=%v", err, ok)
 					return

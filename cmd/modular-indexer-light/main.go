@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
-	"github.com/RiemaLabs/modular-indexer-light/internal/clients/ord/getter"
+	"github.com/RiemaLabs/modular-indexer-light/internal/clients/btcutl"
 	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/provider"
@@ -68,16 +68,16 @@ func (a *App) Run() {
 	}
 
 	a.initDaReport()
-	getter.Init(configs.C.Verification.BitcoinRPC)
+	btcutl.Init(configs.C.Verification.BitcoinRPC)
 
 	logs.Info.Println("Syncing the latest state from committee indexers, please wait...")
 
-	currentBlockHeight, err := getter.Ord.GetLatestBlockHeight(context.Background())
+	currentBlockHeight, err := btcutl.BTC.GetLatestBlockHeight(context.Background())
 	if err != nil {
 		logs.Error.Fatalf("Failed to get latest block height: %v", err)
 	}
 	lastBlockHeight := currentBlockHeight - 1
-	lastBlockHash, err := getter.Ord.GetBlockHash(context.Background(), lastBlockHeight)
+	lastBlockHash, err := btcutl.BTC.GetBlockHash(context.Background(), lastBlockHeight)
 	if err != nil {
 		logs.Error.Fatalf("Failed to get last block hash: height=%d, err=%v", lastBlockHeight, err)
 	}
@@ -177,12 +177,12 @@ func (a *App) runSyncForever() {
 		time.Sleep(10 * time.Second)
 		logs.Info.Println("Syncing latest state...")
 
-		currentHeight, err := getter.Ord.GetLatestBlockHeight(context.Background())
+		currentHeight, err := btcutl.BTC.GetLatestBlockHeight(context.Background())
 		if err != nil {
 			logs.Error.Printf("failed to GetLatestBlockHeight in syncCommitteeIndexers: %v", err)
 			continue
 		}
-		hash, err := getter.Ord.GetBlockHash(context.Background(), currentHeight)
+		hash, err := btcutl.BTC.GetBlockHash(context.Background(), currentHeight)
 		if err != nil {
 			logs.Error.Printf("failed to get block hash in syncCommitteeIndexers: %v", err)
 			continue

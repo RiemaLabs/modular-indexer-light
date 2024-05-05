@@ -1,12 +1,19 @@
-package transfer
+package ordi
 
 import (
 	"strconv"
 	"strings"
 
+	"github.com/RiemaLabs/modular-indexer-committee/ord/getter"
 	"github.com/balletcrypto/bitcoin-inscription-parser/parser"
 	"github.com/btcsuite/btcd/wire"
 )
+
+type ByNewSatpoint []getter.OrdTransfer
+
+func (a ByNewSatpoint) Len() int           { return len(a) }
+func (a ByNewSatpoint) Less(i, j int) bool { return a[i].NewSatpoint < a[j].NewSatpoint }
+func (a ByNewSatpoint) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 type NewLocation struct {
 	SentToCoinbase bool
@@ -23,17 +30,9 @@ type Flotsam struct {
 
 type ByOffset []Flotsam
 
-func (a ByOffset) Len() int {
-	return len(a)
-}
-
-func (a ByOffset) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
-}
-
-func (a ByOffset) Less(i, j int) bool {
-	return a[i].Offset < a[j].Offset
-}
+func (a ByOffset) Len() int           { return len(a) }
+func (a ByOffset) Less(i, j int) bool { return a[i].Offset < a[j].Offset }
+func (a ByOffset) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 type InscriptionID struct {
 	TxID  string
