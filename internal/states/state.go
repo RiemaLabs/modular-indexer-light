@@ -127,14 +127,14 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 		var wg sync.WaitGroup
 		for commit, ck := range aggregates {
 			wg.Add(1)
-			go func(commit string, ck *checkpoint.Checkpoint) {
+			go func(checkpointCommit string, ck *checkpoint.Checkpoint) {
 				defer wg.Done()
 
 				stateProof, err := committee.New(context.Background(), ck.Name, ck.URL).LatestStateProof()
 				if err != nil {
 					logs.Error.Printf(
 						"Failed to get latest state proof from the committee indexer: commit=%s, name=%s, url=%s, err=%v",
-						commit,
+						checkpointCommit,
 						ck.Name,
 						ck.URL,
 						err,
@@ -144,7 +144,7 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 				if errMsg := stateProof.Error; errMsg != nil {
 					logs.Error.Printf(
 						"Latest state proof error from the committee indexer: commit=%s, name=%s, url=%s, err=%s",
-						commit,
+						checkpointCommit,
 						ck.Name,
 						ck.URL,
 						*errMsg,
@@ -159,7 +159,7 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 					if err != nil {
 						logs.Error.Printf(
 							"Invalid Ordinals transfer content: commit=%s, name=%s, url=%s, err=%v",
-							commit,
+							checkpointCommit,
 							ck.Name,
 							ck.URL,
 							err,
@@ -186,20 +186,19 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 					return
 				}
 
-				// Generate current checkpoint
 				preCheckpoint := s.lastCheckpoint
 				prePointByte, err := base64.StdEncoding.DecodeString(preCheckpoint.Checkpoint.Commitment)
 				if err != nil {
 					return
 				}
 				prePoint := new(verkle.Point)
-				err = prePoint.SetBytes(prePointByte)
-				if err != nil {
+				if err := prePoint.SetBytes(prePointByte); err != nil {
 					return
 				}
 
 				node, err := apis.GeneratePostRoot(prePoint, height, stateProof)
 				if err != nil {
+					logs.Error.Printf("generate post root error: %v", err)
 					return
 				}
 				if node == nil {
@@ -207,17 +206,20 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 				}
 
 				postBytes := node.Commit().Bytes()
-				currentCommit := base64.StdEncoding.EncodeToString(postBytes[:])
-
-				if currentCommit != commit {
+				calCommit := base64.StdEncoding.EncodeToString(postBytes[:])
+				if calCommit != checkpointCommit {
+					logs.Warn.Printf(
+						"inconsistent commits: calCommit=%s, checkpointCommit=%s",
+						calCommit,
+						checkpointCommit,
+					)
 					return
 				}
 
 				succCommits <- succCommit{
-					commitment:  commit,
+					commitment:  checkpointCommit,
 					transferLen: len(ordTransfers),
 				}
-
 			}(commit, ck.Checkpoint)
 		}
 		wg.Wait()

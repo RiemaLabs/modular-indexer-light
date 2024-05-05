@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/RiemaLabs/modular-indexer-committee/apis"
 
@@ -25,7 +26,7 @@ type fromFile string
 
 func (f fromFile) LatestStateProof() (*apis.Brc20VerifiableLatestStateProofResponse, error) {
 	var ret apis.Brc20VerifiableLatestStateProofResponse
-	data, err := os.ReadFile(string(f))
+	data, err := os.ReadFile(strings.TrimPrefix(string(f), "/"))
 	if err != nil {
 		return nil, err
 	}

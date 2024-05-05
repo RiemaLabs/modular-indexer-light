@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/RiemaLabs/modular-indexer-committee/ord/getter"
 	"github.com/balletcrypto/bitcoin-inscription-parser/parser"
@@ -74,13 +75,31 @@ func VerifyOrdTransfer(transfers ByNewSatpoint, blockHeight uint) (bool, error) 
 	}
 	batch[strings.Split(transfers[f].NewSatpoint, ":")[0]] = transfers[f:n]
 
-	hash, err := client.Ord.GetBlockHash(context.Background(), blockHeight)
-	if err != nil {
-		return false, err
+	var hash string
+	{
+		var err error
+		for i := 0; i < 50; i++ {
+			if hash, err = client.Ord.GetBlockHash(context.Background(), blockHeight); err == nil {
+				break
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+		if err != nil {
+			return false, err
+		}
 	}
-	blockBody, err := client.Ord.GetBlockDetail(context.Background(), hash)
-	if err != nil {
-		return false, err
+	var blockBody *btcjson.GetBlockVerboseTxResult
+	{
+		var err error
+		for i := 0; i < 50; i++ {
+			if blockBody, err = client.Ord.GetBlockDetail(context.Background(), hash); err == nil {
+				break
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+		if err != nil || blockBody == nil {
+			return false, err
+		}
 	}
 
 	for _, tx := range blockBody.Tx {
