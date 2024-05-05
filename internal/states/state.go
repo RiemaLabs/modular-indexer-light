@@ -15,22 +15,42 @@ import (
 	"github.com/RiemaLabs/modular-indexer-committee/ord/getter"
 	"github.com/ethereum/go-verkle"
 
+	"github.com/RiemaLabs/modular-indexer-light/internal/checkpoints"
 	"github.com/RiemaLabs/modular-indexer-light/internal/clients/committee"
 	"github.com/RiemaLabs/modular-indexer-light/internal/clients/ordi"
 	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
-	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
-	"github.com/RiemaLabs/modular-indexer-light/internal/provider"
 )
 
 // TODO: Medium. Uniform the error report.
+
+type Status int
+
+const (
+	StatusActive Status = iota + 1
+	StatusSync
+	StatusVerify
+)
+
+func (s Status) String() string {
+	switch s {
+	case StatusActive:
+		return "ready"
+	case StatusSync:
+		return "syncing"
+	case StatusVerify:
+		return "verifying"
+	default:
+		return ""
+	}
+}
 
 type State struct {
 	State atomic.Int64
 
 	denyListPath string
 
-	providers []provider.CheckpointProvider
+	providers []checkpoints.CheckpointProvider
 
 	// The consistent check point at the current height - 1.
 	lastCheckpoint *configs.CheckpointExport
@@ -51,7 +71,7 @@ var S *State
 
 func New(
 	denyListPath string,
-	providers []provider.CheckpointProvider,
+	providers []checkpoints.CheckpointProvider,
 	lastCheckpoint *configs.CheckpointExport,
 	minimalCheckpoint int,
 	fetchTimeout time.Duration,
@@ -68,7 +88,7 @@ func New(
 
 func Init(
 	denyListPath string,
-	providers []provider.CheckpointProvider,
+	providers []checkpoints.CheckpointProvider,
 	lastCheckpoint *configs.CheckpointExport,
 	minimalCheckpoint int,
 	fetchTimeout time.Duration,
@@ -92,12 +112,12 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 	s.Lock()
 	defer s.Unlock()
 
-	s.State.Store(int64(constant.StatusSync))
+	s.State.Store(int64(StatusSync))
 
 	// Get checkpoints from the providers.
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 	defer cancel()
-	checkpoints, err := provider.GetCheckpoints(ctx, s.providers, height, hash)
+	checkpoints, err := checkpoints.GetCheckpoints(ctx, s.providers, height, hash)
 	if err != nil {
 		return err
 	}
@@ -105,7 +125,7 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 		return errors.New("not enough checkpoints fetched")
 	}
 
-	inconsistent := provider.CheckpointsInconsistent(checkpoints)
+	inconsistent := checkpoints.CheckpointsInconsistent(checkpoints)
 	if inconsistent {
 		logs.Warn.Printf("Inconsistent checkpoints: height=%d, hash=%s, starting verification and reconstruction...", height, hash)
 
@@ -246,17 +266,17 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 		trustCommitment := succVerify[champion].commitment
 
 		s.lastCheckpoint, s.currentCheckpoints = s.currentCheckpoints[0], []*configs.CheckpointExport{aggregates[trustCommitment]}
-		s.State.Store(int64(constant.StateActive))
+		s.State.Store(int64(StatusActive))
 
 		// Deny untrusted providers.
 		for _, ck := range checkpoints {
 			if !slices.Contains(seemRight, ck.Checkpoint.Commitment) && s.denyListPath != "" {
-				provider.DenyCheckpoint(s.denyListPath, aggregates[trustCommitment], ck)
+				checkpoints.DenyCheckpoint(s.denyListPath, aggregates[trustCommitment], ck)
 			}
 		}
 	} else {
 		s.lastCheckpoint, s.currentCheckpoints = s.currentCheckpoints[0], checkpoints
-		s.State.Store(int64(constant.StateActive))
+		s.State.Store(int64(StatusActive))
 	}
 
 	c := s.currentCheckpoints[0].Checkpoint.Commitment

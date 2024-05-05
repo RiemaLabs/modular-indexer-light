@@ -7,14 +7,13 @@ import (
 	sdk "github.com/RiemaLabs/nubit-da-sdk/utils"
 	"github.com/btcsuite/btcd/btcec/v2"
 
-	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
 	"github.com/RiemaLabs/modular-indexer-light/internal/utils"
 )
 
 func (a *Account) init(wallet *Wallet) {
 	a.wallet = wallet
-	a.ChainType = constant.BTC
-	a.accountType = constant.AccountTypeUndefined
+	a.ChainType = BTC
+	a.accountType = AccountTypeUndefined
 	a.desc = ""
 	a.publicKey = ""
 	a.privateKey = nil
@@ -31,7 +30,7 @@ func (a *Account) GenerateAddress(seed []byte) error {
 func (a *Account) generateBip32Address(seed []byte) error {
 	w := a.wallet
 	// example: m/Purpose'/CoinType'/Account'/Change/AddressIndex
-	path := fmt.Sprintf("m/%d'/%d'/%d'/%d/%d", constant.Purpose, constant.BTC, constant.Zero, constant.Zero, uint32(w.sep0005AccountCount))
+	path := fmt.Sprintf("m/%d'/%d'/%d'/%d/%d", Purpose, BTC, Zero, Zero, uint32(w.sep0005AccountCount))
 	key, err := newKeyBySeed(seed, Path(path))
 	if err != nil {
 		return err
@@ -43,7 +42,7 @@ func (a *Account) generateBip32Address(seed []byte) error {
 	}
 
 	a.privateKey = sdk.FromECDSA(privateKey.ToECDSA())
-	a.accountType = constant.AccountTypeSEP0005
+	a.accountType = AccountTypeSEP0005
 	a.sep0005DerivationPath = path
 	a.generatePubAddr()
 	w.sep0005AccountCount++
@@ -53,7 +52,7 @@ func (a *Account) generateBip32Address(seed []byte) error {
 
 func (a *Account) generatePubAddr() {
 	switch a.ChainType {
-	case constant.BTC:
+	case BTC:
 		a.publicKey = utils.KeyToBtcAddress(a.Key)
 	}
 }
@@ -66,11 +65,11 @@ func (a *Account) Type() uint16 {
 // IsOwnAccount checks if current account is an own account, i.e. of type generated, random or watching.
 func (a *Account) IsOwnAccount() bool {
 	switch a.accountType {
-	case constant.AccountTypeSEP0005:
+	case AccountTypeSEP0005:
 		return true
-	case constant.AccountTypeRandom:
+	case AccountTypeRandom:
 		return true
-	case constant.AccountTypeWatching:
+	case AccountTypeWatching:
 		return true
 	}
 
@@ -80,9 +79,9 @@ func (a *Account) IsOwnAccount() bool {
 // HasPrivateKey checks true if current account holds a private key.
 func (a *Account) HasPrivateKey() bool {
 	switch a.accountType {
-	case constant.AccountTypeSEP0005:
+	case AccountTypeSEP0005:
 		return true
-	case constant.AccountTypeRandom:
+	case AccountTypeRandom:
 		return true
 	}
 
@@ -117,12 +116,12 @@ func (a *Account) PrivateKey(walletPassword *string) *ecdsa.PrivateKey {
 		return nil
 	}
 	switch a.accountType {
-	case constant.AccountTypeSEP0005:
+	case AccountTypeSEP0005:
 
 		pri, _ := btcec.PrivKeyFromBytes(a.privateKey)
 		prv := pri.ToECDSA()
 		return prv
-	case constant.AccountTypeRandom:
+	case AccountTypeRandom:
 	}
 	return nil
 }

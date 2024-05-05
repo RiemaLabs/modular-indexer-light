@@ -12,13 +12,11 @@ import (
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
 	"github.com/btcsuite/btcd/chaincfg"
 	"golang.org/x/crypto/pbkdf2"
-
-	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
 )
 
 // Create AES key from given password string
 func deriveAesKey(password *string) (key []byte) {
-	return pbkdf2.Key([]byte(*password), []byte(constant.AesSalt), 4096, 32, sha1.New)
+	return pbkdf2.Key([]byte(*password), []byte(AesSalt), 4096, 32, sha1.New)
 }
 
 // AES encrypts data with given key.
@@ -92,7 +90,7 @@ func aesDecrypt(data, key []byte) {
 // Adds a SHA1 checksum to data and encrypts it with given key.
 func encryptWithCheckSum(data, key []byte) []byte {
 	// build checksum using a hash
-	mac := hmac.New(sha1.New, []byte(constant.SHA1Checksum))
+	mac := hmac.New(sha1.New, []byte(SHA1Checksum))
 	_, err := mac.Write(data)
 	if err != nil {
 		panic(err)
@@ -120,7 +118,7 @@ func decryptWithCheckSum(encData []byte, resLen int, key []byte) []byte {
 	}
 
 	// check checksum using a hash
-	mac := hmac.New(sha1.New, []byte(constant.SHA1Checksum))
+	mac := hmac.New(sha1.New, []byte(SHA1Checksum))
 	_, err := mac.Write(buf[:resLen])
 	if err != nil {
 		panic(err)
@@ -207,7 +205,7 @@ func PathNumber(str string) uint32 {
 	num64, _ := strconv.ParseInt(strings.TrimSuffix(str, "'"), 10, 64)
 	num := uint32(num64)
 	if strings.HasSuffix(str, "'") {
-		num += constant.ZeroQuote
+		num += ZeroQuote
 	}
 	return num
 }

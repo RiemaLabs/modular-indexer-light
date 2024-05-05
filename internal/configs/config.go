@@ -12,11 +12,12 @@ import (
 
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
 
-	"github.com/RiemaLabs/modular-indexer-light/internal/constant"
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/utils"
 	"github.com/RiemaLabs/modular-indexer-light/internal/wallet"
 )
+
+const DefaultPassword string = "light-indexer"
 
 type (
 	Config struct {
@@ -149,7 +150,7 @@ func (r *Report) LoadPrivate(path string) error {
 	}
 
 	logs.Info.Printf("Failed to read the private key from the local directory, generating a new one...")
-	pwd := constant.DefaultPassword
+	pwd := DefaultPassword
 
 	wall := wallet.NewWallet(&pwd)
 	if !wall.GenerateBip39Seed(&pwd, &pwd) {
