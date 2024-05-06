@@ -89,7 +89,9 @@ func (c *client) Call(ctx context.Context, method string, params, out any) error
 		)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Request-ID", in.ReqID) // for tracing
+	if reqID := in.ReqID; reqID != "" {
+		req.Header.Set("X-Request-Id", in.ReqID)
+	}
 
 	rsp, err := c.cl.Do(req)
 	if err != nil {

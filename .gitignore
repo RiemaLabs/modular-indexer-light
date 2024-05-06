@@ -38,3 +38,9 @@ __debug*
 # Binary
 /modular-indexer-light
 private
+
+# WebAssembly distribution
+node_modules/
+*.wasm
+*.js
+*.d.ts
