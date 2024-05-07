@@ -28,26 +28,26 @@ import (
 type Status int
 
 const (
-	StatusActive Status = iota + 1
-	StatusSync
-	StatusVerify
+	StatusVerified Status = iota + 1
+	StatusVerifying
+	StatusUnverified
 )
 
 func (s Status) String() string {
 	switch s {
-	case StatusActive:
-		return "ready"
-	case StatusSync:
-		return "syncing"
-	case StatusVerify:
+	case StatusVerified:
+		return "verified"
+	case StatusVerifying:
 		return "verifying"
+	case StatusUnverified:
+		return "unverified"
 	default:
 		return ""
 	}
 }
 
 type State struct {
-	State atomic.Int64
+	Status atomic.Int64
 
 	denyListPath string
 
@@ -77,14 +77,15 @@ func New(
 	minimalCheckpoint int,
 	fetchTimeout time.Duration,
 ) *State {
-	return &State{
-		denyListPath:       denyListPath,
-		providers:          providers,
-		lastCheckpoint:     lastCheckpoint,
-		currentCheckpoints: make([]*configs.CheckpointExport, len(providers)),
-		minimalCheckpoint:  minimalCheckpoint,
-		timeout:            fetchTimeout,
+	s := &State{
+		denyListPath:      denyListPath,
+		providers:         providers,
+		lastCheckpoint:    lastCheckpoint,
+		minimalCheckpoint: minimalCheckpoint,
+		timeout:           fetchTimeout,
 	}
+	s.Status.Store(int64(StatusVerifying))
+	return s
 }
 
 func Init(
@@ -113,7 +114,7 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 	s.Lock()
 	defer s.Unlock()
 
-	s.State.Store(int64(StatusSync))
+	s.Status.Store(int64(StatusVerifying))
 
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 	defer cancel()
@@ -127,6 +128,7 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 
 	if checkpoints.Inconsistent(cps) {
 		logs.Warn.Printf("Inconsistent checkpoints at: height=%d, hash=%s", height, hash)
+		s.Status.Store(int64(StatusUnverified))
 
 		aggregates := make(map[string]*configs.CheckpointExport)
 		for _, ck := range cps {
@@ -269,8 +271,9 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 		}
 		trustCommitment := succVerify[champion].commitment
 
-		s.lastCheckpoint, s.currentCheckpoints = s.currentCheckpoints[0], []*configs.CheckpointExport{aggregates[trustCommitment]}
-		s.State.Store(int64(StatusActive))
+		s.currentCheckpoints = []*configs.CheckpointExport{aggregates[trustCommitment]}
+		s.lastCheckpoint = s.currentCheckpoints[0]
+		s.Status.Store(int64(StatusVerified))
 
 		for _, ck := range cps {
 			if !slices.Contains(seemRight, ck.Checkpoint.Commitment) && s.denyListPath != "" {
@@ -283,8 +286,9 @@ func (s *State) UpdateCheckpoints(height uint, hash string) error {
 		return nil
 	}
 
-	s.lastCheckpoint, s.currentCheckpoints = s.currentCheckpoints[0], cps
-	s.State.Store(int64(StatusActive))
+	s.currentCheckpoints = cps
+	s.lastCheckpoint = s.currentCheckpoints[0]
+	s.Status.Store(int64(StatusVerified))
 	c := s.currentCheckpoints[0].Checkpoint.Commitment
 	logs.Info.Printf("Checkpoints fetched from providers are all consistent: commitment=%s, height=%d, hash=%s", c, height, hash)
 
@@ -306,5 +310,8 @@ func (s *State) CurrentCheckpoints() []*configs.CheckpointExport {
 func (s *State) CurrentFirstCheckpoint() *configs.CheckpointExport {
 	s.RLock()
 	defer s.RUnlock()
-	return s.currentCheckpoints[0]
+	if len(s.currentCheckpoints) > 0 {
+		return s.currentCheckpoints[0]
+	}
+	return nil
 }

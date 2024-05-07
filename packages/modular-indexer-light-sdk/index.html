@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Testing Page | Modular Indexer (Light)</title>
+    <script defer type="module" src="./wasm_exec.js"></script>
+    <script defer type="module" src="./index.js"></script>
+    <script defer type="module">
+        import {lightLoadWasm} from "./index.js";
+
+        // Load the Wasm module from the web.
+        await lightLoadWasm();
+
+        // Then the following APIs are globals.
+        window.lightSetConfig({
+            "committeeIndexers": {
+                "s3": [
+                    {
+                        "region": "us-west-2",
+                        "bucket": "nubit-modular-indexer-brc-20",
+                        "name": "nubit-official-00"
+                    }
+                ],
+                "da": []
+            },
+            "verification": {
+                "bitcoinRPC": "https://bitcoin-mainnet-archive.allthatnode.com",
+                "metaProtocol": "brc-20",
+                "minimalCheckpoint": 1
+            },
+        });
+        window.lightInitialize();
+
+        document.getElementById("btn-status").onclick = async () => {
+            document.getElementById("status").textContent = await window.lightStatus();
+        }
+
+        document.getElementById("btn-block-height").onclick = async () => {
+            document.getElementById("block-height").textContent = (await window.lightGetBlockHeight()).toString();
+        }
+
+        document.getElementById("btn-balance-of-pkscript").onclick = async () => {
+            const tick = document.getElementById("input-balance-of-pkscript-tick").value
+            const pkscript = document.getElementById("input-balance-of-pkscript-pkscript").value
+            document.getElementById("balance-of-pkscript").textContent = JSON.stringify(await window.lightGetBalanceOfPkScript(tick, pkscript), null, 2);
+        }
+
+        document.getElementById("btn-balance-of-wallet").onclick = async () => {
+            const tick = document.getElementById("input-balance-of-wallet-tick").value
+            const wallet = document.getElementById("input-balance-of-wallet-wallet").value
+            document.getElementById("balance-of-wallet").textContent = JSON.stringify(await window.lightGetBalanceOfWallet(tick, wallet), null, 2);
+        }
+
+        document.getElementById("btn-current-checkpoints").onclick = async () => {
+            document.getElementById("current-checkpoints").textContent = JSON.stringify(await window.lightGetCurrentCheckpoints(), null, 2);
+        }
+
+        document.getElementById("btn-last-checkpoint").onclick = async () => {
+            document.getElementById("last-checkpoint").textContent = JSON.stringify(await window.lightGetLastCheckpoint(), null, 2);
+        }
+    </script>
+</head>
+<body>
+<div>
+    <form>
+        <input id="btn-status" type="button" value="Status">
+        <pre id="status"></pre>
+    </form>
+    <hr>
+    <form>
+        <input id="btn-block-height" type="button" value="Block height">
+        <pre id="block-height"></pre>
+    </form>
+    <hr>
+    <form>
+        <label for="input-balance-of-pkscript-tick">Tick</label>
+        <input id="input-balance-of-pkscript-tick"
+               value="ordi">
+        <label for="input-balance-of-pkscript-pkscript">PkScript</label>
+        <input id="input-balance-of-pkscript-pkscript"
+               value="0014bf1916dc33dbdd65f60d8b1f65eb35e8120835fc">
+        <input id="btn-balance-of-pkscript" type="button" value="Balance">
+        <pre id="balance-of-pkscript"></pre>
+    </form>
+    <hr>
+    <form>
+        <label for="input-balance-of-wallet-tick">Tick</label>
+        <input id="input-balance-of-wallet-tick"
+               value="ordi">
+        <label for="input-balance-of-wallet-wallet">Wallet</label>
+        <input id="input-balance-of-wallet-wallet"
+               value="bc1qhuv3dhpnm0wktasd3v0kt6e4aqfqsd0uhfdu7d">
+        <input id="btn-balance-of-wallet" type="button" value="Balance">
+        <pre id="balance-of-wallet"></pre>
+    </form>
+    <hr>
+    <form>
+        <input id="btn-current-checkpoints" type="button" value="Current checkpoints">
+        <pre id="current-checkpoints"></pre>
+    </form>
+    <hr>
+    <form>
+        <input id="btn-last-checkpoint" type="button" value="Last checkpoint">
+        <pre id="last-checkpoint"></pre>
+    </form>
+</div>
+</body>
+</html>
