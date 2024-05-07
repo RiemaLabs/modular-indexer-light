@@ -22,43 +22,32 @@ func StartService(enableDebug bool, addr string) {
 	}
 
 	r := gin.Default()
-	r.Use(gin.Recovery(), gin.Logger(), cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"POST", "GET"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
-
+	r.Use(
+		gin.Recovery(),
+		gin.Logger(),
+		cors.New(cors.Config{
+			AllowOrigins:     []string{"*"},
+			AllowMethods:     []string{"POST", "GET"},
+			AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length"},
+			AllowCredentials: true,
+			MaxAge:           12 * time.Hour,
+		}),
+	)
 	r.GET("/v1/brc20_verifiable/light/state", func(c *gin.Context) {
 		c.JSON(http.StatusOK, struct {
 			State fmt.Stringer `json:"state"`
 		}{
-			State: states.Status(states.S.State.Load()),
+			State: states.Status(states.S.Status.Load()),
 		})
 	})
-	serv := r.Group("v1")
+	g := r.Group("v1")
 	{
-		serv.Use(CheckState())
-		serv.GET("/brc20_verifiable/light/block_height", func(c *gin.Context) {
-			c.String(http.StatusOK, strconv.Itoa(int(states.S.CurrentHeight())))
-		})
-
-		serv.GET("/brc20_verifiable/light/current_balance_of_wallet", func(c *gin.Context) {
-			GetCurrentBalanceOfWallet(c, states.S.CurrentFirstCheckpoint().Checkpoint)
-		})
-
-		serv.GET("/brc20_verifiable/light/current_balance_of_pkscript", func(c *gin.Context) {
-			GetCurrentBalanceOfPkscript(c, states.S.CurrentFirstCheckpoint().Checkpoint)
-		})
-
-		serv.GET("/brc20_verifiable/light/checkpoints", func(c *gin.Context) {
-			c.JSON(http.StatusOK, states.S.CurrentCheckpoints())
-		})
-
-		serv.GET("/brc20_verifiable/light/last_checkpoint", func(c *gin.Context) {
-			c.JSON(http.StatusOK, states.S.LastCheckpoint())
-		})
+		g.Use(CheckState)
+		g.GET("/brc20_verifiable/light/block_height", func(c *gin.Context) { c.String(http.StatusOK, strconv.Itoa(int(states.S.CurrentHeight()))) })
+		g.GET("/brc20_verifiable/light/current_balance_of_wallet", HandleGetCurrentBalanceOfWallet)
+		g.GET("/brc20_verifiable/light/current_balance_of_pkscript", HandleGetCurrentBalanceOfPkscript)
+		g.GET("/brc20_verifiable/light/checkpoints", func(c *gin.Context) { c.JSON(http.StatusOK, states.S.CurrentCheckpoints()) })
+		g.GET("/brc20_verifiable/light/last_checkpoint", func(c *gin.Context) { c.JSON(http.StatusOK, states.S.LastCheckpoint()) })
 	}
 
 	if addr == "" {
