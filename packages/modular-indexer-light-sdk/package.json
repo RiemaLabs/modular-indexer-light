@@ -1,18 +1,16 @@
 {
   "name": "@nubit/modular-indexer-light-sdk",
-  "version": "0.2.0-rc.1",
+  "version": "0.2.0-rc.2",
   "description": "WebAssembly-based Nubit Modular Indexer (Light) SDK for Bitcoin meta-protocol verification",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./dist/modular-indexer-light-sdk.mjs",
+  "types": "./dist/index.d.ts",
   "files": [
-    "index.d.ts",
-    "modular-indexer-light.wasm",
-    "wasm_exec.js"
+    "dist/*"
   ],
   "scripts": {
     "prebuild": "test -e modular-indexer-light.wasm || (echo \"Error: please build wasm first\" && exit 1)",
-    "build": "tsc",
-    "start": "http-server --cors",
+    "build": "vite build",
+    "dev": "vite dev",
     "prepublish": "npm run build"
   },
   "repository": {
@@ -34,7 +32,8 @@
   },
   "homepage": "https://github.com/RiemaLabs/modular-indexer-light#readme",
   "devDependencies": {
-    "http-server": "^14.1.1",
-    "typescript": "^5.4.5"
+    "@types/node": "^20.12.10",
+    "vite": "^5.2.11",
+    "vite-plugin-dts": "^3.9.1"
   }
 }
