@@ -14,11 +14,12 @@ And then go back here to start the development server:
 
 ```bash
 cd packages/modular-indexer-light-sdk/
-npm run start
+npm run dev
 ```
 
 Before you publish a new npm package, bump the version first, and then do the dry-run:
 
 ```bash
+npm run build
 npm pack
 ```

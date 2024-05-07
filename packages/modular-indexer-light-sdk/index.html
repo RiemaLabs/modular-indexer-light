@@ -3,15 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Testing Page | Modular Indexer (Light)</title>
-    <script defer type="module" src="./wasm_exec.js"></script>
-    <script defer type="module" src="./index.js"></script>
     <script defer type="module">
-        import {lightLoadWasm} from "./index.js";
+        import {lightLoadWasm} from "./index.ts";
 
-        // Load the Wasm module from the web.
         await lightLoadWasm();
 
-        // Then the following APIs are globals.
         window.lightSetConfig({
             "committeeIndexers": {
                 "s3": [
