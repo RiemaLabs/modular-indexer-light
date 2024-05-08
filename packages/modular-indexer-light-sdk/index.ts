@@ -4,14 +4,6 @@ import init from "./modular-indexer-light.wasm?init";
 
 declare const Go: any;
 
-/**
- * Load the WebAssembly module to make all the APIs available.
- */
-export async function lightLoadWasm() {
-    const go = new Go();
-    go.run(await init(go.importObject));
-}
-
 interface Config {
     verification: {
         bitcoinRPC: string,
@@ -33,16 +25,29 @@ interface Config {
 }
 
 /**
+ * Load the WebAssembly module and run the light indexer.
+ *
+ * @param c configuration
+ */
+export async function lightRun(c: Config) {
+    const go = new Go();
+    go.run(await init(go.importObject));
+
+    lightSetConfig(c);
+    lightInitialize();
+}
+
+/**
  * Set the configuration for the light indexer.
  *
  * @param c configuration
  */
-export declare function lightSetConfig(c: Config): void;
+declare function lightSetConfig(c: Config): void;
 
 /**
  * Initialize and start the syncing and verification loop.
  */
-export declare function lightInitialize(): void;
+declare function lightInitialize(): void;
 
 type Status = "verifying" | "verified" | "unverified";
 

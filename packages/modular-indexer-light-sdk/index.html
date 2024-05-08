@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <title>Testing Page | Modular Indexer (Light)</title>
     <script defer type="module">
-        import {lightLoadWasm} from "./index.ts";
+        import {lightRun} from "./index.ts";
 
-        await lightLoadWasm();
-
-        window.lightSetConfig({
+        await lightRun({
             "committeeIndexers": {
                 "s3": [
                     {
@@ -25,34 +23,58 @@
                 "minimalCheckpoint": 1
             },
         });
-        window.lightInitialize();
 
         document.getElementById("btn-status").onclick = async () => {
             document.getElementById("status").textContent = await window.lightStatus();
         }
 
         document.getElementById("btn-block-height").onclick = async () => {
-            document.getElementById("block-height").textContent = (await window.lightGetBlockHeight()).toString();
+            const pre = document.getElementById("block-height");
+            try {
+                pre.textContent = (await window.lightGetBlockHeight()).toString();
+            } catch (e) {
+                pre.textContent = e
+            }
         }
 
         document.getElementById("btn-balance-of-pkscript").onclick = async () => {
-            const tick = document.getElementById("input-balance-of-pkscript-tick").value
-            const pkscript = document.getElementById("input-balance-of-pkscript-pkscript").value
-            document.getElementById("balance-of-pkscript").textContent = JSON.stringify(await window.lightGetBalanceOfPkScript(tick, pkscript), null, 2);
+            const tick = document.getElementById("input-balance-of-pkscript-tick").value;
+            const pkscript = document.getElementById("input-balance-of-pkscript-pkscript").value;
+            const pre = document.getElementById("balance-of-pkscript");
+            try {
+                pre.textContent = JSON.stringify(await window.lightGetBalanceOfPkScript(tick, pkscript), null, 2);
+            } catch (e) {
+                pre.textContent = e
+            }
         }
 
         document.getElementById("btn-balance-of-wallet").onclick = async () => {
-            const tick = document.getElementById("input-balance-of-wallet-tick").value
-            const wallet = document.getElementById("input-balance-of-wallet-wallet").value
-            document.getElementById("balance-of-wallet").textContent = JSON.stringify(await window.lightGetBalanceOfWallet(tick, wallet), null, 2);
+            const tick = document.getElementById("input-balance-of-wallet-tick").value;
+            const wallet = document.getElementById("input-balance-of-wallet-wallet").value;
+            const pre = document.getElementById("balance-of-wallet");
+            try {
+                pre.textContent = JSON.stringify(await window.lightGetBalanceOfWallet(tick, wallet), null, 2);
+            } catch (e) {
+                pre.textContent = e
+            }
         }
 
         document.getElementById("btn-current-checkpoints").onclick = async () => {
-            document.getElementById("current-checkpoints").textContent = JSON.stringify(await window.lightGetCurrentCheckpoints(), null, 2);
+            const pre = document.getElementById("current-checkpoints");
+            try {
+                pre.textContent = JSON.stringify(await window.lightGetCurrentCheckpoints(), null, 2);
+            } catch (e) {
+                pre.textContent = e
+            }
         }
 
         document.getElementById("btn-last-checkpoint").onclick = async () => {
-            document.getElementById("last-checkpoint").textContent = JSON.stringify(await window.lightGetLastCheckpoint(), null, 2);
+            const pre = document.getElementById("last-checkpoint");
+            try {
+                pre.textContent = JSON.stringify(await window.lightGetLastCheckpoint(), null, 2);
+            } catch (e) {
+                pre.textContent = e
+            }
         }
     </script>
 </head>

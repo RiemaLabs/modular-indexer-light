@@ -103,18 +103,17 @@ func GetCurrentBalanceOfPkScript(_ js.Value, args []js.Value) any {
 		resolve := args[0]
 		reject := args[1]
 
-		go func() {
-			if isVerifying() {
-				reject.Invoke(Error.New("light Indexer still verifying"))
-				return
-			}
+		if isVerifying() {
+			reject.Invoke(Error.New("light Indexer still verifying"))
+			return nil
+		}
 
+		go func() {
 			balance, err := services.GetCurrentBalanceOfPkscript(states.S.CurrentFirstCheckpoint().Checkpoint, tick, pkscript)
 			if err != nil {
 				reject.Invoke(Error.New(err.Error()))
 				return
 			}
-
 			resolve.Invoke(utils.Raw[utils.RawMap](balance))
 		}()
 
@@ -129,18 +128,17 @@ func GetCurrentBalanceOfWallet(_ js.Value, args []js.Value) any {
 		resolve := args[0]
 		reject := args[1]
 
-		go func() {
-			if isVerifying() {
-				reject.Invoke(Error.New("light Indexer still verifying"))
-				return
-			}
+		if isVerifying() {
+			reject.Invoke(Error.New("light Indexer still verifying"))
+			return nil
+		}
 
+		go func() {
 			balance, err := services.GetCurrentBalanceOfWallet(states.S.CurrentFirstCheckpoint().Checkpoint, tick, wallet)
 			if err != nil {
 				reject.Invoke(Error.New(err.Error()))
 				return
 			}
-
 			resolve.Invoke(utils.Raw[utils.RawMap](balance))
 		}()
 
