@@ -1,6 +1,6 @@
 {
   "name": "@nubit/modular-indexer-light-sdk",
-  "version": "0.2.0-rc.3",
+  "version": "0.2.0-rc.4",
   "description": "WebAssembly-based Nubit Modular Indexer (Light) SDK for Bitcoin meta-protocol verification",
   "main": "./dist/modular-indexer-light-sdk.mjs",
   "types": "./dist/index.d.ts",

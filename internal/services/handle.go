@@ -3,7 +3,9 @@ package services
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/RiemaLabs/modular-indexer-committee/apis"
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
@@ -14,6 +16,8 @@ import (
 	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/states"
 )
+
+const errMsgBalanceNotFound = "proof of absence"
 
 func CheckState(c *gin.Context) {
 	switch s := states.Status(states.S.Status.Load()); s {
@@ -72,9 +76,19 @@ func GetCurrentBalanceOfWallet(ck *checkpoint.Checkpoint, tick, wallet string) (
 	commitmentBytes, _ := base64.StdEncoding.DecodeString(ck.Commitment)
 	var point verkle.Point
 	_ = point.SetBytes(commitmentBytes)
-	if ok, err := apis.VerifyCurrentBalanceOfWallet(&point, tick, wallet, balance); err != nil || !ok {
+
+	ok, err := apis.VerifyCurrentBalanceOfWallet(&point, tick, wallet, balance)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), errMsgBalanceNotFound) {
+			return balance, nil
+		}
 		logs.Error.Printf("Verify balance of wallet error: ck=%+v, tick=%s, wallet=%s, balance=%+v, err=%v", ck, tick, wallet, balance, err)
 		return nil, err
+	}
+
+	if !ok {
+		logs.Error.Printf("Verify balance of wallet not OK: ck=%+v, tick=%s, wallet=%s, balance=%+v, err=%v", ck, tick, wallet, balance, err)
+		return nil, fmt.Errorf("verify balance of wallet not OK")
 	}
 
 	return balance, nil
@@ -96,9 +110,19 @@ func GetCurrentBalanceOfPkscript(ck *checkpoint.Checkpoint, tick, pkscript strin
 	commitmentBytes, _ := base64.StdEncoding.DecodeString(ck.Commitment)
 	var point verkle.Point
 	_ = point.SetBytes(commitmentBytes)
-	if ok, err := apis.VerifyCurrentBalanceOfPkscript(&point, tick, pkscript, balance); err != nil || !ok {
+
+	ok, err := apis.VerifyCurrentBalanceOfPkscript(&point, tick, pkscript, balance)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), errMsgBalanceNotFound) {
+			return balance, nil
+		}
 		logs.Error.Printf("Verify balance of PkScript error: ck=%+v, tick=%s, pkscript=%s, balance=%+v, err=%v", ck, tick, pkscript, balance, err)
 		return nil, err
+	}
+
+	if !ok {
+		logs.Error.Printf("Verify balance of PkScript not OK: ck=%+v, tick=%s, pkscript=%s, balance=%+v, err=%v", ck, tick, pkscript, balance, err)
+		return nil, fmt.Errorf("verify balance of PkScript not OK")
 	}
 
 	return balance, nil
