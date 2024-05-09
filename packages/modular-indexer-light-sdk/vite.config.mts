@@ -11,6 +11,11 @@ export default defineConfig({
         },
     },
     plugins: [
-        dts()
+        dts({
+            exclude: "vite.config.mts"
+        })
     ],
+    worker: {
+        format: "es"
+    }
 })

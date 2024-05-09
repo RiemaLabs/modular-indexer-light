@@ -4,11 +4,13 @@ package main
 
 import (
 	"syscall/js"
+	"time"
 
 	"github.com/RiemaLabs/modular-indexer-committee/checkpoint"
 
 	"github.com/RiemaLabs/modular-indexer-light/internal/apps"
 	"github.com/RiemaLabs/modular-indexer-light/internal/configs"
+	"github.com/RiemaLabs/modular-indexer-light/internal/logs"
 	"github.com/RiemaLabs/modular-indexer-light/internal/services"
 	"github.com/RiemaLabs/modular-indexer-light/internal/states"
 	"github.com/RiemaLabs/modular-indexer-light/internal/utils"
@@ -62,6 +64,27 @@ func SetConfig(_ js.Value, args []js.Value) any {
 
 func Initialize(js.Value, []js.Value) any {
 	go app.Run()
+	return nil
+}
+
+func Warmup(js.Value, []js.Value) any {
+	logs.Info.Println("Warming up...")
+	go func() {
+		for {
+			if isVerifying() {
+				logs.Info.Println("Still verifying, waiting...")
+				time.Sleep(3 * time.Second)
+				continue
+			}
+			_, _ = services.GetCurrentBalanceOfWallet(
+				states.S.CurrentFirstCheckpoint().Checkpoint,
+				"ordi",
+				"bc1qhuv3dhpnm0wktasd3v0kt6e4aqfqsd0uhfdu7d",
+			)
+			logs.Info.Println("Warmed up successfully")
+			return
+		}
+	}()
 	return nil
 }
 
@@ -183,6 +206,7 @@ func GetLastCheckpoint(js.Value, []js.Value) any {
 func main() {
 	js.Global().Set("lightSetConfig", js.FuncOf(SetConfig))
 	js.Global().Set("lightInitialize", js.FuncOf(Initialize))
+	js.Global().Set("lightWarmup", js.FuncOf(Warmup))
 	js.Global().Set("lightStatus", js.FuncOf(Status))
 	js.Global().Set("lightGetBlockHeight", js.FuncOf(GetBlockHeight))
 	js.Global().Set("lightGetBalanceOfPkScript", js.FuncOf(GetCurrentBalanceOfPkScript))
