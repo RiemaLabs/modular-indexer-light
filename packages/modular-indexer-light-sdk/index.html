@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <title>Testing Page | Modular Indexer (Light)</title>
     <script defer type="module">
-        import {lightRun} from "./index.ts";
+        import {create} from "./index.ts";
 
-        await lightRun({
+        const sdk = await create();
+        await sdk.run({
             "committeeIndexers": {
                 "s3": [
                     {
@@ -25,13 +26,13 @@
         });
 
         document.getElementById("btn-status").onclick = async () => {
-            document.getElementById("status").textContent = await window.lightStatus();
+            document.getElementById("status").textContent = await sdk.getStatus();
         }
 
         document.getElementById("btn-block-height").onclick = async () => {
             const pre = document.getElementById("block-height");
             try {
-                pre.textContent = (await window.lightGetBlockHeight()).toString();
+                pre.textContent = (await sdk.getBlockHeight()).toString();
             } catch (e) {
                 pre.textContent = e
             }
@@ -42,7 +43,7 @@
             const pkscript = document.getElementById("input-balance-of-pkscript-pkscript").value;
             const pre = document.getElementById("balance-of-pkscript");
             try {
-                pre.textContent = JSON.stringify(await window.lightGetBalanceOfPkScript(tick, pkscript), null, 2);
+                pre.textContent = JSON.stringify(await sdk.getBalanceOfPkScript(tick, pkscript), null, 2);
             } catch (e) {
                 pre.textContent = e
             }
@@ -53,7 +54,7 @@
             const wallet = document.getElementById("input-balance-of-wallet-wallet").value;
             const pre = document.getElementById("balance-of-wallet");
             try {
-                pre.textContent = JSON.stringify(await window.lightGetBalanceOfWallet(tick, wallet), null, 2);
+                pre.textContent = JSON.stringify(await sdk.getBalanceOfWallet(tick, wallet), null, 2);
             } catch (e) {
                 pre.textContent = e
             }
@@ -62,7 +63,7 @@
         document.getElementById("btn-current-checkpoints").onclick = async () => {
             const pre = document.getElementById("current-checkpoints");
             try {
-                pre.textContent = JSON.stringify(await window.lightGetCurrentCheckpoints(), null, 2);
+                pre.textContent = JSON.stringify(await sdk.getCurrentCheckpoints(), null, 2);
             } catch (e) {
                 pre.textContent = e
             }
@@ -71,7 +72,7 @@
         document.getElementById("btn-last-checkpoint").onclick = async () => {
             const pre = document.getElementById("last-checkpoint");
             try {
-                pre.textContent = JSON.stringify(await window.lightGetLastCheckpoint(), null, 2);
+                pre.textContent = JSON.stringify(await sdk.getLastCheckpoint(), null, 2);
             } catch (e) {
                 pre.textContent = e
             }
