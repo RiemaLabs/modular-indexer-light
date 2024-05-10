@@ -86,6 +86,10 @@ brief outline of the necessary variables to be configured:
 
 #### Setting Up `report`:
 
+> [!IMPORTANT]
+> Nubit DA Layer is currently closed for revamps, please use `--report=false` to temporarily disable DA reporting. Stay
+> tuned!
+
 Set up this field to allow your Light Indexer to upload checkpoints to the Nubit DA Layer and participate in the
 Pre-Alpha Testnet! To get gasCoupon, please follow the guideline on the [Nubit website](https://points.nubit.org).
 
@@ -97,6 +101,9 @@ Pre-Alpha Testnet! To get gasCoupon, please follow the guideline on the [Nubit w
 - `timeout`: The timeout to upload a checkpoint to the Nubit DA Layer.
 
 #### Setting Up `committeeIndexers`:
+
+> [!IMPORTANT]
+> Nubit DA Layer is currently closed for revamps, please leave `"da"` settings blank. Stay tuned!
 
 As of now, the Light Indexer cannot automatically detect active Committee Indexers. Therefore, the default Committee
 Indexers that are recognized are those operated officially by Nubit, and they are provided by `config.example.json`.
