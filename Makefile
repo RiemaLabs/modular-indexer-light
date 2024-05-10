@@ -24,4 +24,4 @@ packages/${SDK}/${EXEC}.wasm: packages/${SDK}/wasm_exec.js
 
 .PHONY: clean
 clean:
-	rm -rf ./${EXEC} packages/${SDK}/*.wasm
+	rm -rf *.exe ./${EXEC} packages/${SDK}/*.wasm
