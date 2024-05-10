@@ -21,21 +21,25 @@ jobs:
 
       - name: Build for Linux
         run: |
+          make clean
           make GOOS=linux GOARCH=amd64
           zip modular-indexer-light-linux-amd64.zip config.example.json modular-indexer-light run.sh
 
       - name: Build for macOS amd64
         run: |
+          make clean
           make GOOS=darwin GOARCH=amd64
           zip modular-indexer-light-darwin-amd64.zip config.example.json modular-indexer-light run.sh
 
       - name: Build for macOS arm64
         run: |
+          make clean
           make GOOS=darwin GOARCH=arm64
           zip modular-indexer-light-darwin-arm64.zip config.example.json modular-indexer-light run.sh
 
       - name: Build for Windows
         run: |
+          make clean
           make GOOS=windows GOARCH=amd64
           zip modular-indexer-light-windows-amd64.zip config.example.json modular-indexer-light.exe run.bat
 
