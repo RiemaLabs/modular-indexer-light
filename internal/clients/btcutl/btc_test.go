@@ -78,7 +78,7 @@ func TestBitcoinOrdGetter_GetBlockDetail(t *testing.T) {
 	if b.Hash != hash {
 		t.Fatal(b)
 	}
-	if len(b.RawTx) < 0 {
+	if len(b.RawTx) == 0 {
 		t.Fatal(b)
 	}
 }
@@ -88,7 +88,7 @@ func TestBitcoinOrdGetter_GetAllInscriptions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ins) < 0 {
+	if len(ins) == 0 {
 		t.Fatal(ins)
 	}
 }
