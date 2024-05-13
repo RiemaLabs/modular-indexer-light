@@ -202,7 +202,7 @@ func (w *Wallet) writeToBuffer() []byte {
 		writeUint16(buf, w.sep0005AccountCount)
 	}
 
-	for i, _ := range w.accounts {
+	for i := range w.accounts {
 		a := &w.accounts[i]
 
 		if a.active {

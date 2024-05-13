@@ -154,8 +154,7 @@ func CheckMemoText(s string) error {
 
 func newKeyBySeed(seed []byte, path []uint32) (*hdkeychain.ExtendedKey, error) {
 	var child *hdkeychain.ExtendedKey
-	var param *chaincfg.Params
-	param = &chaincfg.TestNet3Params
+	param := &chaincfg.TestNet3Params
 	child, err := hdkeychain.NewMaster(seed, param)
 	if err != nil {
 		return nil, err
