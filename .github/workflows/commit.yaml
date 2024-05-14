@@ -14,7 +14,9 @@ jobs:
     - name: Print Info
       run: |
         #!/bin/bash
-        echo "${{ toJson(github.event.pull_request._links.commits.href) }}"
+        commits_url="${{ github.event.pull_request._links.commits.href }}"
+        commits=$(curl -sSL $commits_url)
+        echo "$commits"
 
     - name: Validate Commit Messages
       run: |
