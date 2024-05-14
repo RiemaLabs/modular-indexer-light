@@ -22,6 +22,8 @@ jobs:
 
         INVALID_COMMIT_FORMAT_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?:\ .+"
         messages=$(echo "$commits" | jq -r '.[].commit.message')
+        invalid_msg=false
+
         while IFS= read -r msg; do
           # Check if it's a merge commit
           if [[ $msg =~ .*Merge\ .+\ into\ .+$ ]]; then
@@ -29,7 +31,10 @@ jobs:
           fi
           if [[ ! $msg =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
             echo "Invalid commit message format: $msg"
-            exit 1
           fi
         done <<< "$messages"
+
+        if [ "$invalid_msg" = true ]; then
+          exit 1
+        fi
 
