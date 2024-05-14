@@ -14,7 +14,7 @@ jobs:
     - name: Print Info
       run: |
         #!/bin/bash
-        echo "${{ toJson(github.event.pull_request.commits) }}"
+        echo "${{ toJson(github.event.pull_request) }}"
 
     - name: Validate Commit Messages
       run: |
