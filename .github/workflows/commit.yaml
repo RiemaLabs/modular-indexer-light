@@ -25,10 +25,12 @@ jobs:
         invalid_msg=false
 
         while IFS= read -r msg; do
+          
           # Check if it's a merge commit
           if [[ $msg =~ .*Merge\ .+\ into\ .+$ ]]; then
             continue
           fi
+
           if [[ ! $msg =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
             echo "Invalid commit message format: $msg"
             invalid_msg=true
