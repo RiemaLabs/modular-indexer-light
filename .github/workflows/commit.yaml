@@ -11,6 +11,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Print Info
+      run: |
+        #!/bin/bash
+        echo "${{ github.event.commits }}"
+
     - name: Validate Commit Messages
       run: |
         #!/bin/bash
