@@ -23,14 +23,9 @@ jobs:
         INVALID_COMMIT_FORMAT_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?:\ .+"
         commits_url="${{ github.event.pull_request._links.commits.href }}"
         commits=$(curl -sSL $commits_url)
-        commit_messages=$(echo "$commits" | jq -r '.[].commit.message')
-        echo "$commit_messages"
-        # for commit in $(echo "$commits" | jq -c '.[]'); do
-        #   commit_message=$(echo "$commit" | jq -r '.commit.message')
-        #   echo "$commit_message"
-        # done
-        # for msg in $messages; do
-        #   echo "$msg"
+        messages=$(echo "$commits" | jq -r '.[].commit.message')
+        for msg in $messages; do
+          echo "$msg"
         #   # # Check if it's a merge commit
         #   # if [[ $message =~ .*Merge\ .+\ into\ .+$ ]]; then
         #   #   continue
@@ -40,4 +35,4 @@ jobs:
         #   #   echo "Invalid commit message format: $message"
         #   #   exit 1
         #   # fi
-        # done
+        done
