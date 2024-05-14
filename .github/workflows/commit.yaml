@@ -21,7 +21,8 @@ jobs:
       run: |
         #!/bin/bash
         INVALID_COMMIT_FORMAT_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?:\ .+"
-        echo "$commits"
+        commits_url="${{ github.event.pull_request._links.commits.href }}"
+        commits=$(curl -sSL $commits_url)
         for commit in "$commits"; do
           echo "Commit: $commit"
           
