@@ -14,11 +14,9 @@ jobs:
     - name: Print Info
       run: |
         #!/bin/bash
-        echo "${{ toJson(github.event.pull_request.commits) }}"
-        for commit in ${{ github.event.pull_request.commits }}; do
-          echo "Commit SHA: ${commit.id}"
-          echo "Commit Message: ${commit.message}"
-        done
+        commits_url=$(echo "${{ github.event.pull_request.commits.href }}")
+        commits=$(curl -sSL $commits_url)
+        echo "$commits"
 
     - name: Validate Commit Messages
       run: |
