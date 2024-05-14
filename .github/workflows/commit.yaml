@@ -1,0 +1,40 @@
+name: Commit Message Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  commit-message-validation:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Validate Commit Messages
+      run: |
+        commits_url="${{ github.event.pull_request._links.commits.href }}"
+        commits=$(curl -sSL $commits_url)
+        if [ -z "$commits" ]; then
+          echo "fetch commits failed, please retry the action"
+          exit 1
+        fi
+
+        INVALID_COMMIT_FORMAT_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?:\ .+"
+        messages=$(echo "$commits" | jq -r '.[].commit.message')
+        invalid_msg=false
+
+        while IFS= read -r msg; do
+          # Check if it's a merge commit
+          if [[ $msg =~ .*Merge\ .+\ into\ .+$ ]]; then
+            continue
+          fi
+          if [[ ! $msg =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
+            echo "Invalid commit message format: $msg"
+            invalid_msg=true
+          fi
+        done <<< "$messages"
+
+        if [ "$invalid_msg" = true ]; then
+          exit 1
+        fi
