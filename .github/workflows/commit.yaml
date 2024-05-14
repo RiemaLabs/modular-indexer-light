@@ -15,8 +15,13 @@ jobs:
       run: |
         INVALID_COMMIT_FORMAT_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?:\ .+"
         for commit in "${{ github.event.commits }}"; do
-          echo "$commit"
+          
           message=$(git log --format="%H %s" -n 1 $commit)
+          # Check if it's a merge commit
+          if [[ $message =~ ^Merge\ .+$ ]]; then
+            continue
+          fi
+
           if [[ ! $message =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
             echo "Invalid commit message format: $message"
             exit 1
