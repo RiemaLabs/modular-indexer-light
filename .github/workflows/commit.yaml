@@ -13,6 +13,7 @@ jobs:
 
     - name: Validate Commit Messages
       run: |
+        #!/bin/bash
         INVALID_COMMIT_FORMAT_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?:\ .+"
         for commit in "${{ github.event.commits }}"; do
           echo "$commit"
