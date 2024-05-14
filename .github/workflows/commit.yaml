@@ -26,15 +26,15 @@ jobs:
         commit_shas=$(echo "$commits" | jq -r '.[] | .sha')
         for sha in $commit_shas; do
           echo "$sha"
-          # message=$(git log --format="%H %s" -n 1 $commit)
-          # echo "$message"
-          # # Check if it's a merge commit
-          # if [[ $message =~ .*Merge\ .+\ into\ .+$ ]]; then
-          #   continue
-          # fi
+          message=$(git log --format="%H %s" -n 1 $sha)
+          echo "$message"
+          # Check if it's a merge commit
+          if [[ $message =~ .*Merge\ .+\ into\ .+$ ]]; then
+            continue
+          fi
 
-          # if [[ ! $message =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
-          #   echo "Invalid commit message format: $message"
-          #   exit 1
-          # fi
+          if [[ ! $message =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
+            echo "Invalid commit message format: $message"
+            exit 1
+          fi
         done
