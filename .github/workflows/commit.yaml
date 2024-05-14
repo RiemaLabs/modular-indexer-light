@@ -31,6 +31,7 @@ jobs:
           fi
           if [[ ! $msg =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
             echo "Invalid commit message format: $msg"
+            invalid_msg=true
           fi
         done <<< "$messages"
 
