@@ -30,7 +30,7 @@ jobs:
             continue
           fi
           if [[ ! $message =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
-            echo "Invalid commit message format: $message"
+            echo "Invalid commit message format: $msg"
             exit 1
           fi
         done <<< "$messages"
