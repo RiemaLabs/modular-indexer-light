@@ -16,13 +16,15 @@ jobs:
         #!/bin/bash
         commits_url="${{ github.event.pull_request._links.commits.href }}"
         commits=$(curl -sSL $commits_url)
+        if [ -z "$commits" ]; then
+          echo "fetch commits failed, please retry the action"
+          exit 1
+        fi
 
     - name: Validate Commit Messages
       run: |
         #!/bin/bash
         INVALID_COMMIT_FORMAT_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?:\ .+"
-        commits_url="${{ github.event.pull_request._links.commits.href }}"
-        commits=$(curl -sSL $commits_url)
         messages=$(echo "$commits" | jq -r '.[].commit.message')
         while IFS= read -r msg; do
           # Check if it's a merge commit
