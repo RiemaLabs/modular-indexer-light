@@ -24,8 +24,9 @@ jobs:
         commits_url="${{ github.event.pull_request._links.commits.href }}"
         commits=$(curl -sSL $commits_url)
         messages=$(echo "$commits" | jq -r '.[].commit.message')
-        for msg in $messages; do
+        while IFS= read -r msg; do
           echo "$msg"
+        done <<< "$messages"
         #   # # Check if it's a merge commit
         #   # if [[ $message =~ .*Merge\ .+\ into\ .+$ ]]; then
         #   #   continue
