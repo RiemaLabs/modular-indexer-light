@@ -18,7 +18,7 @@ jobs:
           
           message=$(git log --format="%H %s" -n 1 $commit)
           # Check if it's a merge commit
-          if [[ $message =~ .*Merge\ .+ into\ .+$ ]]; then
+          if [[ $message =~ .*Merge\ .+\ into\ .+$ ]]; then
             continue
           fi
 
