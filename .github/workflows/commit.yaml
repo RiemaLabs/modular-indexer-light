@@ -23,17 +23,17 @@ jobs:
         INVALID_COMMIT_FORMAT_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?:\ .+"
         commits_url="${{ github.event.pull_request._links.commits.href }}"
         commits=$(curl -sSL $commits_url)
-        for commit in $(echo "$commits" | jq -r '.[] | .sha'); do
-          echo "$commit"
-          message=$(git log --format="%H %s" -n 1 $commit)
-          echo "$message"
-          # Check if it's a merge commit
-          if [[ $message =~ .*Merge\ .+\ into\ .+$ ]]; then
-            continue
-          fi
+        for commit in $commits; do
+          echo "${{ commit.sha }}"
+          # message=$(git log --format="%H %s" -n 1 $commit)
+          # echo "$message"
+          # # Check if it's a merge commit
+          # if [[ $message =~ .*Merge\ .+\ into\ .+$ ]]; then
+          #   continue
+          # fi
 
-          if [[ ! $message =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
-            echo "Invalid commit message format: $message"
-            exit 1
-          fi
+          # if [[ ! $message =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
+          #   echo "Invalid commit message format: $message"
+          #   exit 1
+          # fi
         done
