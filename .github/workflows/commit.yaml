@@ -29,7 +29,7 @@ jobs:
           if [[ $msg =~ .*Merge\ .+\ into\ .+$ ]]; then
             continue
           fi
-          if [[ ! $message =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
+          if [[ ! $msg =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
             echo "Invalid commit message format: $msg"
             exit 1
           fi
