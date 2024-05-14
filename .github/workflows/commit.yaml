@@ -25,6 +25,7 @@ jobs:
         commits=$(curl -sSL $commits_url)
         for commit in "$commits"; do
           message=$(git log --format="%H %s" -n 1 $commit.sha)
+          echo "$message"
           # Check if it's a merge commit
           if [[ $message =~ .*Merge\ .+\ into\ .+$ ]]; then
             continue
