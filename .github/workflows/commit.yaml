@@ -21,7 +21,6 @@ jobs:
         #!/bin/bash
         INVALID_COMMIT_FORMAT_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?:\ .+"
         for commit in "${{ github.event.pull_request.commits }}"; do
-          echo "${{ toJson(commit) }}"
           
           message=$(git log --format="%H %s" -n 1 $commit)
           # Check if it's a merge commit
