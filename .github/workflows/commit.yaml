@@ -21,6 +21,7 @@ jobs:
       run: |
         #!/bin/bash
         INVALID_COMMIT_FORMAT_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?:\ .+"
+        echo "$commit"
         for commit in "$commits"; do
           echo "Commit: $commit"
           
