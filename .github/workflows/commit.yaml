@@ -1,0 +1,16 @@
+name: Commit Message Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  commit-message-validation:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: CI/CD commit and code format checking
+      run: |
+        make ci
