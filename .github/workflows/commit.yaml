@@ -11,18 +11,18 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Print Info
+    - name: Query commits
       run: |
         #!/bin/bash
         commits_url="${{ github.event.pull_request._links.commits.href }}"
         commits=$(curl -sSL $commits_url)
-        echo "$commits"
 
     - name: Validate Commit Messages
       run: |
         #!/bin/bash
         INVALID_COMMIT_FORMAT_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?:\ .+"
-        for commit in "${{ github.event.pull_request.commits }}"; do
+        for commit in "$commits"; do"
+          echo "Commit: $commit"
           
           message=$(git log --format="%H %s" -n 1 $commit)
           # Check if it's a merge commit
