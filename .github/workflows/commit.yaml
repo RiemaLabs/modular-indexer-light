@@ -14,8 +14,8 @@ jobs:
     - name: Validate Commit Messages
       run: |
         INVALID_COMMIT_FORMAT_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?:\ .+"
-        for commit in $(git log --format=%H ${GITHUB_BASE_REF}..${GITHUB_HEAD_REF}); do
-          message=$(git log --format="%H %s" -n 1 $commit)
+        for commit in "${{ github.event.commits }}"; do
+          message=$(git log --format="%H %s" -n 1 $commit.id)
           if [[ ! $message =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
             echo "Invalid commit message format: $message"
             exit 1
