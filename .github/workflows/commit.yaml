@@ -25,15 +25,13 @@ jobs:
         commits=$(curl -sSL $commits_url)
         messages=$(echo "$commits" | jq -r '.[].commit.message')
         while IFS= read -r msg; do
-          echo "$msg"
+          # Check if it's a merge commit
+          if [[ $msg =~ .*Merge\ .+\ into\ .+$ ]]; then
+            continue
+          fi
+          if [[ ! $message =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
+            echo "Invalid commit message format: $message"
+            exit 1
+          fi
         done <<< "$messages"
-        #   # # Check if it's a merge commit
-        #   # if [[ $message =~ .*Merge\ .+\ into\ .+$ ]]; then
-        #   #   continue
-        #   # fi
 
-        #   # if [[ ! $message =~ $INVALID_COMMIT_FORMAT_REGEX ]]; then
-        #   #   echo "Invalid commit message format: $message"
-        #   #   exit 1
-        #   # fi
-        done
