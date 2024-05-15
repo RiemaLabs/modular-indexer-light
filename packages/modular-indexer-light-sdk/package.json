@@ -1,7 +1,8 @@
 {
   "name": "@nubit/modular-indexer-light-sdk",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "WebAssembly-based Nubit Modular Indexer (Light) SDK for Bitcoin meta-protocol verification",
+  "type": "module",
   "main": "./dist/modular-indexer-light-sdk.mjs",
   "types": "./dist/index.d.ts",
   "files": [
@@ -10,7 +11,7 @@
   "scripts": {
     "prebuild": "test -e modular-indexer-light.wasm || (echo \"Error: please build wasm first\" && exit 1)",
     "build": "vite build",
-    "dev": "vite dev",
+    "dev": "vite",
     "prepublish": "npm run build"
   },
   "repository": {

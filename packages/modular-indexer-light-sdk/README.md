@@ -14,6 +14,10 @@ JavaScript SDK for running [Modular Indexer (Light)] inside your wallets, websit
 
 ## Installation
 
+> [!IMPORTANT]
+> Our JavaScript SDK is **only available on the web (browsers)**, since it introduces web workers for better
+> performance, and they are currently not supported on JavaScript runtimes like Node.js.
+
 Install via `npm` or other package managers:
 
 ```bash
