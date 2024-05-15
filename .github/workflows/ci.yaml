@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  GOPRIVATE: github.com/RiemaLabs
+
 jobs:
   commit-message-validation:
     runs-on: ubuntu-latest

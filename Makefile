@@ -22,21 +22,13 @@ packages/${SDK}/wasm_exec.js:
 packages/${SDK}/${EXEC}.wasm: packages/${SDK}/wasm_exec.js
 	env ${ENV} go build ${FLAGS} -o $@ ./internal/wasm/${EXEC}
 
-
 .PHONY: fmt
 fmt:
 	goimports -w .
 
 .PHONY: ci
 ci:
-	npm i -g @commitlint/cli @commitlint/config-conventional
-	npx commitlint --from=origin/main --extends @commitlint/config-conventional -V
-	test -z "$(goimports -l .)" || (echo "⚠️ Run \`make fmt\` to format these files:" && goimports -l . && exit 1)
-	if [ -n "$$(golangci-lint run)" ]; then \
-		echo "⚠️ Please fix those errors:" && golangci-lint run --show-stats && exit 1; \
-	else \
-		echo "✅ Passed commit, import and lint check!"; \
-	fi
+	go run github.com/RiemaLabs/nubit-ci/cmd/nubitci-lint@latest
 
 .PHONY: clean
 clean:
