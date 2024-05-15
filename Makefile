@@ -30,13 +30,12 @@ fmt:
 .PHONY: ci
 ci:
 	npm i -g @commitlint/cli @commitlint/config-conventional
-	cat .git/HEAD
 	npx commitlint --from=origin/main --extends @commitlint/config-conventional -V
 	test -z "$(goimports -l .)" || (echo "⚠️ Run \`make fmt\` to format these files:" && goimports -l . && exit 1)
 	if [ -n "$$(golangci-lint run)" ]; then \
 		echo "⚠️ Please fix those errors:" && golangci-lint run --show-stats && exit 1; \
 	else \
-		echo "✅ Passed import and lint check!"; \
+		echo "✅ Passed commit, import and lint check!"; \
 	fi
 
 .PHONY: clean
