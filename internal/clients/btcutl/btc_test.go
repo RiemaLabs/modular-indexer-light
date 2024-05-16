@@ -71,14 +71,14 @@ func TestBitcoinOrdGetter_GetBlock(t *testing.T) {
 
 func TestBitcoinOrdGetter_GetBlockDetail(t *testing.T) {
 	const hash = "0000000000000000000454a3a654c88ab5ad9824ca8506c1f7f65cc0ea193503"
-	b, err := testClient(t).GetBlock(httputl.TODO(), hash)
+	b, err := testClient(t).GetBlockDetail(httputl.TODO(), hash)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if b.Hash != hash {
 		t.Fatal(b)
 	}
-	if len(b.RawTx) == 0 {
+	if len(b.Tx) == 0 {
 		t.Fatal(b)
 	}
 }

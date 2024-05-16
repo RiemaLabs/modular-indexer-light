@@ -87,7 +87,7 @@ func (w *Wallet) GenerateAccount(walletPassword *string) *Account {
 	a := w.newAccount()
 	err := a.GenerateAddress(w.GetSeed(walletPassword))
 	if err != nil {
-		logs.Error.Printf("Wallet", "func", "GenerateAccount", "GenerateAddress.err", err)
+		logs.Error.Println("Generate account error:", err)
 		return nil
 	}
 	return a
