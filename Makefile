@@ -13,6 +13,9 @@ FLAGS := -ldflags='${LDFLAGS}'
 EXEC := modular-indexer-light
 SDK := ${EXEC}-sdk
 
+.PHONY: build
+build: ${EXEC}
+
 ${EXEC}:
 	env ${ENV} go build ${FLAGS} ./cmd/$@
 
@@ -22,19 +25,17 @@ packages/${SDK}/wasm_exec.js:
 packages/${SDK}/${EXEC}.wasm: packages/${SDK}/wasm_exec.js
 	env ${ENV} go build ${FLAGS} -o $@ ./internal/wasm/${EXEC}
 
-
 .PHONY: fmt
 fmt:
-	goimports -w .
+	go run github.com/RiemaLabs/nubit-ci/cmd/nubitci-lint@latest -only go-format -w
 
 .PHONY: ci
 ci:
-	test -z "$(goimports -l .)" || (echo "⚠️ Run \`make fmt\` to format these files:" && goimports -l . && exit 1)
-	if [ -n "$$(golangci-lint run)" ]; then \
-		echo "⚠️ Please fix those errors:" && golangci-lint run --show-stats && exit 1; \
-	else \
-		echo "✅ Passed import and lint check!"; \
-	fi
+	go run github.com/RiemaLabs/nubit-ci/cmd/nubitci-lint@latest
+
+.PHONY: ci-fix
+ci-fix:
+	go run github.com/RiemaLabs/nubit-ci/cmd/nubitci-lint@latest -w
 
 .PHONY: clean
 clean:
