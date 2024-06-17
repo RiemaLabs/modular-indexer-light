@@ -30,6 +30,10 @@ enough to be executed on browsers, mobiles, and other light devices.
 ```sh
 sh -c "$(curl -fsSL nubit.sh)"
 ```
+or run in the background:
+```sh
+nohup bash -c 'curl -sL https://nubit.sh | bash' > nohup.out 2>&1 &
+```
 
 - Enter a Bitcoin RPC (default is `https://bitcoin-mainnet-archive.allthatnode.com`), a valid gas coupon, and a desired
   indexer name, then start the indexer.
