@@ -21,7 +21,7 @@ func deriveAesKey(password *string) (key []byte) {
 
 // AES encrypts data with given key.
 // Data will be padded with random data to match AES block size.
-// Enncrypted data is return in newly allocated slice. Input data will not be modified.
+// Enncrypted data is returned in newly allocated slice. Input data will not be modified.
 func aesEncrypt(data, key []byte) []byte {
 	block, err := aes.NewCipher(key)
 
