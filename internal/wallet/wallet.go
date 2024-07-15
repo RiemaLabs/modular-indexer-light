@@ -133,7 +133,7 @@ func (w *Wallet) generateBip39Seed(key []byte, words []string, mnemonicPassword 
 	var err error
 	mnemonic := strings.Join(words, " ")
 	// paranoia mode: calculate seed 5 times and check for identical results
-	// to reduce risk of generating an unreproducable seed caused by faulty hardware
+	// to reduce risk of generating an unreproducible seed caused by faulty hardware
 	for i := 0; i < 5; i++ {
 		prevSeed = seed
 		seed, err = bip39.NewSeedWithErrorChecking(mnemonic, *mnemonicPassword)
