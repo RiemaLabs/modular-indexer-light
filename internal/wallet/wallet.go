@@ -30,7 +30,7 @@ func NewWallet(password *string) *Wallet {
 
 // ImportBinary creates a new wallet from an exported binary serialization of the wallet content.
 // This method can be used to restore a wallet from a permanent storage location.
-// This method panics if the build-in self test fails (see method SelfTest()).
+// This method panics if the built-in self test fails (see method SelfTest()).
 func ImportBinary(buf []byte) (w *Wallet, err error) {
 	w = new(Wallet)
 	err = w.readFromBufferCompressed(buf)
@@ -42,7 +42,7 @@ func ImportBinary(buf []byte) (w *Wallet, err error) {
 
 // ImportBase64 creates a new wallet from an exported ascii (base 64) serialization of the wallet content.
 // This method can be used to restore a wallet from a permanent storage location.
-// This method panics if the build-in self test fails (see method SelfTest()).
+// This method panics if the built-in self test fails (see method SelfTest()).
 func ImportBase64(data string) (w *Wallet, err error) {
 	buf, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
@@ -94,7 +94,7 @@ func (w *Wallet) GenerateAccount(walletPassword *string) *Account {
 }
 
 // GenerateBip39Seed generates the seed used for key derivation (generated accounts). This
-// method mus be called before the first call to GenerateAccount().
+// method must be called before the first call to GenerateAccount().
 // It uses the mnemonic word list,
 // which is internally derived from the master seed (same as returned by Bip39Mnemonic()),
 // and combines it with the given mnemonic password.
@@ -246,7 +246,7 @@ func (w *Wallet) SetDescription(desc string) error {
 	return nil
 }
 
-func (w *Wallet) AddPirKeyAccount(PrivateKey string, walletPassword *string) *Account {
+func (w *Wallet) AddPrivateKeyAccount(PrivateKey string, walletPassword *string) *Account {
 	key := w.checkPassword(walletPassword)
 	if key == nil {
 		return nil
@@ -264,7 +264,7 @@ func (w *Wallet) AddPirKeyAccount(PrivateKey string, walletPassword *string) *Ac
 // The private key is stored encrypted.
 // Application implementors should make the user aware that this type of account cannot be
 // recovered with the mnemonic word list and password.
-// nil is returend if the wallet password is invalid or an invald seed string was provided.
+// nil is returned if the wallet password is invalid or an invalid seed string was provided.
 func (w *Wallet) AddRandomAccount(seed string, walletPassword *string) *Account {
 	key := w.checkPassword(walletPassword)
 	if key == nil {
