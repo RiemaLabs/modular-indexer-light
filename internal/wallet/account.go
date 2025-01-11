@@ -103,7 +103,7 @@ func (a *Account) PublicKey() string {
 }
 
 // PrivateKey returns private key of account.
-// Emptry string is returned if wallet password is not valid or current account does not hold a private key.
+// Empty string is returned if wallet password is not valid or current account does not hold a private key.
 func (a *Account) PrivateKey(walletPassword *string) *ecdsa.PrivateKey {
 	wkey := a.wallet.checkPassword(walletPassword)
 	if wkey == nil {
